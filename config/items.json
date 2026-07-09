@@ -1,0 +1,31 @@
+{
+  "unitNote": "国際市況の代表価格。単位は品目ごとに異なります（USD/トン、USセント/ポンド 等）。相対的な値動き・平年比の把握を目的としています。",
+  "items": [
+    { "slug": "banana",       "column": "Bananas",                     "name": "バナナ",       "emoji": "🍌", "category": "果物",     "unit": "USD/トン",       "origin": "中米・エクアドル産", "season": "通年", "buyKeyword": "バナナ" },
+    { "slug": "orange",       "column": "Oranges",                     "name": "オレンジ",     "emoji": "🍊", "category": "果物",     "unit": "USD/トン",       "origin": "各種オレンジ",       "season": "冬〜春が最盛期", "buyKeyword": "オレンジ" },
+    { "slug": "rice",         "column": "Rice",                        "name": "米（うるち）", "emoji": "🍚", "category": "穀物",     "unit": "USD/トン",       "origin": "精白米 5%砕米",       "season": "秋が新米期", "buyKeyword": "米" },
+    { "slug": "wheat",        "column": "Wheat",                       "name": "小麦",         "emoji": "🌾", "category": "穀物",     "unit": "USD/トン",       "origin": "米国産 硬質赤冬小麦", "season": "初夏〜夏が収穫期", "buyKeyword": "小麦粉" },
+    { "slug": "maize",        "column": "Maize corn",                  "name": "とうもろこし", "emoji": "🌽", "category": "穀物",     "unit": "USD/トン",       "origin": "米国メキシコ湾岸FOB", "season": "夏〜秋が旬", "buyKeyword": "とうもろこし" },
+    { "slug": "barley",       "column": "Barley",                      "name": "大麦",         "emoji": "🌾", "category": "穀物",     "unit": "USD/トン",       "origin": "カナダ産西部大麦1等", "season": "夏が収穫期", "buyKeyword": "もち麦" },
+    { "slug": "soybean",      "column": "Soybeans",                    "name": "大豆",         "emoji": "🫘", "category": "豆・油糧", "unit": "USD/トン",       "origin": "シカゴ先物 2等黄大豆", "season": "秋が収穫期", "buyKeyword": "大豆" },
+    { "slug": "soybean-oil",  "column": "Soybean Oil",                 "name": "大豆油",       "emoji": "🛢️", "category": "豆・油糧", "unit": "USD/トン",       "origin": "シカゴ先物",           "season": "通年", "buyKeyword": "サラダ油" },
+    { "slug": "soybean-meal", "column": "Soybean Meal",                "name": "大豆ミール",   "emoji": "🫘", "category": "豆・油糧", "unit": "USD/トン",       "origin": "シカゴ先物 48%蛋白",   "season": "通年", "buyKeyword": "大豆ミール" },
+    { "slug": "rapeseed-oil", "column": "Rapeseed oil",                "name": "菜種油",       "emoji": "🛢️", "category": "豆・油糧", "unit": "USD/トン",       "origin": "ロッテルダムFOB",     "season": "通年", "buyKeyword": "キャノーラ油" },
+    { "slug": "palm-oil",     "column": "Palm oil",                    "name": "パーム油",     "emoji": "🌴", "category": "豆・油糧", "unit": "USD/トン",       "origin": "マレーシア先物",       "season": "通年", "buyKeyword": "パーム油" },
+    { "slug": "olive-oil",    "column": "Olive Oil",                   "name": "オリーブ油",   "emoji": "🫒", "category": "豆・油糧", "unit": "USD/トン",       "origin": "エキストラバージン",   "season": "秋〜冬が搾油期", "buyKeyword": "オリーブオイル" },
+    { "slug": "sunflower-oil","column": "Sunflower oil",               "name": "ひまわり油",   "emoji": "🌻", "category": "豆・油糧", "unit": "USD/トン",       "origin": "米国メキシコ湾岸輸出", "season": "夏が開花期", "buyKeyword": "ひまわり油" },
+    { "slug": "groundnut",    "column": "Groundnuts peanuts",          "name": "落花生",       "emoji": "🥜", "category": "豆・油糧", "unit": "USD/トン",       "origin": "40/50カウント",       "season": "秋が収穫期", "buyKeyword": "ピーナッツ" },
+    { "slug": "beef",         "column": "Beef",                        "name": "牛肉",         "emoji": "🥩", "category": "畜産",     "unit": "USセント/ポンド", "origin": "豪州・NZ産",           "season": "通年", "buyKeyword": "牛肉" },
+    { "slug": "pork",         "column": "Swine - pork",                "name": "豚肉",         "emoji": "🐖", "category": "畜産",     "unit": "USセント/ポンド", "origin": "赤身51-52%ホッグ",     "season": "通年", "buyKeyword": "豚肉" },
+    { "slug": "chicken",      "column": "Poultry chicken",             "name": "鶏肉",         "emoji": "🐓", "category": "畜産",     "unit": "USセント/ポンド", "origin": "丸鶏 ジョージアドック", "season": "通年", "buyKeyword": "鶏肉" },
+    { "slug": "lamb",         "column": "Lamb",                        "name": "ラム肉",       "emoji": "🐑", "category": "畜産",     "unit": "USセント/ポンド", "origin": "冷凍カーカス ロンドン", "season": "春が旬", "buyKeyword": "ラム肉" },
+    { "slug": "salmon",       "column": "Fish salmon",                 "name": "サーモン",     "emoji": "🐟", "category": "水産",     "unit": "USD/kg",         "origin": "ノルウェー養殖",       "season": "秋〜冬が脂のり", "buyKeyword": "サーモン" },
+    { "slug": "shrimp",       "column": "Shrimp",                      "name": "エビ",         "emoji": "🦐", "category": "水産",     "unit": "USD/kg",         "origin": "メキシコ産",           "season": "通年", "buyKeyword": "エビ" },
+    { "slug": "fishmeal",     "column": "Fishmeal",                    "name": "フィッシュミール", "emoji": "🐠", "category": "水産", "unit": "USD/トン",       "origin": "ペルー産",             "season": "通年", "buyKeyword": "フィッシュミール" },
+    { "slug": "sugar",        "column": "Sugar Free Market",           "name": "砂糖",         "emoji": "🍬", "category": "嗜好品",   "unit": "USセント/ポンド", "origin": "自由市場 CSCE11番",   "season": "冬が製糖期", "buyKeyword": "砂糖" },
+    { "slug": "coffee-arabica","column": "Coffee Other Mild Arabicas", "name": "コーヒー（アラビカ）", "emoji": "☕", "category": "嗜好品", "unit": "USセント/ポンド", "origin": "マイルドアラビカ", "season": "通年", "buyKeyword": "コーヒー豆" },
+    { "slug": "coffee-robusta","column": "Coffee Robusta",             "name": "コーヒー（ロブスタ）", "emoji": "☕", "category": "嗜好品", "unit": "USセント/ポンド", "origin": "ロブスタ種", "season": "通年", "buyKeyword": "コーヒー ロブスタ" },
+    { "slug": "cocoa",        "column": "Cocoa beans",                 "name": "カカオ豆",     "emoji": "🍫", "category": "嗜好品",   "unit": "USD/トン",       "origin": "国際ココア機関",       "season": "通年", "buyKeyword": "チョコレート" },
+    { "slug": "tea",          "column": "Tea",                         "name": "紅茶",         "emoji": "🍵", "category": "嗜好品",   "unit": "USセント/kg",    "origin": "ケニア・モンバサ競売", "season": "通年", "buyKeyword": "紅茶" }
+  ]
+}

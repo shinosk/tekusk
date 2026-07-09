@@ -1,0 +1,17 @@
+{
+  "generatedAt": "2026-07-09T23:40:59.575Z",
+  "source": {
+    "id": "commodity",
+    "title": "国際商品市況（食品・青果コモディティ）",
+    "url": "https://raw.githubusercontent.com/datasets/commodity-prices/main/data/commodity-prices.csv",
+    "homepage": "https://github.com/datasets/commodity-prices",
+    "license": "ODC-PDDL-1.0 (Public Domain Dedication and License)",
+    "licenseUrl": "http://opendatacommons.org/licenses/pddl/",
+    "attribution": "Frictionless Data / Open Knowledge Foundation「Commodity Prices」（原データ: IMF）",
+    "cadence": "monthly"
+  },
+  "itemCount": 26,
+  "totalPoints": 11674,
+  "latestDate": "2017-06-01",
+  "missing": []
+}

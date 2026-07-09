@@ -1,0 +1,19 @@
+{
+  "name": "tekusk",
+  "version": "1.0.0",
+  "private": true,
+  "description": "野菜・果物・食品の市況価格を毎日自動更新する静的サイトジェネレータ",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "fetch": "node scripts/fetch.mjs",
+    "build": "node scripts/build.mjs",
+    "update": "node scripts/fetch.mjs && node scripts/build.mjs",
+    "test": "node --test",
+    "serve": "node scripts/serve.mjs"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

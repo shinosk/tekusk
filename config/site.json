@@ -1,0 +1,18 @@
+{
+  "siteName": "青果・食品価格ナビ",
+  "tagline": "野菜・果物・食品の市況価格を自動で毎日チェック",
+  "description": "野菜・果物をはじめとする食品コモディティの国際市況価格を毎日自動更新。品目別の価格推移、平年比、いまが買い時の品目をわかりやすく可視化するユーティリティサイトです。",
+  "baseUrl": "https://example.github.io/tekusk",
+  "lang": "ja",
+  "locale": "ja_JP",
+  "author": "青果・食品価格ナビ 編集部（自動生成）",
+  "adsenseClientId": "",
+  "adsenseSlotTop": "",
+  "adsenseSlotItem": "",
+  "affiliate": {
+    "enabled": false,
+    "note": "config/site.json の affiliate.enabled を true にし、リンクを設定すると各ページに表示されます。",
+    "links": []
+  },
+  "analyticsId": ""
+}

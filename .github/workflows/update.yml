@@ -1,0 +1,76 @@
+name: Daily update & deploy
+
+on:
+  schedule:
+    # 22:00 UTC = 07:00 JST（日本時間の朝）に日次実行
+    - cron: '0 22 * * *'
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+
+# GitHub Pages デプロイに必要な権限 + data/ の自動コミット用
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# 同時実行を1本に絞る（cronとpushの競合防止）
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # 外部依存ゼロだが、将来のためにキャッシュ可能な install ステップを用意
+      - name: Install deps
+        run: npm ci || npm install
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Fetch data (fail-safe)
+        run: node scripts/fetch.mjs
+
+      - name: Commit data changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "No data changes to commit."
+          else
+            git commit -m "chore(data): daily price update [skip ci]"
+            git push
+          fi
+
+      - name: Build site
+        run: node scripts/build.mjs
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: update
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
