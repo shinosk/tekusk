@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-09T23:55:34.551Z",
+  "generatedAt": "2026-07-09T23:56:21.539Z",
   "note": "Raw samples from candidate production data sources (see docs/data-sources.md). Re-running scripts/probe.mjs overwrites this file and files/ in place — it does not accumulate.",
   "seedUrls": [
     "https://www.shijou.metro.tokyo.lg.jp/",
@@ -12,69 +12,95 @@
   "results": [
     {
       "url": "https://www.shijou.metro.tokyo.lg.jp/",
-      "fetchedAt": "2026-07-09T23:55:33.256Z",
-      "ok": false,
-      "status": 403,
-      "contentType": "text/plain",
-      "byteLength": 115,
-      "savedBytes": 115,
-      "truncated": false,
-      "file": "files/001-www.shijou.metro.tokyo.lg.jp_.txt"
+      "fetchedAt": "2026-07-09T23:56:14.137Z",
+      "ok": true,
+      "status": 200,
+      "contentType": "text/html;charset=UTF-8",
+      "byteLength": 606797,
+      "savedBytes": 204800,
+      "truncated": true,
+      "file": "files/001-www.shijou.metro.tokyo.lg.jp_.html",
+      "linksFound": 122,
+      "linksToFollow": []
     },
     {
       "url": "https://www.shijou.metro.tokyo.lg.jp/torihiki/geppo/",
-      "fetchedAt": "2026-07-09T23:55:33.572Z",
-      "ok": false,
-      "status": 403,
-      "contentType": "text/plain",
-      "byteLength": 115,
-      "savedBytes": 115,
-      "truncated": false,
-      "file": "files/002-www.shijou.metro.tokyo.lg.jp_torihiki_geppo_.txt"
+      "fetchedAt": "2026-07-09T23:56:15.237Z",
+      "ok": true,
+      "status": 200,
+      "contentType": "text/html;charset=UTF-8",
+      "byteLength": 750575,
+      "savedBytes": 204800,
+      "truncated": true,
+      "file": "files/002-www.shijou.metro.tokyo.lg.jp_torihiki_geppo_.html",
+      "linksFound": 1614,
+      "linksToFollow": []
     },
     {
       "url": "https://www.shijou.metro.tokyo.lg.jp/torihiki/nippo/",
-      "fetchedAt": "2026-07-09T23:55:33.577Z",
-      "ok": false,
-      "status": 403,
-      "contentType": "text/plain",
-      "byteLength": 115,
-      "savedBytes": 115,
-      "truncated": false,
-      "file": "files/003-www.shijou.metro.tokyo.lg.jp_torihiki_nippo_.txt"
+      "fetchedAt": "2026-07-09T23:56:15.673Z",
+      "ok": true,
+      "status": 200,
+      "contentType": "text/html;charset=UTF-8",
+      "byteLength": 466759,
+      "savedBytes": 204800,
+      "truncated": true,
+      "file": "files/003-www.shijou.metro.tokyo.lg.jp_torihiki_nippo_.html",
+      "linksFound": 82,
+      "linksToFollow": []
     },
     {
       "url": "https://vegetan.alic.go.jp/",
-      "fetchedAt": "2026-07-09T23:55:33.582Z",
-      "ok": false,
-      "status": 403,
-      "contentType": "text/plain",
-      "byteLength": 105,
-      "savedBytes": 105,
+      "fetchedAt": "2026-07-09T23:56:16.074Z",
+      "ok": true,
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "byteLength": 60496,
+      "savedBytes": 60496,
       "truncated": false,
-      "file": "files/004-vegetan.alic.go.jp_.txt"
+      "file": "files/004-vegetan.alic.go.jp_.html",
+      "linksFound": 46,
+      "linksToFollow": [
+        "https://vegetan.alic.go.jp/wp-content/uploads/seisen.xls"
+      ]
+    },
+    {
+      "url": "https://vegetan.alic.go.jp/wp-content/uploads/seisen.xls",
+      "fetchedAt": "2026-07-09T23:56:17.265Z",
+      "ok": true,
+      "status": 200,
+      "contentType": "application/vnd.ms-excel",
+      "byteLength": 80384,
+      "savedBytes": 80384,
+      "truncated": false,
+      "file": "files/005-vegetan.alic.go.jp_wp-content_uploads_seisen.xls.xls",
+      "followedFrom": "https://vegetan.alic.go.jp/"
     },
     {
       "url": "https://www.maff.go.jp/j/zyukyu/anpo/kouri/",
-      "fetchedAt": "2026-07-09T23:55:33.854Z",
-      "ok": false,
-      "status": 403,
-      "contentType": "text/plain",
-      "byteLength": 101,
-      "savedBytes": 101,
+      "fetchedAt": "2026-07-09T23:56:17.578Z",
+      "ok": true,
+      "status": 200,
+      "contentType": "text/html",
+      "byteLength": 44901,
+      "savedBytes": 44901,
       "truncated": false,
-      "file": "files/005-www.maff.go.jp_j_zyukyu_anpo_kouri_.txt"
+      "file": "files/006-www.maff.go.jp_j_zyukyu_anpo_kouri_.html",
+      "linksFound": 258,
+      "linksToFollow": []
     },
     {
       "url": "https://www.e-stat.go.jp/stat-search/files?toukei=00500226",
-      "fetchedAt": "2026-07-09T23:55:34.240Z",
-      "ok": false,
-      "status": 403,
-      "contentType": "text/plain",
-      "byteLength": 103,
-      "savedBytes": 103,
-      "truncated": false,
-      "file": "files/006-www.e-stat.go.jp_stat-search_files_toukei_00500226.txt"
+      "fetchedAt": "2026-07-09T23:56:18.214Z",
+      "ok": true,
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "byteLength": 387279,
+      "savedBytes": 204800,
+      "truncated": true,
+      "file": "files/007-www.e-stat.go.jp_stat-search_files_toukei_00500226.html",
+      "linksFound": 356,
+      "linksToFollow": []
     }
   ]
 }
