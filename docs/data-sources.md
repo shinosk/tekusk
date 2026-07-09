@@ -79,6 +79,27 @@ User-Agent を付与しても到達できません（サイト側の403ではな
 - そのため本サイトは「食品コモディティ価格（青果を含む）」として正確に表示・出典明示し、
   誇張のない範囲でトップの企画（値上がり/値下がり、平年比、買い時）を提供している。
 
+## 本番ランナーからの到達性検証（probe workflow）
+
+上記の egress 403 は**このビルドサンドボックス固有の制約**であり、日本政府系ホストが
+実在しない/廃止されたことを意味しません。本番の GitHub Actions ホストランナーからは
+通常どおり到達できる可能性が高いため、その検証自体を自動化しています。
+
+- `.github/workflows/probe.yml`（`workflow_dispatch` 専用）を手動実行すると、
+  ランナー上で `node scripts/probe.mjs` が下記の候補URLへ実際にHTTPリクエストを行い、
+  HTTPステータス・content-type・本文サンプル（テキストは先頭200KB、バイナリは先頭1MB）を
+  `data/raw-samples/index.json` と `data/raw-samples/files/` に保存し、実行ブランチへコミット・プッシュします。
+- 対象URL: 東京都中央卸売市場（トップ／月報／日報）、ベジ探、農林水産省 食品価格動向調査、e-Stat。
+  HTML応答からは `.csv/.xlsx/.xls/.zip` へのリンクや「日報・旬報・月報・統計・価格」を含む
+  同一ホスト内リンクを最大10件まで1階層だけ追加取得します。
+- `scripts/probe.mjs` は `scripts/fetch.mjs` と同じfail-safe設計です。1つのURLが失敗（403等）しても
+  他のURLの取得を継続し、結果はすべて記録したうえで必ず終了コード0で終わります。
+  再実行時は `data/raw-samples/` を上書きするため、実行のたびに肥大化することはありません。
+- **開発フロー**: probe実行 → `data/raw-samples/` の実データ（HTMLのリンク構造、CSV/Excelの
+  列レイアウトなど）を確認 → その実データに基づいて `src/lib/sources.mjs` の
+  `estatAdapter.fetchCsv`（現状は意図的なスタブ）を実装 → `node scripts/fetch.mjs --source=estat` で
+  本番ソースへ切り替え。サイト生成側（`scripts/build.mjs` 等）は無改修。
+
 ## ソースアダプタ方式
 
 `src/lib/sources.mjs` にアダプタを定義。`commodity`（検証済み・稼働中）と `estat`（本番想定・スタブ）を用意。

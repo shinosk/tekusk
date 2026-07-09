@@ -1,0 +1,80 @@
+{
+  "generatedAt": "2026-07-09T23:55:34.551Z",
+  "note": "Raw samples from candidate production data sources (see docs/data-sources.md). Re-running scripts/probe.mjs overwrites this file and files/ in place — it does not accumulate.",
+  "seedUrls": [
+    "https://www.shijou.metro.tokyo.lg.jp/",
+    "https://www.shijou.metro.tokyo.lg.jp/torihiki/geppo/",
+    "https://www.shijou.metro.tokyo.lg.jp/torihiki/nippo/",
+    "https://vegetan.alic.go.jp/",
+    "https://www.maff.go.jp/j/zyukyu/anpo/kouri/",
+    "https://www.e-stat.go.jp/stat-search/files?toukei=00500226"
+  ],
+  "results": [
+    {
+      "url": "https://www.shijou.metro.tokyo.lg.jp/",
+      "fetchedAt": "2026-07-09T23:55:33.256Z",
+      "ok": false,
+      "status": 403,
+      "contentType": "text/plain",
+      "byteLength": 115,
+      "savedBytes": 115,
+      "truncated": false,
+      "file": "files/001-www.shijou.metro.tokyo.lg.jp_.txt"
+    },
+    {
+      "url": "https://www.shijou.metro.tokyo.lg.jp/torihiki/geppo/",
+      "fetchedAt": "2026-07-09T23:55:33.572Z",
+      "ok": false,
+      "status": 403,
+      "contentType": "text/plain",
+      "byteLength": 115,
+      "savedBytes": 115,
+      "truncated": false,
+      "file": "files/002-www.shijou.metro.tokyo.lg.jp_torihiki_geppo_.txt"
+    },
+    {
+      "url": "https://www.shijou.metro.tokyo.lg.jp/torihiki/nippo/",
+      "fetchedAt": "2026-07-09T23:55:33.577Z",
+      "ok": false,
+      "status": 403,
+      "contentType": "text/plain",
+      "byteLength": 115,
+      "savedBytes": 115,
+      "truncated": false,
+      "file": "files/003-www.shijou.metro.tokyo.lg.jp_torihiki_nippo_.txt"
+    },
+    {
+      "url": "https://vegetan.alic.go.jp/",
+      "fetchedAt": "2026-07-09T23:55:33.582Z",
+      "ok": false,
+      "status": 403,
+      "contentType": "text/plain",
+      "byteLength": 105,
+      "savedBytes": 105,
+      "truncated": false,
+      "file": "files/004-vegetan.alic.go.jp_.txt"
+    },
+    {
+      "url": "https://www.maff.go.jp/j/zyukyu/anpo/kouri/",
+      "fetchedAt": "2026-07-09T23:55:33.854Z",
+      "ok": false,
+      "status": 403,
+      "contentType": "text/plain",
+      "byteLength": 101,
+      "savedBytes": 101,
+      "truncated": false,
+      "file": "files/005-www.maff.go.jp_j_zyukyu_anpo_kouri_.txt"
+    },
+    {
+      "url": "https://www.e-stat.go.jp/stat-search/files?toukei=00500226",
+      "fetchedAt": "2026-07-09T23:55:34.240Z",
+      "ok": false,
+      "status": 403,
+      "contentType": "text/plain",
+      "byteLength": 103,
+      "savedBytes": 103,
+      "truncated": false,
+      "file": "files/006-www.e-stat.go.jp_stat-search_files_toukei_00500226.txt"
+    }
+  ]
+}

@@ -10,6 +10,7 @@ import { lineChartSvg } from '../src/lib/chart.mjs';
 import { esc } from '../src/lib/html.mjs';
 import { fmtNum, fmtPct, fmtMonth, fmtDate, trendClass } from '../src/lib/format.mjs';
 import { weeklyReport, headline, itemBlurb } from '../src/lib/report.mjs';
+import { freshnessCopy } from '../src/lib/freshness.mjs';
 
 async function readJson(p, fallback) {
   try {
@@ -53,6 +54,7 @@ function statBox(k, v) {
 // ---- Page: item ----------------------------------------------------------
 function renderItemPage(site, meta, entry, updatedLabel) {
   const { item, stats } = entry;
+  const freshness = site.freshness || freshnessCopy(meta.latestDate);
   const s = item.series;
   const recent = s.slice(-36);
   const canonicalPath = `/items/${item.slug}/`;
@@ -68,7 +70,7 @@ function renderItemPage(site, meta, entry, updatedLabel) {
 <p class="lead">${esc(itemBlurb(item, stats))} ${buyBadge}</p>
 
 <div class="statgrid">
-  ${statBox('最新価格', `${fmtNum(stats.latest.price)}<small> ${esc(item.unit)}</small>`)}
+  ${statBox(freshness.priceLabel, `${fmtNum(stats.latest.price)}<small> ${esc(item.unit)}</small>`)}
   ${statBox('前月比', pctCell(stats.momPct))}
   ${statBox('前年比', pctCell(stats.yoyPct))}
   ${statBox('平年比', pctCell(stats.vsNormalPct))}
@@ -145,6 +147,7 @@ function breadcrumbLd(site, items) {
 
 // ---- Page: index ---------------------------------------------------------
 function renderIndex(site, meta, entries, rankings, updatedLabel) {
+  const freshness = site.freshness || freshnessCopy(meta.latestDate);
   const byCat = new Map();
   for (const e of entries) {
     if (!byCat.has(e.item.category)) byCat.set(e.item.category, []);
@@ -189,9 +192,9 @@ function renderIndex(site, meta, entries, rankings, updatedLabel) {
     .join('');
 
   const body = `
-<h1>今週の野菜・食品価格ナビ</h1>
+<h1>${esc(freshness.indexTitle)}</h1>
 <p class="lead">${esc(headline(meta, rankings))}</p>
-<div class="notice">最新集計: <strong>${fmtMonth(meta.latestDate)}</strong>／対象 ${entries.length} 品目。データは毎日自動で取得・更新しています。</div>
+<div class="notice">最新集計: <strong>${fmtMonth(meta.latestDate)}</strong>／対象 ${entries.length} 品目。${esc(freshness.updateNotice)}</div>
 
 <h2>🟢 いまが買い時の品目</h2>
 <p class="lead">平年（同月の過去平均）と直近12か月の水準をどちらも下回っている＝割安な品目です。</p>
@@ -236,7 +239,8 @@ ${catSections}
 
 // ---- Page: weekly --------------------------------------------------------
 function renderWeekly(site, meta, entries, rankings, updatedLabel) {
-  const rep = weeklyReport(meta, entries, rankings);
+  const freshness = site.freshness || freshnessCopy(meta.latestDate);
+  const rep = weeklyReport(meta, entries, rankings, freshness);
   const movers = [...rankings.risers.slice(0, 3), ...rankings.fallers.slice(0, 3)];
   const body = `
 <h1>${esc(rep.title)}</h1>
@@ -247,7 +251,7 @@ ${adSlot(site, site.adsenseSlotTop)}
 
 <h2>主な値動き</h2>
 <table>
-  <thead><tr><th>品目</th><th class="num">最新価格</th><th class="num">前月比</th><th class="num">平年比</th></tr></thead>
+  <thead><tr><th>品目</th><th class="num">${esc(freshness.priceLabel)}</th><th class="num">前月比</th><th class="num">平年比</th></tr></thead>
   <tbody>${movers
     .map(
       (e) =>
@@ -271,9 +275,29 @@ ${adSlot(site, site.adsenseSlotTop)}
 // ---- Page: about ---------------------------------------------------------
 function renderAbout(site, meta, updatedLabel) {
   const src = meta.source;
+  const freshness = site.freshness || freshnessCopy(meta.latestDate);
+
+  const leadAuto = freshness.archive
+    ? `公開オープンデータをもとに価格情報を自動生成するユーティリティサイトです。` +
+      `現在のデータソースは${freshness.label}時点で更新が止まった月次アーカイブのため、掲載価格自体は日々変動しません。`
+    : `公開オープンデータをもとに価格情報を<strong>自動生成・毎日更新</strong>するユーティリティサイトです。`;
+
+  const cadenceCell = freshness.archive
+    ? `${esc(src.cadence)}（データソースは更新が止まった月次アーカイブです）`
+    : `${esc(src.cadence)}（本サイトは日次で自動チェック）`;
+
+  const disclosureBody = freshness.archive
+    ? `本サイトのページ生成は GitHub Actions で日次スケジュール実行されますが、` +
+      `現在の元データソースは${freshness.label}時点で更新が止まっている月次アーカイブです。` +
+      `そのため掲載価格自体は日々変わりません。本番想定の政府系データソース（e-Stat・農林水産省 等）に` +
+      `切り替わり次第、この開示は自動的に日次更新中の表示へ戻ります。詳細は下記「本番運用で想定するデータソース」を参照してください。`
+    : `本サイトのすべてのページは、GitHub Actions の日次スケジュール（日本時間の朝）で
+データ取得スクリプトとページ生成スクリプトを実行し、自動的に再構築・公開されています。
+編集者による手動の価格入力・修正は行っていません。`;
+
   const body = `
 <h1>データ出典・このサイトについて</h1>
-<p class="lead">${esc(site.siteName)}は、公開オープンデータをもとに価格情報を<strong>自動生成・毎日更新</strong>するユーティリティサイトです。</p>
+<p class="lead">${esc(site.siteName)}は、${leadAuto}</p>
 
 <h2>データの出典</h2>
 <table>
@@ -281,14 +305,12 @@ function renderAbout(site, meta, updatedLabel) {
   <tr><th>提供元・出典表示</th><td>${esc(src.attribution)}</td></tr>
   <tr><th>取得元URL</th><td><a href="${esc(src.homepage)}" rel="nofollow">${esc(src.homepage)}</a></td></tr>
   <tr><th>ライセンス</th><td><a href="${esc(src.licenseUrl)}" rel="nofollow">${esc(src.license)}</a></td></tr>
-  <tr><th>更新頻度</th><td>${esc(src.cadence)}（本サイトは日次で自動チェック）</td></tr>
+  <tr><th>更新頻度</th><td>${cadenceCell}</td></tr>
   <tr><th>最新データ</th><td>${fmtMonth(meta.latestDate)}</td></tr>
 </table>
 
 <h2>自動更新であることの開示</h2>
-<p>本サイトのすべてのページは、GitHub Actions の日次スケジュール（日本時間の朝）で
-データ取得スクリプトとページ生成スクリプトを実行し、自動的に再構築・公開されています。
-編集者による手動の価格入力・修正は行っていません。</p>
+<p>${disclosureBody}</p>
 
 <h2>指標の算出方法</h2>
 <ul>
@@ -322,13 +344,16 @@ function renderAbout(site, meta, updatedLabel) {
 }
 
 // ---- assets --------------------------------------------------------------
-function ogSvg(site, meta) {
+function ogSvg(site, meta, freshness) {
+  const tail = freshness.archive
+    ? `品目（月次アーカイブ・${freshness.label}まで）`
+    : '品目を毎日自動更新';
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
 <rect width="1200" height="630" fill="#0f2e20"/>
 <rect x="0" y="0" width="1200" height="12" fill="#4ecb8b"/>
 <text x="80" y="230" font-family="sans-serif" font-size="86" font-weight="700" fill="#ffffff">🥬 ${esc(site.siteName)}</text>
 <text x="80" y="320" font-family="sans-serif" font-size="42" fill="#bfe6d2">${esc(site.tagline)}</text>
-<text x="80" y="470" font-family="sans-serif" font-size="34" fill="#9fd8bb">最新集計: ${esc(fmtMonth(meta.latestDate))}／${esc(String(meta.itemCount))}品目を毎日自動更新</text>
+<text x="80" y="470" font-family="sans-serif" font-size="34" fill="#9fd8bb">最新集計: ${esc(fmtMonth(meta.latestDate))}／${esc(String(meta.itemCount))}${esc(tail)}</text>
 </svg>`;
 }
 
@@ -356,13 +381,26 @@ Sitemap: ${base}/sitemap.xml
 
 // ---- main ----------------------------------------------------------------
 async function main() {
-  const site = await readJson(path.join(CONFIG_DIR, 'site.json'), {});
+  const rawSite = await readJson(path.join(CONFIG_DIR, 'site.json'), {});
   const meta = await readJson(path.join(DATA_DIR, 'meta.json'), null);
   const records = await loadItems();
 
   if (!meta || records.length === 0) {
     throw new Error('build: no data found. Run `npm run fetch` first.');
   }
+
+  // Data-driven freshness: if the latest known data point is older than the
+  // archive threshold (see src/lib/freshness.mjs), every "live/daily" claim
+  // in the site copy is swapped for an honest "archive" framing, and a
+  // banner is shown on every page. Reverts automatically once a live source
+  // produces recent data.
+  const freshness = freshnessCopy(meta.latestDate, new Date());
+  const site = {
+    ...rawSite,
+    tagline: freshness.archive ? freshness.tagline : rawSite.tagline,
+    description: freshness.archive ? freshness.description : rawSite.description,
+    freshness,
+  };
 
   const entries = records
     .map((item) => ({ item, stats: computeItemStats(item) }))
@@ -383,7 +421,7 @@ async function main() {
 
   // assets
   await write('assets/style.css', STYLESHEET);
-  await write('assets/og.svg', ogSvg(site, meta));
+  await write('assets/og.svg', ogSvg(site, meta, freshness));
   await write('.nojekyll', '');
 
   // pages

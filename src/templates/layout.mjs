@@ -65,6 +65,8 @@ footer.site a{color:var(--muted);text-decoration:underline}
 .breadcrumb{font-size:.82rem;color:var(--muted);margin:4px 0 10px}
 .breadcrumb a{color:var(--muted)}
 .cat-tag{font-size:.78rem;color:var(--muted)}
+.archive-banner{background:#7a4a12;color:#fff8ec;text-align:center;font-size:.85rem;padding:8px 14px}
+@media (prefers-color-scheme:dark){.archive-banner{background:#5c3a11;color:#ffe9c7}}
 @media (max-width:520px){h1{font-size:1.35rem}nav.main a{margin-left:10px}}
 `;
 
@@ -81,6 +83,26 @@ export function adSlot(site, slotId) {
 function adsenseHead(site) {
   if (!site.adsenseClientId) return '';
   return `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${esc(site.adsenseClientId)}" crossorigin="anonymous"></script>`;
+}
+
+// Data-freshness banner (site.freshness is attached by scripts/build.mjs from
+// src/lib/freshness.mjs). Only rendered when the underlying data is stale, so
+// the site never displays a live/daily banner alongside archived data. Placed
+// at the very top of <body> so it is prominent on every page.
+function archiveBanner(site) {
+  const f = site.freshness;
+  if (!f || !f.banner) return '';
+  return `<div class="archive-banner">${esc(f.banner)}</div>`;
+}
+
+// Footer disclosure sentence: honest "daily update" copy when data is fresh,
+// honest "frozen archive" copy when it isn't. freshnessCopy's strings are
+// static (no user input), so — consistent with the rest of this literal —
+// they are not passed through esc().
+function footerNotice(site) {
+  const f = site.freshness;
+  if (f && f.footerNotice) return f.footerNotice;
+  return '本サイトは公開オープンデータをもとに<strong>自動生成・毎日更新</strong>される情報サイトです。';
 }
 
 // page: { title, description, path, canonical, breadcrumb:[{name,url}], jsonld:[], body }
@@ -114,6 +136,7 @@ ${adsenseHead(site)}
 ${jsonldBlocks}
 </head>
 <body>
+${archiveBanner(site)}
 <header class="site"><div class="wrap">
   <a class="brand" href="/">🥬 ${esc(site.siteName.replace('価格ナビ', ''))}<span>価格ナビ</span></a>
   <nav class="main">
@@ -127,7 +150,7 @@ ${page.breadcrumb ? renderBreadcrumb(page.breadcrumb) : ''}
 ${page.body}
 </div></main>
 <footer class="site"><div class="wrap">
-  <p>${esc(site.siteName)} — 本サイトは公開オープンデータをもとに<strong>自動生成・毎日更新</strong>される情報サイトです。価格は参考値であり取引を保証するものではありません。</p>
+  <p>${esc(site.siteName)} — ${footerNotice(site)} 価格は参考値であり取引を保証するものではありません。</p>
   <p><a href="/about/">データ出典・免責事項</a>　|　最終更新: ${esc(page.updatedLabel || '')}</p>
 </div></footer>
 </body>

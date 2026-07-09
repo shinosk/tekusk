@@ -27,8 +27,12 @@ export function headline(meta, rankings) {
 }
 
 // Full weekly report: array of paragraphs (plain text).
-export function weeklyReport(meta, itemsWithStats, rankings) {
+// `freshness` (from src/lib/freshness.mjs) is optional; when it flags the
+// data as an archive, the closing paragraph switches from a "daily update"
+// claim to an honest archive disclosure instead.
+export function weeklyReport(meta, itemsWithStats, rankings, freshness = null) {
   const monthLabel = fmtMonth(meta.latestDate);
+  const archive = !!(freshness && freshness.archive);
   const p = [];
 
   p.push(
@@ -69,10 +73,16 @@ export function weeklyReport(meta, itemsWithStats, rankings) {
 
   p.push(
     `価格はあくまで国際市況の参考値です。品目ごとの詳しい推移は各品目ページのチャートをご覧ください。` +
-      `本サイトは毎日自動でデータを取得・更新しています。`
+      (archive
+        ? `本サイトのデータは${monthLabel}時点までの月次アーカイブです。`
+        : `本サイトは毎日自動でデータを取得・更新しています。`)
   );
 
-  return { title: `${monthLabel} 価格まとめレポート`, paragraphs: p, monthLabel };
+  return {
+    title: archive ? `${monthLabel} 価格アーカイブ` : `${monthLabel} 価格まとめレポート`,
+    paragraphs: p,
+    monthLabel,
+  };
 }
 
 // Per-item short description sentence.
