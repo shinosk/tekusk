@@ -1,0 +1,134 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja" lang="ja">
+<head>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-NNZDJQC');</script>
+<!-- End Google Tag Manager -->
+<meta http-equiv="Content-Language" content="ja" />
+<meta http-equiv="Content-Type" content="text/html;charset=EUC-JP" />
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<meta http-equiv="Content-Script-Type" content="text/javascript" />
+<title>著作権について :: ベジ探</title>
+<meta name="Keywords" content="野菜,統計情報,貿易,生産量,出荷量,入荷量,消費量,市況動向,家計調査,卸売価格,市場価格,小売価格,農業気象,産地気象,海外気象,農業災害,東京都中央,大阪中央,加工野菜,生鮮野菜,冷凍野菜,キャベツ,レタス,にんじん,トマト,ほうれんそう,きゅうり,なす,たまねぎ,ばれいしょ,はくさい,ピーマン,ねぎ,だいこん,さといも,ブロッコリー,ベジシャス,需給,野菜需給協議会,価格動向,レポート,VEGETAN,Alic,独立行政法人農畜産業振興機構,ベジタン,べじたん" />
+<meta name="description" content="野菜情報総合把握システム（通称：ベジ探）は、独立行政法人農畜産業振興機構が運営するサイトです。野菜の市況、気象、輸入、輸出、消費動向、生産動向など野菜に係わる統計データをワンストップで収集・分析・データベース化し、インターネットにより提供しています。" />
+<meta name="copyright" content="独立行政法人 農畜産業振興機構 野菜情報総合把握システム" />
+<link rel="stylesheet" type="text/css" media="all" href="common/css/base.css" />
+<link rel="stylesheet" type="text/css" media="all" href="common/css/common.css" />
+<link rel="stylesheet" type="text/css" media="print" href="common/css/print.css" />
+<link rel="shortcut icon" href="images/favicon/favicon.ico" />
+<script type="text/javascript" src="common/js/jquery-1.4.4.min.js"></script>
+<script type="text/javascript" src="common/js/jquery.cookie.js"></script>
+<script type="text/javascript" src="common/js/common.js"></script>
+</head>
+
+<body id="second" class="textM">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NNZDJQC"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+	<div id="wrapper">
+		<div id="header">
+			<h1><a href="index.html"><img src="images/logo.gif" alt="ベジ探　独立行政法人 農畜産業振興機構 野菜情報総合把握システム" width="488" height="49" /></a></h1>
+			
+			<div id="formArea">
+				<img src="images/label_textSize.gif" alt="文字サイズ" id="label_textSize" />
+				<ul id="btn_textSize">
+					<li id="textS"><img src="images/btn_txtS.gif" alt="小" width="15" height="15" class="hover" /></li>
+					<li id="textM"><img src="images/btn_txtM.gif" alt="中" width="17" height="17" class="hover" /></li>
+					<li id="textL"><img src="images/btn_txtL.gif" alt="大" width="19" height="18" class="hover" /></li>
+				</ul>
+				<form action="http://alicSearch.alic.go.jp/search" method="get">
+					<input type="hidden" name="ie" value="EUC-JP" />
+					<input type="hidden" name="oe" value="EUC-JP" />
+					<input type="hidden" name="site" value="default_collection">
+					<input type="hidden" name="client" value="default_frontend">
+					<input type="hidden" name="proxystylesheet" value="default_frontend">
+					<input type="hidden" name="output" value="xml_no_dtd">
+					<input type="text" name="q" id="searchTxt" />
+					<input type="image" name="btnG" src="images/btn_search.gif" id="searchBtn" class="hover" />
+				</form>
+			</div>
+			
+<script language="JavaScript">
+<!--
+	if ($.cookie('JSESSIONID')==null) {
+		document.write("<a id=logout><img src=images/spacer.gif width=100 height=19 /></a>");
+		document.write("<a id=kaiin_joho><img src=images/spacer.gif width=100 height=19 /></a>");
+	} else {
+		document.write("<a href=https://vegetan.alic.go.jp/login.do?CMD=logout id=logout><img src=images/btn_logout.gif alt=ログアウト width=100 height=19 class=hover /></a>");
+		document.write("<a href=https://vegetan.alic.go.jp/menu.do id=kaiin_joho><img src=images/btn_kaiin.gif alt=会員情報変更 width=100 height=19 class=hover /></a>");
+	}
+//-->
+</script>
+			
+			<a href="rss.xml" id="rss"><img src="images/btn_rss.gif" alt="RSS" width="42" height="19" class="hover" /></a>
+			
+			<ul id="gnav">
+				<li id="gnav01"><a href="index.html"><img src="images/btn_gnav01.gif" alt="HOME" width="96" height="24" class="hover" /></a></li><!--
+				--><li id="gnav02"><a href="about.html"><img src="images/btn_gnav02.gif" alt="ベジ探とは？" width="100" height="24" class="hover" /></a></li><!--
+				--><li id="gnav03"><a href="vegetan_manual.html"><img src="images/btn_gnav03.gif" alt="ベジ探マニュアル" width="128" height="24" class="hover" /></a></li><!--
+				--><li id="gnav04"><a href="sitemap.html"><img src="images/btn_gnav04.gif" alt="サイトマップ" width="96" height="24" class="hover" /></a></li><!--
+				--><li id="gnav05"><a href="link.html"><img src="images/btn_gnav05.gif" alt="リンク集" width="72" height="24" class="hover" /></a></li><!--
+				--><li id="gnav06"><a href="https://www.alic.go.jp/cgi-bin/form/inquiry_vegetan.cgi" target="_blank"><img src="images/btn_gnav06.gif" alt="お問い合わせ" width="102" height="24" class="hover" /></a></li><!--
+				--><li id="gnav07"><a href="http://www.alic.go.jp" target="_blank"><img src="images/btn_gnav07.gif" alt="alicホームへ" height="24" class="hover" /></a></li>
+			</ul>
+		</div><!-- //header -->
+		
+		<div id="contents" class="clearfix">
+			<ul id="breadCrumb">
+				<li><a href="index.html">HOME</a></li>
+				<li class="last">著作権について</li>
+			</ul><!-- //breadCrumb -->
+			
+			<div id="main">
+				<h2>著作権について</h2>
+				<div id="login" class="inner">
+					<div id="FootCont">
+						<p id="lead">当ホームページに掲載されている情報の著作権は、特記されていない限り、独立行政法人農畜産業振興機構に帰属します。<br />
+						当ホームページの内容の全部又は一部については、私的使用又は引用等著作権法上認められた行為を除き、当機構に無断で引用、転載、複製を行うことはできません。</p>
+
+						<h3>リンクについて</h3>
+
+						<p id="lead">
+						<dl>
+						<dt>(1)</dt>
+						<dd>当ホームページへのリンクは、リンク先が「ベジ探」であることを明記して、できるだけ <a href="http://vegetan.alic.go.jp/">http://vegetan.alic.go.jp/</a>（メインメニュー） へリンクしてください。</dd>
+						<dt>(2)</dt>
+						<dd>やむを得ず、当ホームページ内の各ページにリンクを張る場合は、そのページが「ベジ探」のページ内にあることが分かるように、必ず明記してください。</dd>
+						<dt>(3)</dt>
+						<dd>当ホームページのコンテンツは、予告なしに内容を変更又は削除する場合があります。あらかじめご了承ください。</dd>
+						<dt>(4)</dt>
+						<dd>リンク設定を行った場合には、お手数ですがリンク元の URL を<a href="https://www.alic.go.jp/cgi-bin/form/inquiry_vegetan.cgi">こちら</a>からお知らせください。</dd>
+						</dl>
+						</p>
+
+						<h3>免責事項について</h3>
+
+						<p id="lead">機構は、当ホームページの情報やリンク等に関して生じた如何なる損害・不利益等についても一切の責任を負いません。<br />
+また、当ホームページからリンクを設定している他のサイトにつきましては、著作権及び内容に関する責任等は各サイトの開設者に帰属するものであり、当機構では責任を負いかねますのでご了承ください。</p>
+
+					</div>
+				</div>
+			</div><!-- //main -->
+
+		</div><!-- //contents -->
+		
+		<div id="footer" class="clearfix">
+			<address>独立行政法人農畜産業振興機構　〒106-8635 東京都港区麻布台2-2-1 麻布台ビル<br />
+			Tel:03-3583-8196 Fax:03-3582-3397</address>
+			
+			<ul id="fnav">
+				<li><a href="chosaku.html">著作権について</a></li>
+				<li><a href="privacy.html">プライバシーポリシー</a></li><!--
+				--><li class="last"><a href="riyou.html">当ホームページのご利用に当たって</a></li>
+			</ul>
+			
+			<div id="copyright">Copyright 2010 Agriculture &amp; Livestock Industries Corporation All rights Reserved.</div>
+		</div><!-- //footer -->
+	</div>
+</body>
+</html>
