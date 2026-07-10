@@ -64,6 +64,11 @@ jobs:
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
+        with:
+          # Pages サイト未作成なら Actions から自動作成を試みる
+          # (プライベートリポジトリ+無料プランでは失敗する。その場合は
+          #  リポジトリを public にするか Settings > Pages で有効化が必要)
+          enablement: true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
