@@ -37,7 +37,7 @@ const TIMEOUT_MS = 30000;
 const RETRIES = 2; // total attempts = RETRIES + 1
 const MAX_TEXT_BYTES = 200 * 1024; // 200KB cap for text-like bodies
 const MAX_BINARY_BYTES = 1024 * 1024; // 1MB cap for binary bodies (xlsx/zip/...)
-const MAX_FOLLOWED_LINKS_PER_PAGE = 10;
+const MAX_FOLLOWED_LINKS_PER_PAGE = 20;
 
 // href must look like a document link (csv/xlsx/xls/zip) or mention one of
 // these Japanese keywords for daily/ten-day/monthly reports, statistics, or
@@ -48,12 +48,12 @@ const LINK_KEYWORD_RE = /(日報|旬報|月報|統計|価格)/;
 // Candidate production sources. See docs/data-sources.md for the rationale
 // and licensing notes for each.
 const SEED_URLS = [
-  'https://www.shijou.metro.tokyo.lg.jp/',
-  'https://www.shijou.metro.tokyo.lg.jp/torihiki/geppo/',
-  'https://www.shijou.metro.tokyo.lg.jp/torihiki/nippo/',
-  'https://vegetan.alic.go.jp/',
-  'https://www.maff.go.jp/j/zyukyu/anpo/kouri/',
-  'https://www.e-stat.go.jp/stat-search/files?toukei=00500226',
+  // Round 2: ベジ探のデータ一覧・価格系ページ(第1回プローブで全ホスト到達可を
+  // 確認済み。ここから .xls/.csv 直リンクを収集して本番アダプタの対象を決める)
+  'https://vegetan.alic.go.jp/other/list-data.html',
+  'https://vegetan.alic.go.jp/price-trends/changes-arrivals-prices.html',
+  'https://vegetan.alic.go.jp/retail-price-trends/vegetable-retail-price.html',
+  'https://vegetan.alic.go.jp/retail-price-trends/price-trend-survey.html',
 ];
 
 function sanitizeName(url) {
