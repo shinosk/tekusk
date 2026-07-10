@@ -2,15 +2,15 @@
   "name": "tekusk",
   "version": "1.0.0",
   "private": true,
-  "description": "野菜・果物・食品の市況価格を毎日自動更新する静的サイトジェネレータ",
+  "description": "日本の野菜卸売価格（ベジ探）を毎日自動更新する静的サイトジェネレータ",
   "type": "module",
   "engines": {
     "node": ">=20"
   },
   "scripts": {
-    "fetch": "node scripts/fetch.mjs",
+    "fetch": "node scripts/fetch.mjs --source=vegetan && node scripts/fetch.mjs --source=commodity",
     "build": "node scripts/build.mjs",
-    "update": "node scripts/fetch.mjs && node scripts/build.mjs",
+    "update": "npm run fetch && node scripts/build.mjs",
     "test": "node --test",
     "serve": "node scripts/serve.mjs"
   },

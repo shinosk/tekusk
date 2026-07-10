@@ -3,17 +3,21 @@
 ## 概要
 公開オープンデータを日次で取得し、正規化してリポジトリ内 JSON（時系列DB）に蓄積、
 そこから静的HTMLを生成して GitHub Pages に配信する、完全自動運用の静的サイトジェネレータ。
-フレームワーク不使用・**外部npm依存ゼロ**（Node.js 標準APIのみ）。
+フレームワーク不使用・**外部npm依存ゼロ**（Node.js 標準APIのみ。xlsxのZIP/XML解析も自作）。
+
+主役は日本の野菜卸売価格（`vegetan` アダプタ＝ベジ探）。国際コモディティ（`commodity`）は
+2017年で凍結されたアーカイブとして `/archive/` 配下に維持する。
 
 ## データフロー
 
 ```
-[オープンデータCSV]
-      │  scripts/fetch.mjs   (source adapter → 正規化 → マージ)
-      ▼
-   data/items/<slug>.json   ← gitにコミット＝時系列DB（履歴が価格の推移になる）
-   data/meta.json
-      │  scripts/build.mjs   (鮮度判定 → 統計計算 → テンプレート → SVGチャート)
+[ベジ探 .xlsx（日次卸売×4ブック + 月次長期×19）]   [コモディティCSV（凍結）]
+      │  scripts/fetch.mjs --source=vegetan            │  --source=commodity
+      │  (adapter.fetchRaw → xlsx.mjs → vegetan.mjs 正規化 → mergeByDate)
+      ▼                                                ▼
+   data/items/<slug>.json   ← gitにコミット＝時系列DB（日次は追記蓄積・再取得で上書き）
+   data/meta.json           ← sources: { vegetan: {...}, commodity: {...} }（ソース別）
+      │  scripts/build.mjs   (ソース別鮮度判定 → 統計計算 → テンプレート → SVGチャート)
       ▼
    public/                  ← ビルド成果物（.gitignore）
       │  GitHub Actions: actions/deploy-pages
@@ -21,66 +25,86 @@
    GitHub Pages
 ```
 
-## プローブ→本番ソース実装フロー（開発時のみ）
+## フィクスチャ開発フロー（ベジ探）
+
+開発サンドボックスは egress 制限で `vegetan.alic.go.jp` へ到達できない（403）。
+本番 GitHub Actions ランナーで `scripts/probe.mjs` を実行して実レスポンスを
+`data/raw-samples/files/` にコミットバックし、その**実ファイルをフィクスチャ**として
+パーサを開発・テストする。
 
 ```
-.github/workflows/probe.yml (workflow_dispatch)
-      │  GitHub Actions ランナー（本サンドボックスと異なりegress制限なし）から
-      │  scripts/probe.mjs を実行
-      ▼
-   data/raw-samples/index.json, data/raw-samples/files/
-      │  実行ブランチへ自動コミット・プッシュ
-      ▼
-   開発者が data/raw-samples/ の実データ（HTML構造・CSV/Excel列構成）を確認
-      ▼
-   src/lib/sources.mjs の estatAdapter.fetchCsv を実装
-   （必要なら config/items.json の列マッピングを調整）
-      ▼
-   node scripts/fetch.mjs --source=estat でソース切替（build.mjs 側は無改修）
+probe.yml (workflow_dispatch, 本番ランナー)
+   → data/raw-samples/files/*.xlsx をコミットバック
+   → src/lib/xlsx.mjs / vegetan.mjs をフィクスチャに対して開発・テスト
+   → node scripts/fetch.mjs --source=vegetan --fixtures で検証
+   → 本番は同一の正規化経路で HTTP 取得（経路はフィクスチャ/HTTP共通、
+     分岐は vegetanAdapter.fetchRaw のバイト入手部分のみ）
 ```
 
-この一連の流れは「実データを見ないまま憶測でパーサを書かない」という本プロジェクトの方針を
-維持したまま、本番想定ソース（東京都中央卸売市場・ベジ探・農水省・e-Stat）への到達性と
-実際のレスポンス形式を確認するためのものです。`scripts/probe.mjs` は `scripts/fetch.mjs` と同じ
-fail-safe設計（1つのURLの失敗が他に波及しない・必ずexit 0）を踏襲しています。
+「実データを見ないまま憶測でパーサを書かない」方針はこの仕組みで維持している。
+probe.mjs の SEED_URLS は現在ベジ探の利用規約ページ（riyou.html / chosaku.html）を
+指しており、次回プローブで利用条件の原文を捕獲する。
+
+## ベジ探データの構造（フィクスチャで確認済みの事実）
+
+- **日次卸売** `kakakugurafu/{youkeisai,kasai,konsai,imo}.xlsx`
+  - ブック=部類（葉茎菜・果菜・根菜・いも類）、シート=品目（例「トマト」）＋「集計表」
+  - 1シートに約40行×4ブロック＝市場別（先頭行タイトルで確認: 東京都中央卸売市場・
+    名古屋市・大阪市・福岡市）。**先頭の東京ブロックを採用**
+  - ブロック構造: 日付行（先頭セル=月初日のExcelシリアル値、以降 "6/1","2",...,"7/2" と
+    月をまたぐラベル）→「入荷量」「卸売価格」「平均価格」（=平年値）「平年比」の行
+  - 当月+翌月分のセル枠があり、未来日は null/#N/A → スキップ。日次の長期蓄積は
+    data/ への mergeByDate 追記で実現（過去日の再取得値は上書き）
+- **月次長期** `wp-content/uploads/{item}.xlsx`（19品目、ファイル名は先方のtypoごと:
+  `rettuce`, `wthite-potato`, `burdosk` 等）
+  - シート「Sheet１」: 行=月（1月〜12月）、列=年。年見出しは和暦・西暦混在
+    （「平成18年」「2008年」）＋**先頭に無ラベルの2005年列**＋末尾に「平年値」列
+    （平年値=直近5か年平均であることを実データで検算して列対応を確定）
+  - 単位: 円/kg。当年の未来月も埋まっているため fetch 時に当月までにキャップ
+- **都市別小売** `kouri_cyousa/*.xlsx` — 実装スコープ外（フィクスチャのみ確保）
 
 ## モジュール
 
 | パス | 役割 |
 |---|---|
 | `config/site.json` | サイト名・baseUrl・AdSense/アフィリエイト設定 |
-| `config/items.json` | 品目カタログ（ソース列名 → slug/和名/分類/単位/旬） |
+| `config/items.json` | 品目カタログ。野菜は `source:"vegetan"` + `monthlyKey`/`dailyBook`/`dailySheet`（slug↔xlsx対応表）、コモディティは `source:"commodity"` + `column` |
+| `src/lib/xlsx.mjs` | **依存ゼロ .xlsx パーサ**。ZIPは**セントラルディレクトリ**を正として解析し `node:zlib.inflateRawSync` で展開。workbook.xml/rels/sharedStrings/worksheet を最小限パースし、シート名一覧と2次元配列を返す |
+| `src/lib/wareki.mjs` | 和暦（平成/令和等）→西暦変換、Excelシリアル日付変換。**純関数** |
+| `src/lib/vegetan.mjs` | ベジ探ブックの正規化（日次ブロック抽出・月次年列マップ）。**純関数** |
 | `src/lib/csv.mjs` | 依存なしCSVパーサ、数値パース（`nan`→null） |
-| `src/lib/normalize.mjs` | 横持ちCSV→品目別時系列。マージ（冪等・蓄積）。**純関数** |
-| `src/lib/stats.mjs` | 前月比/前年比/平年比/移動平均/買い時判定/ランキング。**純関数** |
-| `src/lib/chart.mjs` | SVG折れ線チャート自前生成（CDN不使用） |
-| `src/lib/report.mjs` | 週報・見出し・品目文の機械生成（テンプレ＋数値埋め込み） |
-| `src/lib/format.mjs` | 和書式（数値・％・年月） |
+| `src/lib/normalize.mjs` | 横持ちCSV→品目別時系列。`mergeSeries`/`mergeByDate`（冪等・蓄積・全フィールド保持）。**純関数** |
+| `src/lib/stats.mjs` | 統計。vegetan日次品目は**ソース提供の平年比**で買い時判定（`normalRatio < 0.9`）+ 日次ベースの直近1週間変化（rankPct）、月次品目は従来の前月比ベース。**純関数** |
+| `src/lib/chart.mjs` | SVG折れ線チャート自前生成（`xFormat:'md'` で日次のM/D軸に対応） |
+| `src/lib/report.mjs` | 週報・見出し・品目文の機械生成（日次/月次で文面を切替） |
+| `src/lib/format.mjs` | 和書式（数値・％・年月日） |
 | `src/lib/html.mjs` | HTMLエスケープ、JSON-LD出力 |
-| `src/lib/sources.mjs` | ソースアダプタ（`commodity` / `estat`）、リトライ付きfetch |
-| `src/lib/freshness.mjs` | データ鮮度（アーカイブ判定・90日閾値）→コピー/バナー切替。**純関数** |
-| `src/templates/layout.mjs` | ページシェル（head/meta/OGP/JSON-LD/CSS/広告スロット/鮮度バナー） |
-| `scripts/fetch.mjs` | 取得・正規化・書き込み（fail-safe） |
-| `scripts/build.mjs` | data/ → public/ 生成（鮮度判定を反映） |
-| `scripts/probe.mjs` | 本番想定ソース候補への到達性・実データサンプル収集（fail-safe、開発用） |
+| `src/lib/sources.mjs` | ソースアダプタ（`vegetan` / `commodity` / `estat` スタブ）、リトライ付きfetch（テキスト/バイナリ） |
+| `src/lib/freshness.mjs` | データ鮮度（90日閾値）→コピー/バナー切替。**純関数**。build.mjs が**ソース単位**に適用 |
+| `src/templates/layout.mjs` | ページシェル。`page.freshness` でページ（＝ソース）単位のバナー/フッター切替 |
+| `scripts/fetch.mjs` | 取得・正規化・書き込み（fail-safe・ソース別 meta マージ・`--fixtures`） |
+| `scripts/build.mjs` | data/ → public/ 生成（野菜中心トップ・/archive/・2段チャート品目ページ） |
+| `scripts/probe.mjs` | 本番ソースの実データサンプル収集（fail-safe、開発用） |
 | `scripts/serve.mjs` | ローカルプレビュー用サーバ |
 
 ## 設計上のポイント
 
 - **fail-safe fetch**: 取得・正規化に失敗した場合、既存 `data/` を一切変更せず終了コード0で抜ける
-  （`--strict` で1）。ネットワーク断でサイトが壊れない。0品目に正規化されたら書き込み拒否。
-- **fail-safe probe**: `scripts/probe.mjs` も同じ思想。どのURLが失敗しても他の候補URLの取得を継続し、
-  結果はすべて `data/raw-samples/index.json` に記録したうえで必ず終了コード0で終わる。
-  再実行時は `data/raw-samples/` を上書きするため、実行のたびにディレクトリが肥大化しない。
-- **冪等・蓄積**: `mergeSeries` が日付キーでマージ。同一データの再取得は同一結果。
-  日次の増分ソースでも履歴が積み上がる。
-- **データ鮮度に応じた誠実な表示**: `src/lib/freshness.mjs` がビルド時に全品目の最新データ日付を判定し、
-  90日より古ければ「毎日自動更新」等の現在性を示す文言を排して長期アーカイブとしての表現・バナーに切り替える。
-  最新日付が90日以内に戻れば自動的に「自動更新」系のコピーへ戻る（手動でのコピー書き換えは不要）。
-- **純関数コア**: 正規化・統計・鮮度判定はI/Oを持たず、`node --test` で単体テスト可能。
-- **依存ゼロ**: CSV/チャート/サーバ/プローブをすべて標準APIで自作。サプライチェーンリスク最小。
+  （`--strict` で1）。vegetan は個別ブックの失敗も握りつぶして残りを処理（0品目なら書き込み拒否）。
+- **冪等・蓄積**: `mergeByDate` が日付キーでマージ（全フィールド保持）。同一データの再取得は同一結果。
+  日次の増分ソース（当月分しか配布されない）でも履歴が積み上がり、過去日の改定値は上書きされる。
+  月次系列も既存とマージするため、一時的なブック取得失敗で蓄積が消えない。
+- **フィクスチャ=本番バイト**: パーサは本番ランナーが取得した実ファイルに対して開発・テスト。
+  フィクスチャ/HTTP の分岐はアダプタのバイト入手部分だけで、正規化経路は共通。
+- **鮮度はソース単位**: `meta.json` の `sources.{id}.latestDate` ごとに `freshnessCopy` を評価し、
+  ページ単位で正しいコピー/バナーを出す。vegetan=ライブ表示、commodity=アーカイブ表示が同一ビルドで共存。
+- **買い時=ソース提供の平年比**: ベジ探が計算済みの平年比（当日価格÷過去5か年同時期平均）を
+  そのまま使い、`< 0.9` で「買い時」。自前の再計算より原典に忠実。
+- **純関数コア**: xlsx/wareki/vegetan/正規化/統計/鮮度判定はI/Oを持たず `node --test` で単体テスト可能。
+- **依存ゼロ**: xlsx(ZIP+XML)/CSV/チャート/サーバ/プローブをすべて標準APIで自作。サプライチェーンリスク最小。
+- **出典表記**: 全野菜ページ・トップ・週報・aboutに
+  「出典：独立行政法人農畜産業振興機構『ベジ探』のデータを加工して作成」を表示。
 - **AdSense**: `config/site.json` の `adsenseClientId` が空なら広告タグを一切出力しない。
-- **軽量**: 全ページ100KB以下（実測: トップ16KB、品目ページ最大20KB、CSS4KB）。
 
 ## 収益化フック
 - AdSense: `adsenseClientId` 設定時のみ head の配信スクリプトと各スロットを出力。

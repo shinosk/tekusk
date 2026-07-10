@@ -38,8 +38,14 @@ jobs:
       - name: Run unit tests
         run: npm test
 
-      - name: Fetch data (fail-safe)
-        run: node scripts/fetch.mjs
+      # vegetan（ベジ探）が本命の日次ソース。commodity は2017年で凍結済みの
+      # アーカイブなので、失敗しても差分ゼロで無害（どちらも fail-safe 設計で
+      # エラー時は既存 data/ を変更せず exit 0）。
+      - name: Fetch vegetable prices (vegetan, fail-safe)
+        run: node scripts/fetch.mjs --source=vegetan
+
+      - name: Fetch commodity archive (fail-safe)
+        run: node scripts/fetch.mjs --source=commodity
 
       - name: Commit data changes
         run: |

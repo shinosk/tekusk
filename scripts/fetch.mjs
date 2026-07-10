@@ -32,7 +32,7 @@ const fixtures = args.includes('--fixtures');
 const sourceArg =
   (args.find((a) => a.startsWith('--source=')) || '').split('=')[1] ||
   process.env.SOURCE ||
-  'commodity';
+  'vegetan';
 
 async function readJson(p, fallback) {
   try {
@@ -42,9 +42,12 @@ async function readJson(p, fallback) {
   }
 }
 
-async function loadExistingSeries(slug) {
+async function loadExistingRecord(slug) {
   const rec = await readJson(path.join(DATA_ITEMS_DIR, `${slug}.json`), null);
-  return rec && Array.isArray(rec.series) ? rec.series : [];
+  return {
+    series: rec && Array.isArray(rec.series) ? rec.series : [],
+    monthly: rec && Array.isArray(rec.monthly) ? rec.monthly : [],
+  };
 }
 
 const NOW_YM = new Date().toISOString().slice(0, 7);
@@ -99,8 +102,8 @@ async function main() {
   let totalPoints = 0;
   let latestDate = '';
   for (const it of items) {
-    const existing = await loadExistingSeries(it.slug);
-    const series = mergeByDate(existing, it.series);
+    const existing = await loadExistingRecord(it.slug);
+    const series = mergeByDate(existing.series, it.series);
     totalPoints += series.length;
     if (series.length) {
       const last = series[series.length - 1].date;
@@ -121,8 +124,11 @@ async function main() {
       series,
     };
     // Vegetan items carry a separate long-term monthly series for the second
-    // chart; commodity items have only `series`.
-    if (it.monthly) record.monthly = it.monthly;
+    // chart; commodity items have only `series`. Merge with the accumulated
+    // history so a transiently missing monthly workbook can't wipe it.
+    if (it.monthly || existing.monthly.length) {
+      record.monthly = mergeByDate(existing.monthly, it.monthly || []);
+    }
     await fs.writeFile(
       path.join(DATA_ITEMS_DIR, `${it.slug}.json`),
       JSON.stringify(record, null, 2) + '\n'

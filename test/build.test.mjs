@@ -76,3 +76,44 @@ test('build.mjs runs end-to-end when data exists', (t) => {
   assert.ok(fs.existsSync(path.join(PUBLIC_DIR, 'sitemap.xml')));
   assert.ok(fs.existsSync(path.join(PUBLIC_DIR, 'robots.txt')));
 });
+
+// Per-source freshness + attribution: on a build that has BOTH the live
+// vegetan data and the frozen commodity archive, veg pages must carry live
+// copy + the ベジ探 attribution and NO archive banner, while commodity pages
+// must carry the archive banner. This is the "freshness per data source"
+// requirement made observable in the generated HTML.
+test('per-source freshness: veg pages live, commodity pages archived', (t) => {
+  const meta = fs.existsSync(path.join(DATA_DIR, 'meta.json'))
+    ? JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'meta.json'), 'utf8'))
+    : null;
+  if (!meta || !meta.sources || !meta.sources.vegetan || !meta.sources.commodity) {
+    t.skip('needs both vegetan and commodity data — run both fetches first');
+    return;
+  }
+  execFileSync('node', ['scripts/build.mjs'], { cwd: ROOT, stdio: 'pipe' });
+
+  const tomato = fs.readFileSync(path.join(PUBLIC_DIR, 'items/tomato/index.html'), 'utf8');
+  const banana = fs.readFileSync(path.join(PUBLIC_DIR, 'items/banana/index.html'), 'utf8');
+  const index = fs.readFileSync(path.join(PUBLIC_DIR, 'index.html'), 'utf8');
+  const about = fs.readFileSync(path.join(PUBLIC_DIR, 'about/index.html'), 'utf8');
+
+  // veg page: live (no archive banner), attributed, two-chart layout
+  assert.doesNotMatch(tomato, /archive-banner/);
+  assert.match(tomato, /ベジ探』のデータを加工して作成/);
+  assert.match(tomato, /日次の卸売価格/);
+  assert.match(tomato, /長期の価格推移（2005年〜・月次）/);
+
+  // commodity page: archive banner + honest framing on the same build
+  assert.match(banana, /archive-banner/);
+  assert.match(banana, /月次アーカイブ/);
+  assert.match(banana, /国際市況アーカイブ/);
+
+  // top page: vegetable-first with 平年比-based buy framing + attribution
+  assert.doesNotMatch(index, /archive-banner/);
+  assert.match(index, /買い時の野菜/);
+  assert.match(index, /平年比/);
+  assert.match(index, /ベジ探』のデータを加工して作成/);
+
+  // about page: attribution required
+  assert.match(about, /ベジ探』のデータを加工して作成/);
+});

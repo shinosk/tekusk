@@ -48,12 +48,14 @@ const LINK_KEYWORD_RE = /(日報|旬報|月報|統計|価格)/;
 // Candidate production sources. See docs/data-sources.md for the rationale
 // and licensing notes for each.
 const SEED_URLS = [
-  // Round 2: ベジ探のデータ一覧・価格系ページ(第1回プローブで全ホスト到達可を
-  // 確認済み。ここから .xls/.csv 直リンクを収集して本番アダプタの対象を決める)
-  'https://vegetan.alic.go.jp/other/list-data.html',
-  'https://vegetan.alic.go.jp/price-trends/changes-arrivals-prices.html',
-  'https://vegetan.alic.go.jp/retail-price-trends/vegetable-retail-price.html',
-  'https://vegetan.alic.go.jp/retail-price-trends/price-trend-survey.html',
+  // Round 3: ベジ探の利用規約・著作権ページを捕獲する（round 2 で価格データの
+  // .xlsx 構造は確定済み → vegetan アダプタとして実装済み。残るは正式な
+  // 利用条件テキストの確認。次回プローブでこの2ページを保存する）。
+  // 注意: probe.mjs は data/raw-samples/ を毎回上書きするが、vegetan アダプタの
+  // フィクスチャは test/fixtures/vegetan/ に恒久保存済みのため、上書きしても
+  // テスト・--fixtures モードには影響しない。
+  'https://vegetan.alic.go.jp/riyou.html',
+  'https://vegetan.alic.go.jp/chosaku.html',
 ];
 
 function sanitizeName(url) {

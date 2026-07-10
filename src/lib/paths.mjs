@@ -8,5 +8,6 @@ export const DATA_DIR = path.join(ROOT, 'data');
 export const DATA_ITEMS_DIR = path.join(DATA_DIR, 'items');
 export const RAW_SAMPLES_DIR = path.join(DATA_DIR, 'raw-samples');
 export const RAW_SAMPLES_FILES_DIR = path.join(RAW_SAMPLES_DIR, 'files');
+export const VEGETAN_FIXTURES_DIR = path.join(ROOT, 'test', 'fixtures', 'vegetan');
 export const PUBLIC_DIR = path.join(ROOT, 'public');
 export const TEMPLATES_DIR = path.join(ROOT, 'src', 'templates');

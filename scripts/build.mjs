@@ -1,5 +1,12 @@
 #!/usr/bin/env node
 // Build static site from data/*.json into public/.
+//
+// The site is vegetable-first: items whose source is `vegetan` (日本の野菜
+// 卸売価格) drive the top page, buy-signal and rankings, while the frozen
+// international `commodity` items live on under /archive/ as an explicitly
+// labeled long-term archive. Freshness (live vs archive copy/banner) is
+// computed PER DATA SOURCE, so veg pages show live "daily update" copy while
+// commodity pages honestly show the archive banner on the same build.
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -11,6 +18,9 @@ import { esc } from '../src/lib/html.mjs';
 import { fmtNum, fmtPct, fmtMonth, fmtDate, trendClass } from '../src/lib/format.mjs';
 import { weeklyReport, headline, itemBlurb } from '../src/lib/report.mjs';
 import { freshnessCopy } from '../src/lib/freshness.mjs';
+
+const VEGETAN_ATTRIBUTION =
+  '出典：独立行政法人農畜産業振興機構『ベジ探』のデータを加工して作成';
 
 async function readJson(p, fallback) {
   try {
@@ -51,23 +61,133 @@ function statBox(k, v) {
   return `<div class="stat"><div class="k">${esc(k)}</div><div class="v">${v}</div></div>`;
 }
 
-// ---- Page: item ----------------------------------------------------------
-function renderItemPage(site, meta, entry, updatedLabel) {
-  const { item, stats } = entry;
-  const freshness = site.freshness || freshnessCopy(meta.latestDate);
-  const s = item.series;
-  const recent = s.slice(-36);
-  const canonicalPath = `/items/${item.slug}/`;
+function breadcrumbLd(site, items) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((b, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: b.name,
+      item: site.baseUrl.replace(/\/$/, '') + b.url,
+    })),
+  };
+}
 
-  const buyBadge = stats.isBuy
+function buyBadgeFor(stats) {
+  return stats.isBuy
     ? `<span class="badge pill-down">いま買い時 🟢</span>`
     : stats.vsNormalPct != null && stats.vsNormalPct > 5
       ? `<span class="badge pill-up">やや割高</span>`
       : `<span class="badge">通常水準</span>`;
+}
+
+// ---- Page: vegetable item (daily + long-term monthly, two charts) ---------
+function renderVegItemPage(site, meta, entry, updatedLabel, freshness) {
+  const { item, stats } = entry;
+  const s = item.series;
+  const monthly = item.monthly || [];
+  const canonicalPath = `/items/${item.slug}/`;
+  const src = meta.sources.vegetan;
+
+  const dailySection = item.hasDaily
+    ? `
+<h2>日次の卸売価格（直近取得可能範囲）</h2>
+${lineChartSvg(s, { ariaLabel: `${item.name}の日次卸売価格推移`, title: `${item.name} 日次`, xFormat: 'md' })}
+<p class="lead">対象期間: ${fmtDate(stats.firstDate)} 〜 ${fmtDate(stats.lastDate)}（${stats.pointCount}日分・東京都中央卸売市場）。取得済みの日次データは毎日追記で蓄積されます。</p>`
+    : `
+<div class="notice">この品目は日次卸売データの対象外のため、月次の価格を掲載しています。</div>`;
+
+  const monthlySection = monthly.length
+    ? `
+<h2>長期の価格推移（2005年〜・月次）</h2>
+${lineChartSvg(monthly, { ariaLabel: `${item.name}の長期月次価格推移`, title: `${item.name} 長期` })}
+<p class="lead">対象期間: ${fmtMonth(monthly[0].date)} 〜 ${fmtMonth(monthly[monthly.length - 1].date)}（${monthly.length}か月分）</p>`
+    : '';
+
+  const statRow = item.hasDaily
+    ? `
+  ${statBox(freshness.priceLabel, `${fmtNum(stats.latest.price, 0)}<small> ${esc(item.unit)}</small>`)}
+  ${statBox('平年比（当日）', pctCell(stats.vsNormalPct))}
+  ${statBox('直近1週間', pctCell(stats.wowPct))}
+  ${statBox('前月比（月次）', pctCell(stats.momPct))}
+  ${statBox('前年比（月次）', pctCell(stats.yoyPct))}
+  ${statBox('平年値（同時期）', `${fmtNum(stats.normal, 0)}<small> ${esc(item.unit)}</small>`)}`
+    : `
+  ${statBox('最新月の価格', `${fmtNum(stats.latest.price, 0)}<small> ${esc(item.unit)}</small>`)}
+  ${statBox('前月比', pctCell(stats.momPct))}
+  ${statBox('前年比', pctCell(stats.yoyPct))}
+  ${statBox('平年比', pctCell(stats.vsNormalPct))}
+  ${statBox('期間高値', fmtNum(stats.max, 0))}
+  ${statBox('期間安値', fmtNum(stats.min, 0))}`;
 
   const body = `
 <h1>${item.emoji} ${esc(item.name)}の価格推移 <span class="cat-tag">/ ${esc(item.category)}</span></h1>
-<p class="lead">${esc(itemBlurb(item, stats))} ${buyBadge}</p>
+<p class="lead">${esc(itemBlurb(item, stats))} ${buyBadgeFor(stats)}</p>
+
+<div class="statgrid">${statRow}
+</div>
+${dailySection}
+
+${adSlot(site, site.adsenseSlotItem)}
+${monthlySection}
+
+<h2>品目情報</h2>
+<table>
+  <tr><th>分類</th><td>${esc(item.category)}</td></tr>
+  <tr><th>調査対象</th><td>${esc(item.origin)}</td></tr>
+  <tr><th>旬・出回り</th><td>${esc(item.season)}</td></tr>
+  <tr><th>価格の単位</th><td>${esc(item.unit)}</td></tr>
+</table>
+
+<div class="notice">${esc(VEGETAN_ATTRIBUTION)}（原資料: 農林水産省「青果物卸売市場調査（日別調査）」等）。価格は参考値です。</div>
+`;
+
+  const breadcrumb = [
+    { name: 'トップ', url: '/' },
+    { name: '品目一覧', url: '/#items' },
+    { name: item.name, url: canonicalPath },
+  ];
+
+  const jsonld = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Dataset',
+      name: `${item.name}の価格推移`,
+      description: `${item.name}の卸売・小売価格の時系列。最新 ${fmtDate(stats.lastDate)}、平年比 ${fmtPct(stats.vsNormalPct)}。`,
+      creator: { '@type': 'Organization', name: src.attribution },
+      license: src.licenseUrl,
+      isAccessibleForFree: true,
+      temporalCoverage: `${stats.monthlyFirst || stats.firstDate}/${stats.lastDate}`,
+      variableMeasured: `価格（${item.unit}）`,
+      url: site.baseUrl.replace(/\/$/, '') + canonicalPath,
+    },
+    breadcrumbLd(site, breadcrumb),
+  ];
+
+  return renderPage(site, {
+    title: `${item.name}の価格推移・平年比・買い時`,
+    description: `${item.name}の最新卸売価格は${fmtNum(stats.latest.price, 0)}${item.unit}（平年比${fmtPct(stats.vsNormalPct)}）。日次と2005年からの長期チャートで買い時をチェック。`,
+    path: canonicalPath,
+    breadcrumb,
+    jsonld,
+    updatedLabel,
+    freshness,
+    body,
+  });
+}
+
+// ---- Page: commodity (archive) item ---------------------------------------
+function renderCommodityItemPage(site, meta, entry, updatedLabel, freshness) {
+  const { item, stats } = entry;
+  const s = item.series;
+  const recent = s.slice(-36);
+  const canonicalPath = `/items/${item.slug}/`;
+  const src = meta.sources.commodity;
+
+  const body = `
+<h1>${item.emoji} ${esc(item.name)}の価格推移 <span class="cat-tag">/ 国際市況アーカイブ・${esc(item.category)}</span></h1>
+<p class="lead">${esc(itemBlurb(item, stats))}</p>
 
 <div class="statgrid">
   ${statBox(freshness.priceLabel, `${fmtNum(stats.latest.price)}<small> ${esc(item.unit)}</small>`)}
@@ -89,19 +209,19 @@ ${adSlot(site, site.adsenseSlotItem)}
 
 <h2>品目情報</h2>
 <table>
-  <tr><th>分類</th><td>${esc(item.category)}</td></tr>
+  <tr><th>分類</th><td>国際市況アーカイブ（${esc(item.category)}）</td></tr>
   <tr><th>代表産地・規格</th><td>${esc(item.origin)}</td></tr>
   <tr><th>旬・出回り</th><td>${esc(item.season)}</td></tr>
   <tr><th>価格の単位</th><td>${esc(item.unit)}</td></tr>
   <tr><th>平年値（同月平均）</th><td>${fmtNum(stats.normal)} ${esc(item.unit)}</td></tr>
 </table>
 
-<div class="notice">価格は${esc(meta.source.title)}に基づく参考値です。単位は品目により異なります。${esc(meta.source.attribution)}</div>
+<div class="notice">価格は${esc(src.title)}に基づく参考値です。${esc(src.attribution)}。このデータは${esc(freshness.label)}で更新が停止した月次アーカイブです。</div>
 `;
 
   const breadcrumb = [
     { name: 'トップ', url: '/' },
-    { name: '品目一覧', url: '/#items' },
+    { name: '国際市況アーカイブ', url: '/archive/' },
     { name: item.name, url: canonicalPath },
   ];
 
@@ -109,10 +229,10 @@ ${adSlot(site, site.adsenseSlotItem)}
     {
       '@context': 'https://schema.org',
       '@type': 'Dataset',
-      name: `${item.name}の価格推移`,
-      description: `${item.name}（${item.origin}）の価格時系列。最新 ${fmtMonth(stats.lastDate)}、前月比 ${fmtPct(stats.momPct)}。`,
-      creator: { '@type': 'Organization', name: meta.source.attribution },
-      license: meta.source.licenseUrl,
+      name: `${item.name}の国際市況価格推移（アーカイブ）`,
+      description: `${item.name}（${item.origin}）の国際市況価格時系列。${fmtMonth(stats.firstDate)}〜${fmtMonth(stats.lastDate)}の月次アーカイブ。`,
+      creator: { '@type': 'Organization', name: src.attribution },
+      license: src.licenseUrl,
       isAccessibleForFree: true,
       temporalCoverage: `${stats.firstDate}/${stats.lastDate}`,
       variableMeasured: `価格（${item.unit}）`,
@@ -122,34 +242,21 @@ ${adSlot(site, site.adsenseSlotItem)}
   ];
 
   return renderPage(site, {
-    title: `${item.name}の価格推移・平年比`,
-    description: `${item.name}の最新価格は${fmtNum(stats.latest.price)}${item.unit}（前月比${fmtPct(stats.momPct)}）。平年比${fmtPct(stats.vsNormalPct)}。価格推移チャートと旬情報をチェック。`,
+    title: `${item.name}の国際市況価格推移（アーカイブ）`,
+    description: `${item.name}の国際市況価格アーカイブ（${fmtMonth(stats.firstDate)}〜${fmtMonth(stats.lastDate)}・月次）。長期の価格推移チャートを掲載。`,
     path: canonicalPath,
     breadcrumb,
     jsonld,
     updatedLabel,
+    freshness,
     body,
   });
 }
 
-function breadcrumbLd(site, items) {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: items.map((b, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      name: b.name,
-      item: site.baseUrl.replace(/\/$/, '') + b.url,
-    })),
-  };
-}
-
-// ---- Page: index ---------------------------------------------------------
-function renderIndex(site, meta, entries, rankings, updatedLabel) {
-  const freshness = site.freshness || freshnessCopy(meta.latestDate);
+// ---- Page: index (vegetable-first) ----------------------------------------
+function renderIndex(site, meta, vegEntries, rankings, updatedLabel, freshness) {
   const byCat = new Map();
-  for (const e of entries) {
+  for (const e of vegEntries) {
     if (!byCat.has(e.item.category)) byCat.set(e.item.category, []);
     byCat.get(e.item.category).push(e);
   }
@@ -160,18 +267,18 @@ function renderIndex(site, meta, entries, rankings, updatedLabel) {
           (e) => `<a class="card item-card" href="/items/${e.item.slug}/">
         <span class="em">${e.item.emoji}</span>
         <span class="nm">${esc(e.item.name)}</span>
-        <span class="px">${fmtNum(e.stats.latest.price)} <small>${esc(e.item.unit)}</small></span>
+        <span class="px">${fmtNum(e.stats.latest.price, 0)} <small>${esc(e.item.unit)}</small></span>
         <span class="down">平年比 ${fmtPct(e.stats.vsNormalPct)}</span>
       </a>`
         )
         .join('')}</div>`
-    : `<p class="lead">現在、明確な「買い時」と判定された品目はありません。</p>`;
+    : `<p class="lead">現在、平年比が買い時ライン（平年より10%以上割安）に達した野菜はありません。</p>`;
 
   const rankList = (list, cls) =>
     `<ul class="rank-list">${list
       .map(
         (e) =>
-          `<li><a href="/items/${e.item.slug}/">${e.item.emoji} ${esc(e.item.name)}</a><span class="${cls}">${fmtPct(e.stats.momPct)}</span></li>`
+          `<li><a href="/items/${e.item.slug}/">${e.item.emoji} ${esc(e.item.name)}</a><span class="${cls}">${fmtPct(e.stats.rankPct)}</span></li>`
       )
       .join('')}</ul>`;
 
@@ -183,8 +290,8 @@ function renderIndex(site, meta, entries, rankings, updatedLabel) {
         (e) => `<a class="card item-card" href="/items/${e.item.slug}/">
           <span class="em">${e.item.emoji}</span>
           <span class="nm">${esc(e.item.name)}</span>
-          <span class="px">${fmtNum(e.stats.latest.price)} <small>${esc(e.item.unit)}</small></span>
-          <span class="${trendClass(e.stats.momPct)}">前月比 ${fmtPct(e.stats.momPct)}</span>
+          <span class="px">${fmtNum(e.stats.latest.price, 0)} <small>${esc(e.item.unit)}</small></span>
+          <span class="${trendClass(e.stats.vsNormalPct)}">平年比 ${fmtPct(e.stats.vsNormalPct)}</span>
         </a>`
       )
       .join('')}</div>`
@@ -194,15 +301,15 @@ function renderIndex(site, meta, entries, rankings, updatedLabel) {
   const body = `
 <h1>${esc(freshness.indexTitle)}</h1>
 <p class="lead">${esc(headline(meta, rankings))}</p>
-<div class="notice">最新集計: <strong>${fmtMonth(meta.latestDate)}</strong>／対象 ${entries.length} 品目。${esc(freshness.updateNotice)}</div>
+<div class="notice">最新集計: <strong>${fmtDate(meta.latestDate)}</strong>／対象 ${vegEntries.length} 品目（東京都中央卸売市場ほか）。${esc(freshness.updateNotice)}</div>
 
-<h2>🟢 いまが買い時の品目</h2>
-<p class="lead">平年（同月の過去平均）と直近12か月の水準をどちらも下回っている＝割安な品目です。</p>
+<h2>🟢 いまが買い時の野菜</h2>
+<p class="lead">当日の卸売価格が平年（過去5か年の同時期平均）を10%以上下回っている＝割安な野菜です。</p>
 ${buyCards}
 
 ${adSlot(site, site.adsenseSlotTop)}
 
-<h2>値上がり・値下がりランキング（前月比）</h2>
+<h2>値上がり・値下がりランキング（日次・直近1週間）</h2>
 <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
   <div class="card"><h3 class="up">▲ 値上がり</h3>${rankList(rankings.risers, 'up')}</div>
   <div class="card"><h3 class="down">▼ 値下がり</h3>${rankList(rankings.fallers, 'down')}</div>
@@ -210,6 +317,11 @@ ${adSlot(site, site.adsenseSlotTop)}
 
 <h2 id="items">品目一覧</h2>
 ${catSections}
+
+<h2>国際市況アーカイブ</h2>
+<p class="lead">バナナ・小麦・コーヒーなど食品コモディティ26品目の国際市況（1980〜2017年・月次）の長期アーカイブも<a href="/archive/">こちら</a>で公開しています。</p>
+
+<div class="notice">${esc(VEGETAN_ATTRIBUTION)}</div>
 `;
 
   const jsonld = [
@@ -218,8 +330,8 @@ ${catSections}
       '@type': 'Dataset',
       name: site.siteName,
       description: site.description,
-      creator: { '@type': 'Organization', name: meta.source.attribution },
-      license: meta.source.licenseUrl,
+      creator: { '@type': 'Organization', name: meta.sources.vegetan.attribution },
+      license: meta.sources.vegetan.licenseUrl,
       isAccessibleForFree: true,
       dateModified: meta.generatedAt,
       url: site.baseUrl,
@@ -233,99 +345,150 @@ ${catSections}
     path: '/',
     jsonld,
     updatedLabel,
+    freshness,
     body,
   });
 }
 
-// ---- Page: weekly --------------------------------------------------------
-function renderWeekly(site, meta, entries, rankings, updatedLabel) {
-  const freshness = site.freshness || freshnessCopy(meta.latestDate);
+// ---- Page: archive index (commodity) ---------------------------------------
+function renderArchiveIndex(site, meta, entries, updatedLabel, freshness) {
+  const src = meta.sources.commodity;
+  const byCat = new Map();
+  for (const e of entries) {
+    if (!byCat.has(e.item.category)) byCat.set(e.item.category, []);
+    byCat.get(e.item.category).push(e);
+  }
+  const catSections = [...byCat.entries()]
+    .map(
+      ([cat, list]) => `<h3>${esc(cat)}</h3>
+    <div class="grid cards">${list
+      .map(
+        (e) => `<a class="card item-card" href="/items/${e.item.slug}/">
+          <span class="em">${e.item.emoji}</span>
+          <span class="nm">${esc(e.item.name)}</span>
+          <span class="px">${fmtNum(e.stats.latest.price)} <small>${esc(e.item.unit)}</small></span>
+        </a>`
+      )
+      .join('')}</div>`
+    )
+    .join('');
+
+  const body = `
+<h1>国際市況アーカイブ（食品コモディティ）</h1>
+<p class="lead">バナナ・穀物・食用油・畜産・水産・嗜好品など食品コモディティ${entries.length}品目の国際市況価格（1980〜${freshness.label}・月次）の長期アーカイブです。データソースの更新は${freshness.label}で停止しており、掲載価格は変動しません。</p>
+${catSections}
+<div class="notice">出典: ${esc(src.attribution)}（ライセンス: ${esc(src.license)}）。本アーカイブは参考資料であり、現在の市況を示すものではありません。最新の野菜価格は<a href="/">トップページ</a>をご覧ください。</div>
+`;
+
+  const breadcrumb = [
+    { name: 'トップ', url: '/' },
+    { name: '国際市況アーカイブ', url: '/archive/' },
+  ];
+  const jsonld = [breadcrumbLd(site, breadcrumb)];
+  return renderPage(site, {
+    title: '国際市況アーカイブ（食品コモディティ・1980〜2017）',
+    description: `食品コモディティ${entries.length}品目の国際市況価格アーカイブ（月次・${freshness.label}まで）。長期の価格推移チャートを品目別に掲載。`,
+    path: '/archive/',
+    breadcrumb,
+    jsonld,
+    updatedLabel,
+    freshness,
+    body,
+  });
+}
+
+// ---- Page: weekly ----------------------------------------------------------
+function renderWeekly(site, meta, entries, rankings, updatedLabel, freshness) {
   const rep = weeklyReport(meta, entries, rankings, freshness);
   const movers = [...rankings.risers.slice(0, 3), ...rankings.fallers.slice(0, 3)];
   const body = `
 <h1>${esc(rep.title)}</h1>
-<p class="lead">データから自動生成した価格まとめです（${fmtMonth(meta.latestDate)}）。</p>
+<p class="lead">データから自動生成した野菜価格のまとめです（${fmtDate(meta.latestDate)}時点）。</p>
 <div class="report">${rep.paragraphs.map((t) => `<p>${esc(t)}</p>`).join('')}</div>
 
 ${adSlot(site, site.adsenseSlotTop)}
 
 <h2>主な値動き</h2>
 <table>
-  <thead><tr><th>品目</th><th class="num">${esc(freshness.priceLabel)}</th><th class="num">前月比</th><th class="num">平年比</th></tr></thead>
+  <thead><tr><th>品目</th><th class="num">${esc(freshness.priceLabel)}</th><th class="num">直近の変化</th><th class="num">平年比</th></tr></thead>
   <tbody>${movers
     .map(
       (e) =>
-        `<tr><td><a href="/items/${e.item.slug}/">${e.item.emoji} ${esc(e.item.name)}</a></td><td class="num">${fmtNum(e.stats.latest.price)}</td><td class="num">${pctCell(e.stats.momPct)}</td><td class="num">${pctCell(e.stats.vsNormalPct)}</td></tr>`
+        `<tr><td><a href="/items/${e.item.slug}/">${e.item.emoji} ${esc(e.item.name)}</a></td><td class="num">${fmtNum(e.stats.latest.price, 0)}</td><td class="num">${pctCell(e.stats.rankPct)}</td><td class="num">${pctCell(e.stats.vsNormalPct)}</td></tr>`
     )
     .join('')}</tbody>
 </table>
+<div class="notice">${esc(VEGETAN_ATTRIBUTION)}</div>
 `;
   const jsonld = [breadcrumbLd(site, [{ name: 'トップ', url: '/' }, { name: '週報', url: '/weekly/' }])];
   return renderPage(site, {
     title: rep.title,
-    description: `${fmtMonth(meta.latestDate)}の野菜・食品価格まとめ。値上がり・値下がり・買い時品目を自動集計したレポートです。`,
+    description: `${fmtMonth(meta.latestDate)}の野菜価格まとめ。値上がり・値下がり・買い時の野菜を自動集計したレポートです。`,
     path: '/weekly/',
     breadcrumb: [{ name: 'トップ', url: '/' }, { name: '週報', url: '/weekly/' }],
     jsonld,
     updatedLabel,
+    freshness,
     body,
   });
 }
 
-// ---- Page: about ---------------------------------------------------------
-function renderAbout(site, meta, updatedLabel) {
-  const src = meta.source;
-  const freshness = site.freshness || freshnessCopy(meta.latestDate);
+// ---- Page: about ------------------------------------------------------------
+function renderAbout(site, meta, updatedLabel, freshnessBySource) {
+  const veg = meta.sources.vegetan;
+  const com = meta.sources.commodity;
+  const vf = freshnessBySource.vegetan;
 
-  const leadAuto = freshness.archive
-    ? `公開オープンデータをもとに価格情報を自動生成するユーティリティサイトです。` +
-      `現在のデータソースは${freshness.label}時点で更新が止まった月次アーカイブのため、掲載価格自体は日々変動しません。`
-    : `公開オープンデータをもとに価格情報を<strong>自動生成・毎日更新</strong>するユーティリティサイトです。`;
+  const vegRows = veg
+    ? `
+<h2>データの出典（野菜価格）</h2>
+<p><strong>${esc(VEGETAN_ATTRIBUTION)}</strong></p>
+<table>
+  <tr><th>データソース</th><td>${esc(veg.title)}</td></tr>
+  <tr><th>提供元・出典表示</th><td>${esc(veg.attribution)}</td></tr>
+  <tr><th>取得元URL</th><td><a href="${esc(veg.homepage)}" rel="nofollow">${esc(veg.homepage)}</a></td></tr>
+  <tr><th>利用条件</th><td><a href="${esc(veg.licenseUrl)}" rel="nofollow">${esc(veg.license)}</a></td></tr>
+  <tr><th>更新頻度</th><td>日次（卸売・東京都中央卸売市場ほか）＋月次（長期系列）。本サイトは日次で自動取得。</td></tr>
+  <tr><th>最新データ</th><td>${fmtDate(veg.latestDate)}</td></tr>
+</table>
+<p>日次卸売データ（入荷量・卸売価格・平年値・平年比）は農林水産省「青果物卸売市場調査（日別調査）」を原資料として
+「ベジ探」が公開しているもの、2005年からの長期月次系列は主要品目の価格をまとめたものです。</p>`
+    : '';
 
-  const cadenceCell = freshness.archive
-    ? `${esc(src.cadence)}（データソースは更新が止まった月次アーカイブです）`
-    : `${esc(src.cadence)}（本サイトは日次で自動チェック）`;
-
-  const disclosureBody = freshness.archive
-    ? `本サイトのページ生成は GitHub Actions で日次スケジュール実行されますが、` +
-      `現在の元データソースは${freshness.label}時点で更新が止まっている月次アーカイブです。` +
-      `そのため掲載価格自体は日々変わりません。本番想定の政府系データソース（e-Stat・農林水産省 等）に` +
-      `切り替わり次第、この開示は自動的に日次更新中の表示へ戻ります。詳細は下記「本番運用で想定するデータソース」を参照してください。`
-    : `本サイトのすべてのページは、GitHub Actions の日次スケジュール（日本時間の朝）で
-データ取得スクリプトとページ生成スクリプトを実行し、自動的に再構築・公開されています。
-編集者による手動の価格入力・修正は行っていません。`;
+  const comRows = com
+    ? `
+<h2>データの出典（国際市況アーカイブ）</h2>
+<table>
+  <tr><th>データソース</th><td>${esc(com.title)}</td></tr>
+  <tr><th>提供元・出典表示</th><td>${esc(com.attribution)}</td></tr>
+  <tr><th>取得元URL</th><td><a href="${esc(com.homepage)}" rel="nofollow">${esc(com.homepage)}</a></td></tr>
+  <tr><th>ライセンス</th><td><a href="${esc(com.licenseUrl)}" rel="nofollow">${esc(com.license)}</a></td></tr>
+  <tr><th>状態</th><td>${fmtMonth(com.latestDate)}で更新が停止した月次アーカイブ（<a href="/archive/">アーカイブ一覧</a>）</td></tr>
+</table>`
+    : '';
 
   const body = `
 <h1>データ出典・このサイトについて</h1>
-<p class="lead">${esc(site.siteName)}は、${leadAuto}</p>
-
-<h2>データの出典</h2>
-<table>
-  <tr><th>現在のデータソース</th><td>${esc(src.title)}</td></tr>
-  <tr><th>提供元・出典表示</th><td>${esc(src.attribution)}</td></tr>
-  <tr><th>取得元URL</th><td><a href="${esc(src.homepage)}" rel="nofollow">${esc(src.homepage)}</a></td></tr>
-  <tr><th>ライセンス</th><td><a href="${esc(src.licenseUrl)}" rel="nofollow">${esc(src.license)}</a></td></tr>
-  <tr><th>更新頻度</th><td>${cadenceCell}</td></tr>
-  <tr><th>最新データ</th><td>${fmtMonth(meta.latestDate)}</td></tr>
-</table>
+<p class="lead">${esc(site.siteName)}は、公開オープンデータをもとに野菜の価格情報を<strong>自動生成・毎日更新</strong>するユーティリティサイトです。</p>
+${vegRows}
+${comRows}
 
 <h2>自動更新であることの開示</h2>
-<p>${disclosureBody}</p>
+<p>本サイトのすべてのページは、GitHub Actions の日次スケジュール（日本時間の朝）で
+データ取得スクリプトとページ生成スクリプトを実行し、自動的に再構築・公開されています。
+編集者による手動の価格入力・修正は行っていません。データの鮮度はデータソース単位で判定し、
+更新が止まったソース（国際市況アーカイブ）のページには自動でアーカイブである旨を表示します。</p>
 
 <h2>指標の算出方法</h2>
 <ul>
-  <li><strong>前月比 / 前年比</strong>: 直前の集計期・12か月前と比較した価格変化率です。</li>
-  <li><strong>平年比</strong>: 同じ月の過去全期間の平均（＝平年値）と比較した割安・割高の度合いです。</li>
-  <li><strong>いま買い時</strong>: 平年値と直近12か月平均のどちらも下回っている品目を「割安（買い時）」と判定しています。</li>
+  <li><strong>平年比</strong>: 「ベジ探」が提供する、当日の卸売価格と平年値（過去5か年の同時期平均）との比率です。野菜の割安・割高の基準として使用しています。</li>
+  <li><strong>いま買い時</strong>: 当日の平年比が0.9未満（＝平年より10%以上割安）の品目を「買い時」と判定しています。</li>
+  <li><strong>値上がり・値下がりランキング</strong>: 日次卸売価格の直近1週間の変化率で並べています。</li>
+  <li><strong>前月比 / 前年比</strong>: 長期月次系列で、直前月・12か月前と比較した価格変化率です。</li>
 </ul>
 
-<h2>本番運用で想定するデータソース</h2>
-<p>本システムは日本国内の卸売・小売の青果価格（e-Stat / 農林水産省 食品価格動向調査 等、
-政府標準利用規約に基づき出典表示のうえ二次利用可能）を本番のデータソースとして想定して設計されています。
-データソースはアダプタ方式で差し替え可能です。詳細はリポジトリの <code>docs/data-sources.md</code> を参照してください。</p>
-
 <h2>免責事項</h2>
-<p>掲載する価格は国際市況等に基づく参考値であり、特定地域の店頭価格や実際の取引価格を保証するものではありません。
+<p>掲載する価格は卸売市場等の調査に基づく参考値であり、店頭価格や実際の取引価格を保証するものではありません。
 本サイトの情報を用いて行う一切の判断・行為について、運営者は責任を負いません。</p>
 
 <h2>広告・アフィリエイトについて</h2>
@@ -334,16 +497,17 @@ function renderAbout(site, meta, updatedLabel) {
   const jsonld = [breadcrumbLd(site, [{ name: 'トップ', url: '/' }, { name: 'データ出典', url: '/about/' }])];
   return renderPage(site, {
     title: 'データ出典・このサイトについて',
-    description: `${site.siteName}のデータ出典・ライセンス・自動更新の仕組み・指標の算出方法・免責事項について。`,
+    description: `${site.siteName}のデータ出典（独立行政法人農畜産業振興機構「ベジ探」等）・ライセンス・自動更新の仕組み・指標の算出方法・免責事項について。`,
     path: '/about/',
     breadcrumb: [{ name: 'トップ', url: '/' }, { name: 'データ出典', url: '/about/' }],
     jsonld,
     updatedLabel,
+    freshness: vf,
     body,
   });
 }
 
-// ---- assets --------------------------------------------------------------
+// ---- assets ----------------------------------------------------------------
 function ogSvg(site, meta, freshness) {
   const tail = freshness.archive
     ? `品目（月次アーカイブ・${freshness.label}まで）`
@@ -353,7 +517,7 @@ function ogSvg(site, meta, freshness) {
 <rect x="0" y="0" width="1200" height="12" fill="#4ecb8b"/>
 <text x="80" y="230" font-family="sans-serif" font-size="86" font-weight="700" fill="#ffffff">🥬 ${esc(site.siteName)}</text>
 <text x="80" y="320" font-family="sans-serif" font-size="42" fill="#bfe6d2">${esc(site.tagline)}</text>
-<text x="80" y="470" font-family="sans-serif" font-size="34" fill="#9fd8bb">最新集計: ${esc(fmtMonth(meta.latestDate))}／${esc(String(meta.itemCount))}${esc(tail)}</text>
+<text x="80" y="470" font-family="sans-serif" font-size="34" fill="#9fd8bb">最新集計: ${esc(fmtDate(meta.latestDate))}／${esc(String(meta.itemCount))}${esc(tail)}</text>
 </svg>`;
 }
 
@@ -379,7 +543,7 @@ Sitemap: ${base}/sitemap.xml
 `;
 }
 
-// ---- main ----------------------------------------------------------------
+// ---- main --------------------------------------------------------------------
 async function main() {
   const rawSite = await readJson(path.join(CONFIG_DIR, 'site.json'), {});
   const meta = await readJson(path.join(DATA_DIR, 'meta.json'), null);
@@ -388,31 +552,47 @@ async function main() {
   if (!meta || records.length === 0) {
     throw new Error('build: no data found. Run `npm run fetch` first.');
   }
+  // Back-compat: lift a single-source meta.json into the multi-source shape.
+  if (!meta.sources) {
+    meta.sources = { [meta.source.id]: { ...meta.source, latestDate: meta.latestDate } };
+    meta.primarySource = meta.source.id;
+  }
 
-  // Data-driven freshness: if the latest known data point is older than the
-  // archive threshold (see src/lib/freshness.mjs), every "live/daily" claim
-  // in the site copy is swapped for an honest "archive" framing, and a
-  // banner is shown on every page. Reverts automatically once a live source
-  // produces recent data.
-  const freshness = freshnessCopy(meta.latestDate, new Date());
+  // PER-SOURCE freshness: each data source's latest data point decides whether
+  // its pages carry live copy or the archive banner. The site-level default is
+  // the primary (vegetan) source's freshness.
+  const now = new Date();
+  const freshnessBySource = {};
+  for (const [id, src] of Object.entries(meta.sources)) {
+    freshnessBySource[id] = freshnessCopy(src.latestDate, now);
+  }
+  const primaryFresh =
+    freshnessBySource[meta.primarySource] || freshnessCopy(meta.latestDate, now);
+
   const site = {
     ...rawSite,
-    tagline: freshness.archive ? freshness.tagline : rawSite.tagline,
-    description: freshness.archive ? freshness.description : rawSite.description,
-    freshness,
+    tagline: primaryFresh.archive ? primaryFresh.tagline : rawSite.tagline,
+    description: primaryFresh.archive ? primaryFresh.description : rawSite.description,
+    freshness: primaryFresh,
   };
 
   const entries = records
     .map((item) => ({ item, stats: computeItemStats(item) }))
     .filter((e) => e.stats);
-  // stable order by category then name
   entries.sort((a, b) =>
     a.item.category === b.item.category
       ? a.item.name.localeCompare(b.item.name, 'ja')
       : a.item.category.localeCompare(b.item.category, 'ja')
   );
 
-  const rankings = buildRankings(entries);
+  const vegEntries = entries.filter((e) => e.item.source === 'vegetan');
+  const comEntries = entries.filter((e) => e.item.source !== 'vegetan');
+  const vegFresh = freshnessBySource.vegetan || primaryFresh;
+  const comFresh = freshnessBySource.commodity || freshnessCopy(null, now);
+
+  // Rankings and the buy signal are vegetable/daily-based: isBuy comes from the
+  // source-provided 平年比 (normalRatio < 0.9), rankPct from the daily series.
+  const rankings = buildRankings(vegEntries.length ? vegEntries : entries);
   const updatedLabel = fmtDate(new Date().toISOString().slice(0, 10)) + '（自動生成）';
 
   // clean public (keep dir)
@@ -421,25 +601,40 @@ async function main() {
 
   // assets
   await write('assets/style.css', STYLESHEET);
-  await write('assets/og.svg', ogSvg(site, meta, freshness));
+  await write('assets/og.svg', ogSvg(site, meta, vegEntries.length ? vegFresh : primaryFresh));
   await write('.nojekyll', '');
 
-  // pages
-  await write('index.html', renderIndex(site, meta, entries, rankings, updatedLabel));
-  await write('weekly/index.html', renderWeekly(site, meta, entries, rankings, updatedLabel));
-  await write('about/index.html', renderAbout(site, meta, updatedLabel));
-
   const urls = ['/', '/weekly/', '/about/'];
-  for (const e of entries) {
-    const rel = `items/${e.item.slug}/index.html`;
-    await write(rel, renderItemPage(site, meta, e, updatedLabel));
+
+  if (vegEntries.length) {
+    await write('index.html', renderIndex(site, meta, vegEntries, rankings, updatedLabel, vegFresh));
+    await write('weekly/index.html', renderWeekly(site, meta, vegEntries, rankings, updatedLabel, vegFresh));
+  } else {
+    // Degenerate fallback (no veg data yet): keep the site buildable from the
+    // commodity archive alone rather than failing the deploy.
+    await write('index.html', renderArchiveIndex(site, meta, comEntries, updatedLabel, comFresh));
+    await write('weekly/index.html', renderWeekly(site, meta, comEntries, rankings, updatedLabel, comFresh));
+  }
+  await write('about/index.html', renderAbout(site, meta, updatedLabel, freshnessBySource));
+
+  if (comEntries.length && vegEntries.length) {
+    await write('archive/index.html', renderArchiveIndex(site, meta, comEntries, updatedLabel, comFresh));
+    urls.push('/archive/');
+  }
+
+  for (const e of vegEntries) {
+    await write(`items/${e.item.slug}/index.html`, renderVegItemPage(site, meta, e, updatedLabel, vegFresh));
+    urls.push(`/items/${e.item.slug}/`);
+  }
+  for (const e of comEntries) {
+    await write(`items/${e.item.slug}/index.html`, renderCommodityItemPage(site, meta, e, updatedLabel, comFresh));
     urls.push(`/items/${e.item.slug}/`);
   }
 
   await write('sitemap.xml', sitemap(site, urls, meta.generatedAt.slice(0, 10)));
   await write('robots.txt', robots(site));
 
-  console.log(`[build] ${entries.length} items -> ${urls.length} pages in public/`);
+  console.log(`[build] ${entries.length} items (${vegEntries.length} veg / ${comEntries.length} archive) -> ${urls.length} pages in public/`);
   console.log('[build] done.');
 }
 

@@ -1,5 +1,11 @@
 # データソース実在性検証レポート
 
+> **2026-07-10 更新: ベジ探を本番ソースとして実装済み。** 本番 GitHub Actions ランナーの
+> probe（`data/raw-samples/`）で実ファイルを取得・コミットバックし、その実フィクスチャに
+> 対して `vegetan` アダプタ（`src/lib/sources.mjs` + `src/lib/vegetan.mjs` +
+> 依存ゼロxlsxパーサ `src/lib/xlsx.mjs`）を実装した。詳細は下記
+> 「採用ソース: 農畜産業振興機構『ベジ探』（実装済み）」を参照。
+
 検証日: 2026-07-09
 検証方法: ビルド環境コンテナから `curl`（`HTTPS_PROXY` 経由）および Node.js `fetch` による実 HTTP リクエスト。
 
@@ -35,11 +41,45 @@ User-Agent を付与しても到達できません（サイト側の403ではな
 - 備考: 実在は公知だが、正確な列レイアウトを本環境で確認できないため、憶測でパーサを書くことは避けた。
   利用条件は東京都のオープンデータ方針（政府標準利用規約準拠、出典明示で二次利用可）に従う想定。
 
-## 2. 農畜産業振興機構「ベジ探」
+## 2. 農畜産業振興機構「ベジ探」 → **採用・実装済み（vegetan アダプタ）**
 - URL: https://vegetan.alic.go.jp/
-- 想定形式: 検索フォーム経由の表・CSV
-- **ビルド環境からの取得可否: 不可（egress 403）。**
-- 備考: 動的検索UIが主体で、機械的な定期取得には各データのダウンロードエンドポイント特定が必要。本環境では検証不能。
+- **ビルド環境からの取得可否: 不可（egress 403）だが、本番 GitHub Actions ランナーからは 200 を確認済み。**
+- probe ワークフローが取得した実ファイル（`data/raw-samples/files/`）をフィクスチャとして
+  パーサを実装した。実装対象と構造:
+
+### 日次卸売データ（実装済み・本命）
+- URL: `https://vegetan.alic.go.jp/kakakugurafu/{youkeisai,kasai,konsai,imo}.xlsx`
+  （葉茎菜・果菜・根菜・いも類。フィクスチャ: files/005〜008）
+- 各ブックに品目別シート（例「トマト」）＋「集計表」。1シート内に約40行×4ブロック＝
+  市場別（シート先頭行のタイトルで確認: **東京都中央卸売市場**・名古屋市・大阪市・福岡市）。
+  先頭の東京ブロックを採用。
+- ブロック構造: 日付行（1列目=月初日のExcelシリアル値、以降 "6/1","2",…,"7/2" と月をまたぐ
+  日ラベル）→「入荷量」「卸売価格」「平均価格」（=平年値）「平年比」の行。列=日々。
+- 当月分のみの提供（未来日セルは null / "#N/A"）。日次の長期蓄積は本リポジトリの
+  `data/items/*.json` への追記マージ（`mergeByDate`）で実現し、過去日の改定値は再取得で上書き。
+- 原資料: 農林水産省「青果物卸売市場調査（日別調査）結果」（シート末尾の資料行に明記）。
+
+### 月次長期卸売（小売）価格（実装済み）
+- URL: `https://vegetan.alic.go.jp/wp-content/uploads/{item}.xlsx` の19品目
+  （`cabbage, spinach, chinese-cabbage, welsh-onion, rettuce, wthite-potato, taros, radish,
+  carrot, onion, cucumber, eggplant, tomato, green-pepper, broccoli, asparagus, sweet-potato,
+  burdosk, lotus-root` — **先方のtypoごと正確に**。フィクスチャ: files/011〜029）
+- シート「Sheet１」: 行=月（1月〜12月）＋年平均値行、列=年。年見出しは和暦・西暦混在
+  （「平成18年ヘイセイネン」「2008年ネン」等、ふりがな混入あり）。さらに
+  **先頭に見出しの無い2005年列**、末尾に「平年値」列（=直近5か年平均。トマト1月で
+  avg(2021〜2025)=772.4 と一致することを検算し、列対応を確定）。
+- 値の単位: 円/kg。当年の未来月にも値が入っているため fetch 時に当月までにキャップする。
+- 和暦→西暦変換は `src/lib/wareki.mjs`（平成/令和/昭和・元年・ふりがな耐性）。
+
+### 都市別小売価格（スコープ外・将来用）
+- URL: `https://vegetan.alic.go.jp/kouri_cyousa/*.xlsx`（フィクスチャ: files/032〜048）
+- 品目別・都市別の小売価格。今回は実装対象外だが、フィクスチャは取得済みで
+  xlsxパーサのラウンドトリップテスト対象には含めている。
+
+### 利用条件・出典表記
+- 全野菜ページに「**出典：独立行政法人農畜産業振興機構『ベジ探』のデータを加工して作成**」を表示。
+- 利用規約原文（https://vegetan.alic.go.jp/riyou.html / chosaku.html）は本サンドボックスから
+  取得不能のため、`scripts/probe.mjs` の SEED_URLS に設定済み。次回プローブで捕獲し内容を確認すること。
 
 ## 3. 農林水産省 食品価格動向調査（野菜等の小売価格・週次）
 - URL: https://www.maff.go.jp/j/zyukyu/anpo/kouri/
@@ -56,9 +96,9 @@ User-Agent を付与しても到達できません（サイト側の403ではな
 - ライセンス: 政府標準利用規約（第2.0版）。出典表示のうえ二次利用可。
 - 備考: 小売物価統計調査の野菜小売価格などが該当。本番の有力候補。
 
-## 実装対象として採用したソース（本環境で機械取得を確認できた唯一のソース）
+## アーカイブとして維持するソース（初期構築時に採用）
 
-### Frictionless Data「Commodity Prices」
+### Frictionless Data「Commodity Prices」→ 現在は「国際市況アーカイブ」（/archive/）
 - 取得URL: https://raw.githubusercontent.com/datasets/commodity-prices/main/data/commodity-prices.csv
 - ホームページ: https://github.com/datasets/commodity-prices
 - 形式: CSV（横持ち。1列=1品目、1行=1か月）
@@ -89,20 +129,25 @@ User-Agent を付与しても到達できません（サイト側の403ではな
   ランナー上で `node scripts/probe.mjs` が下記の候補URLへ実際にHTTPリクエストを行い、
   HTTPステータス・content-type・本文サンプル（テキストは先頭200KB、バイナリは先頭1MB）を
   `data/raw-samples/index.json` と `data/raw-samples/files/` に保存し、実行ブランチへコミット・プッシュします。
-- 対象URL: 東京都中央卸売市場（トップ／月報／日報）、ベジ探、農林水産省 食品価格動向調査、e-Stat。
-  HTML応答からは `.csv/.xlsx/.xls/.zip` へのリンクや「日報・旬報・月報・統計・価格」を含む
-  同一ホスト内リンクを最大10件まで1階層だけ追加取得します。
+- 現在の対象URL（round 3）: ベジ探の利用規約・著作権ページ
+  （`https://vegetan.alic.go.jp/riyou.html`, `https://vegetan.alic.go.jp/chosaku.html`）。
+  価格データの構造確定は round 2 のフィクスチャで完了しているため、残る利用条件原文の捕獲に絞っている。
 - `scripts/probe.mjs` は `scripts/fetch.mjs` と同じfail-safe設計です。1つのURLが失敗（403等）しても
   他のURLの取得を継続し、結果はすべて記録したうえで必ず終了コード0で終わります。
-  再実行時は `data/raw-samples/` を上書きするため、実行のたびに肥大化することはありません。
-- **開発フロー**: probe実行 → `data/raw-samples/` の実データ（HTMLのリンク構造、CSV/Excelの
-  列レイアウトなど）を確認 → その実データに基づいて `src/lib/sources.mjs` の
-  `estatAdapter.fetchCsv`（現状は意図的なスタブ）を実装 → `node scripts/fetch.mjs --source=estat` で
-  本番ソースへ切り替え。サイト生成側（`scripts/build.mjs` 等）は無改修。
+  再実行時は `data/raw-samples/` を**上書き**するため、実行のたびに肥大化することはありません
+  （＝現在のxlsxフィクスチャも消えます。フィクスチャ依存のテストは不在時スキップになりますが、
+  パーサ検証用の実ファイルを更新する場合は差分に注意）。
+- **開発フロー（実績）**: probe実行 → `data/raw-samples/files/` の実xlsxを確認 →
+  その実データに基づいて `src/lib/xlsx.mjs`（依存ゼロxlsxパーサ）と `src/lib/vegetan.mjs`
+  （正規化）・`vegetanAdapter`（`src/lib/sources.mjs`）を実装 →
+  `node scripts/fetch.mjs --source=vegetan --fixtures` でフィクスチャから検証 →
+  本番は `--fixtures` を外すだけ（fetch→normalize経路は共通）。サイト生成側は無改修。
 
 ## ソースアダプタ方式
 
-`src/lib/sources.mjs` にアダプタを定義。`commodity`（検証済み・稼働中）と `estat`（本番想定・スタブ）を用意。
-本番では農水省/e-Stat 用アダプタの `fetchCsv` と、必要なら列マッピング（`config/items.json`）を実装すれば、
-サイト生成側は無改修で日本の青果価格に切り替わる。egress が開いた環境で
-`node scripts/fetch.mjs --source=estat` を実行して実応答に対しパーサを確定する運用を想定。
+`src/lib/sources.mjs` にアダプタを定義。`vegetan`（**本番稼働・日次**）、`commodity`
+（凍結アーカイブ・/archive/ 配下で維持）、`estat`（将来の追加候補・スタブ）を用意。
+`config/items.json` の各品目は `source` フィールドでアダプタに紐づき、野菜品目は
+`monthlyKey`（月次xlsxファイル名）・`dailyBook`・`dailySheet`（日次ブック・シート名）の
+対応表を持つ。`data/meta.json` はソース別の `sources.{id}` を持ち、ビルドはソース単位で
+データ鮮度（ライブ/アーカイブ表示）を判定する。

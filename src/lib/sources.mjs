@@ -13,7 +13,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { RAW_SAMPLES_FILES_DIR } from './paths.mjs';
+import { VEGETAN_FIXTURES_DIR } from './paths.mjs';
 
 const UA =
   'tekusk-price-bot/1.0 (+https://github.com/; static-site data updater)';
@@ -103,10 +103,10 @@ const VEGETAN_DAILY_BOOKS = ['youkeisai', 'kasai', 'konsai', 'imo'];
 // Locate a committed fixture whose sanitized filename ends with `suffix`
 // (probe.mjs saves e.g. "005-vegetan.alic.go.jp_kakakugurafu_youkeisai.xlsx.xlsx").
 async function findFixture(suffix) {
-  const files = await fs.readdir(RAW_SAMPLES_FILES_DIR);
+  const files = await fs.readdir(VEGETAN_FIXTURES_DIR);
   const hit = files.find((f) => f.endsWith(suffix));
   if (!hit) return null;
-  return fs.readFile(path.join(RAW_SAMPLES_FILES_DIR, hit));
+  return fs.readFile(path.join(VEGETAN_FIXTURES_DIR, hit));
 }
 
 export const vegetanAdapter = {
