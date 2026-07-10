@@ -47,13 +47,13 @@ export function freshnessCopy(latestDate, now = new Date(), thresholdDays = STAL
     return {
       archive: false,
       label: ymLabel(latestDate),
-      tagline: '野菜・果物・食品の市況価格を自動で毎日チェック',
+      tagline: '国内の野菜卸売価格を毎日自動チェック',
       description:
-        '野菜・果物をはじめとする食品コモディティの国際市況価格を毎日自動更新。品目別の価格推移、平年比、いまが買い時の品目をわかりやすく可視化するユーティリティサイトです。',
-      indexTitle: '今週の野菜・食品価格ナビ',
-      priceLabel: '最新価格',
-      updateNotice: 'データは毎日自動で取得・更新しています。',
-      footerNotice: '本サイトは公開オープンデータをもとに<strong>自動生成・毎日更新</strong>される情報サイトです。',
+        '独立行政法人農畜産業振興機構「ベジ探」の東京都中央卸売市場データをもとに、主要野菜の卸売価格を毎日自動更新。品目別の日次・長期の価格推移、平年比、いまが買い時の野菜をわかりやすく可視化するユーティリティサイトです。',
+      indexTitle: '今日の野菜 買い時ナビ',
+      priceLabel: '最新の卸売価格',
+      updateNotice: 'データは毎日自動で取得・更新しています（東京都中央卸売市場・日次）。',
+      footerNotice: '本サイトは公開オープンデータをもとに<strong>自動生成・毎日更新</strong>される野菜価格の情報サイトです。',
       banner: null,
     };
   }

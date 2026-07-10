@@ -8,7 +8,8 @@
   "season": "通年",
   "buyKeyword": "牛肉",
   "source": "commodity",
-  "updatedAt": "2026-07-09T23:40:59.549Z",
+  "hasDaily": false,
+  "updatedAt": "2026-07-10T00:23:04.303Z",
   "series": [
     {
       "date": "1980-02-01",

@@ -8,7 +8,8 @@
   "season": "秋が収穫期",
   "buyKeyword": "ピーナッツ",
   "source": "commodity",
-  "updatedAt": "2026-07-09T23:40:59.545Z",
+  "hasDaily": false,
+  "updatedAt": "2026-07-10T00:23:04.302Z",
   "series": [
     {
       "date": "1980-02-01",

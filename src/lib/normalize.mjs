@@ -61,6 +61,19 @@ export function mergeSeries(existing = [], incoming = []) {
     .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
 }
 
+// Like mergeSeries but preserves ALL fields on each point (date, price, and —
+// for vegetan daily points — arrival/normalPrice/normalRatio). Incoming points
+// win on a date collision, so re-fetching a day overwrites its (possibly
+// revised) values while older days accumulate. Idempotent by date key.
+export function mergeByDate(existing = [], incoming = []) {
+  const byDate = new Map();
+  for (const p of existing) if (p && p.date) byDate.set(p.date, p);
+  for (const p of incoming) if (p && p.date) byDate.set(p.date, p);
+  return [...byDate.values()].sort((a, b) =>
+    a.date < b.date ? -1 : a.date > b.date ? 1 : 0
+  );
+}
+
 // High-level: raw CSV text + item catalog -> array of normalized item records.
 // Each record: { ...itemMeta, series }. Items with an unknown/empty column are
 // skipped (returned in `missing`) rather than throwing, so one bad mapping does

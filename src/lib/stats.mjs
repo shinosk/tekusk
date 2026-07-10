@@ -46,7 +46,97 @@ export function movingAverage(series, n) {
   return mean(slice.map((p) => p.price));
 }
 
+// A daily wholesale point is "buy now" (買い時) when its source-provided 平年比
+// (normalRatio = price / seasonal-normal) drops below this threshold, i.e. the
+// price is >10% under its平年 level. Matches the spec (normalRatio < 0.9).
+export const BUY_RATIO_THRESHOLD = 0.9;
+
+// Nearest daily point at least `days` before the last point (for a daily-based
+// "recent move" used in the veg riser/faller ranking). Falls back to the first
+// point when the window predates the available data.
+function priceDaysAgo(series, days) {
+  if (series.length === 0) return null;
+  const lastMs = new Date(`${series[series.length - 1].date}T00:00:00Z`).getTime();
+  const cutoff = lastMs - days * 86400000;
+  let pick = series[0];
+  for (const p of series) {
+    const t = new Date(`${p.date}T00:00:00Z`).getTime();
+    if (t <= cutoff) pick = p;
+    else break;
+  }
+  return pick.price;
+}
+
+// Month-over-month / year-over-year from a monthly [{date,price}] series.
+function monthlyChange(monthly, backMonths) {
+  if (!monthly || monthly.length < 2) return null;
+  const last = monthly[monthly.length - 1];
+  const target = shiftMonths(ym(last.date), backMonths);
+  const ref = findByYm(monthly, target);
+  return ref ? pct(ref.price, last.price) : null;
+}
+
+// Vegetan daily items: primary series is the daily wholesale prices, and the
+// authoritative 平年比 comes straight from the source (not recomputed). mom/yoy
+// come from the item's monthly long-term series. Buy/ranking are daily-based.
+export function computeVegDailyStats(item) {
+  const s = item.series;
+  if (!s || s.length === 0) return null;
+  const latest = s[s.length - 1];
+  const prev = s.length >= 2 ? s[s.length - 2] : null;
+  const monthly = item.monthly || [];
+
+  const prices = s.map((p) => p.price);
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const minPoint = s.find((p) => p.price === min);
+  const maxPoint = s.find((p) => p.price === max);
+
+  const normalRatio = latest.normalRatio;
+  const vsNormalPct = normalRatio != null ? (normalRatio - 1) * 100 : null;
+  const normal = latest.normalPrice != null ? latest.normalPrice : null;
+
+  const isBuy = normalRatio != null && normalRatio < BUY_RATIO_THRESHOLD;
+  const buyScore = normalRatio != null ? (1 - normalRatio) * 100 : 0;
+
+  const wowPct = pct(priceDaysAgo(s, 7), latest.price); // recent (weekly) move
+  const momPct = monthlyChange(monthly, 1);
+  const yoyPct = monthlyChange(monthly, 12);
+
+  return {
+    slug: item.slug,
+    daily: true,
+    latest,
+    prev,
+    min,
+    max,
+    minPoint,
+    maxPoint,
+    normal,
+    normalRatio,
+    avgAll: mean(prices),
+    momPct,
+    yoyPct,
+    vsNormalPct,
+    wowPct,
+    rankPct: wowPct, // veg ranking is daily-based
+    isBuy,
+    buyScore,
+    pointCount: s.length,
+    firstDate: s[0].date,
+    lastDate: latest.date,
+    monthlyCount: monthly.length,
+    monthlyFirst: monthly.length ? monthly[0].date : null,
+    monthlyLast: monthly.length ? monthly[monthly.length - 1].date : null,
+  };
+}
+
 export function computeItemStats(item) {
+  // Daily vegetable items get source-provided 平年比 + daily-based ranking.
+  if (item && item.source === 'vegetan' && item.hasDaily) {
+    return computeVegDailyStats(item);
+  }
+
   const s = item.series;
   if (!s || s.length === 0) return null;
 
@@ -77,8 +167,10 @@ export function computeItemStats(item) {
   const isBuy = belowNormal && belowTrend;
   const buyScore = vsNormalPct != null ? -vsNormalPct : 0;
 
+  const monthly = item.monthly || [];
   return {
     slug: item.slug,
+    daily: false,
     latest,
     prev,
     yearAgo,
@@ -93,19 +185,26 @@ export function computeItemStats(item) {
     yoyPct,
     vsNormalPct,
     vsMa12Pct,
+    rankPct: momPct, // monthly items rank on前月比
     isBuy,
     buyScore,
     pointCount: s.length,
     firstDate: s[0].date,
     lastDate: latest.date,
+    monthlyCount: monthly.length,
+    monthlyFirst: monthly.length ? monthly[0].date : null,
+    monthlyLast: monthly.length ? monthly[monthly.length - 1].date : null,
   };
 }
 
-// Build ranking tables across all items.
+// Build ranking tables across all items. `rankPct` is the source-appropriate
+// change metric (daily weekly move for veg, 前月比 for monthly items); it falls
+// back to momPct so existing monthly-only callers keep working.
 export function buildRankings(itemsWithStats) {
-  const withMom = itemsWithStats.filter((x) => x.stats && x.stats.momPct != null);
-  const risers = [...withMom].sort((a, b) => b.stats.momPct - a.stats.momPct);
-  const fallers = [...withMom].sort((a, b) => a.stats.momPct - b.stats.momPct);
+  const key = (x) => (x.stats.rankPct != null ? x.stats.rankPct : x.stats.momPct);
+  const withMove = itemsWithStats.filter((x) => x.stats && key(x) != null);
+  const risers = [...withMove].sort((a, b) => key(b) - key(a));
+  const fallers = [...withMove].sort((a, b) => key(a) - key(b));
 
   const buys = itemsWithStats
     .filter((x) => x.stats && x.stats.isBuy)

@@ -89,8 +89,8 @@ function adsenseHead(site) {
 // src/lib/freshness.mjs). Only rendered when the underlying data is stale, so
 // the site never displays a live/daily banner alongside archived data. Placed
 // at the very top of <body> so it is prominent on every page.
-function archiveBanner(site) {
-  const f = site.freshness;
+function archiveBanner(freshness) {
+  const f = freshness;
   if (!f || !f.banner) return '';
   return `<div class="archive-banner">${esc(f.banner)}</div>`;
 }
@@ -99,17 +99,20 @@ function archiveBanner(site) {
 // honest "frozen archive" copy when it isn't. freshnessCopy's strings are
 // static (no user input), so — consistent with the rest of this literal —
 // they are not passed through esc().
-function footerNotice(site) {
-  const f = site.freshness;
+function footerNotice(freshness) {
+  const f = freshness;
   if (f && f.footerNotice) return f.footerNotice;
   return '本サイトは公開オープンデータをもとに<strong>自動生成・毎日更新</strong>される情報サイトです。';
 }
 
-// page: { title, description, path, canonical, breadcrumb:[{name,url}], jsonld:[], body }
+// page: { title, description, path, canonical, breadcrumb, jsonld, body,
+//         freshness } — page.freshness (per data source) overrides site.freshness
+// so a live veg page and an archived commodity page can each show honest copy.
 export function renderPage(site, page) {
   const canonical = site.baseUrl.replace(/\/$/, '') + page.path;
   const ogImage = site.baseUrl.replace(/\/$/, '') + '/assets/og.svg';
   const fullTitle = page.path === '/' ? `${site.siteName}｜${site.tagline}` : `${page.title}｜${site.siteName}`;
+  const freshness = page.freshness || site.freshness;
 
   const jsonldBlocks = (page.jsonld || []).map(jsonLd).join('\n');
 
@@ -136,12 +139,13 @@ ${adsenseHead(site)}
 ${jsonldBlocks}
 </head>
 <body>
-${archiveBanner(site)}
+${archiveBanner(freshness)}
 <header class="site"><div class="wrap">
   <a class="brand" href="/">🥬 ${esc(site.siteName.replace('価格ナビ', ''))}<span>価格ナビ</span></a>
   <nav class="main">
     <a href="/">トップ</a>
     <a href="/weekly/">週報</a>
+    <a href="/archive/">国際市況</a>
     <a href="/about/">データ出典</a>
   </nav>
 </div></header>
@@ -150,7 +154,7 @@ ${page.breadcrumb ? renderBreadcrumb(page.breadcrumb) : ''}
 ${page.body}
 </div></main>
 <footer class="site"><div class="wrap">
-  <p>${esc(site.siteName)} — ${footerNotice(site)} 価格は参考値であり取引を保証するものではありません。</p>
+  <p>${esc(site.siteName)} — ${footerNotice(freshness)} 価格は参考値であり取引を保証するものではありません。</p>
   <p><a href="/about/">データ出典・免責事項</a>　|　最終更新: ${esc(page.updatedLabel || '')}</p>
 </div></footer>
 </body>

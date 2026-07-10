@@ -8,7 +8,8 @@
   "season": "通年",
   "buyKeyword": "サラダ油",
   "source": "commodity",
-  "updatedAt": "2026-07-09T23:40:59.523Z",
+  "hasDaily": false,
+  "updatedAt": "2026-07-10T00:23:04.294Z",
   "series": [
     {
       "date": "1980-02-01",

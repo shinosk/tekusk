@@ -8,7 +8,8 @@
   "season": "夏が収穫期",
   "buyKeyword": "もち麦",
   "source": "commodity",
-  "updatedAt": "2026-07-09T23:40:59.519Z",
+  "hasDaily": false,
+  "updatedAt": "2026-07-10T00:23:04.292Z",
   "series": [
     {
       "date": "1980-02-01",

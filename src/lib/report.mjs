@@ -35,8 +35,9 @@ export function weeklyReport(meta, itemsWithStats, rankings, freshness = null) {
   const archive = !!(freshness && freshness.archive);
   const p = [];
 
+  const sourceTitle = (freshness && freshness.sourceTitle) || meta.source.title;
   p.push(
-    `${monthLabel}時点の${meta.source.title}をもとに、主要${itemsWithStats.length}品目の価格動向を自動集計しました。` +
+    `${monthLabel}時点の${sourceTitle}をもとに、主要${itemsWithStats.length}品目の価格動向を自動集計しました。` +
       `本レポートはデータから機械的に生成しています。`
   );
 
@@ -72,10 +73,11 @@ export function weeklyReport(meta, itemsWithStats, rankings, freshness = null) {
   }
 
   p.push(
-    `価格はあくまで国際市況の参考値です。品目ごとの詳しい推移は各品目ページのチャートをご覧ください。` +
-      (archive
-        ? `本サイトのデータは${monthLabel}時点までの月次アーカイブです。`
-        : `本サイトは毎日自動でデータを取得・更新しています。`)
+    (archive
+      ? `価格はあくまで国際市況の参考値です。品目ごとの詳しい推移は各品目ページのチャートをご覧ください。` +
+        `本サイトのデータは${monthLabel}時点までの月次アーカイブです。`
+      : `掲載価格は東京都中央卸売市場などの卸売価格（円/kg）の参考値です。品目ごとの日次・長期の推移は各品目ページのチャートをご覧ください。` +
+        `本サイトは毎日自動でデータを取得・更新しています。`)
   );
 
   return {

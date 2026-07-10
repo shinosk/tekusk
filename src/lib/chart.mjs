@@ -63,13 +63,20 @@ export function lineChartSvg(series, opts = {}) {
     .join('');
 
   // X labels: show ~5 evenly spaced year markers
+  // Year markers by default; "md" (month/day) for short daily ranges.
+  const fmtX = (dateStr) => {
+    if (opts.xFormat === 'md') {
+      const [, mm, dd] = String(dateStr).split('-');
+      return `${Number(mm)}/${Number(dd)}`;
+    }
+    return String(dateStr).slice(0, 4);
+  };
   const xLabelCount = Math.min(5, n);
   const xLabels = [];
   for (let k = 0; k < xLabelCount; k++) {
     const i = Math.round(((n - 1) * k) / (xLabelCount - 1 || 1));
-    const yr = String(series[i].date).slice(0, 4);
     xLabels.push(
-      `<text x="${x(i).toFixed(1)}" y="${height - 8}" text-anchor="middle" class="chart-axis">${esc(yr)}</text>`
+      `<text x="${x(i).toFixed(1)}" y="${height - 8}" text-anchor="middle" class="chart-axis">${esc(fmtX(series[i].date))}</text>`
     );
   }
 
