@@ -114,8 +114,17 @@ export const vegetanAdapter = {
   title: '日本の野菜卸売・小売価格（独立行政法人農畜産業振興機構「ベジ探」）',
   url: VEGETAN_BASE,
   homepage: 'https://vegetan.alic.go.jp/',
-  license: '独立行政法人農畜産業振興機構の利用規約（出典明示のうえ二次利用可）',
-  licenseUrl: 'https://vegetan.alic.go.jp/riyou.html',
+  // NOTE (legal accuracy, see docs/legal-notes.md): 機構の著作権ページ
+  // (https://vegetan.alic.go.jp/chosaku.html) は「掲載情報の著作権は機構に帰属し、私的使用・
+  // 引用等の著作権法上認められた行為を除き無断引用・転載・複製不可」という一般的な著作権表示で
+  // あり、政府標準利用規約のようなオープンライセンス（出典表示のみで二次利用自由）ではない。
+  // 本サイトはページ・記事を複製せず、価格等の数値（事実データ）を独自に集計・可視化して掲載する
+  // ことで対応している。licenseUrl は実際に著作権条件を記載した chosaku.html を指す
+  // （riyou.html はブラウザ推奨等の別ページで著作権とは無関係）。
+  license:
+    '著作権は機構に帰属（オープンライセンスではない）。本サイトは価格等の数値（事実データ）を' +
+    '独自に集計・可視化して掲載しており、ページ・記事等の転載は行っていない。',
+  licenseUrl: 'https://vegetan.alic.go.jp/chosaku.html',
   attribution:
     '独立行政法人農畜産業振興機構『ベジ探』のデータを加工して作成（原資料: 農林水産省「青果物卸売市場調査」等）',
   cadence: 'daily',

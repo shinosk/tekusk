@@ -447,12 +447,19 @@ function renderAbout(site, meta, updatedLabel, freshnessBySource) {
   <tr><th>データソース</th><td>${esc(veg.title)}</td></tr>
   <tr><th>提供元・出典表示</th><td>${esc(veg.attribution)}</td></tr>
   <tr><th>取得元URL</th><td><a href="${esc(veg.homepage)}" rel="nofollow">${esc(veg.homepage)}</a></td></tr>
-  <tr><th>利用条件</th><td><a href="${esc(veg.licenseUrl)}" rel="nofollow">${esc(veg.license)}</a></td></tr>
+  <tr><th>著作権について（機構の規定）</th><td><a href="${esc(veg.licenseUrl)}" rel="nofollow">${esc(veg.licenseUrl)}</a></td></tr>
   <tr><th>更新頻度</th><td>日次（卸売・東京都中央卸売市場ほか）＋月次（長期系列）。本サイトは日次で自動取得。</td></tr>
   <tr><th>最新データ</th><td>${fmtDate(veg.latestDate)}</td></tr>
 </table>
 <p>日次卸売データ（入荷量・卸売価格・平年値・平年比）は農林水産省「青果物卸売市場調査（日別調査）」を原資料として
-「ベジ探」が公開しているもの、2005年からの長期月次系列は主要品目の価格をまとめたものです。</p>`
+「ベジ探」が公開しているもの、2005年からの長期月次系列は主要品目の価格をまとめたものです。</p>
+<p><strong>著作権の扱いについて:</strong> ${esc(veg.license)}
+「ベジ探」の著作権ページには「掲載されている情報の著作権は、特記されていない限り、機構に帰属します。
+内容の全部又は一部については、私的使用又は引用等著作権法上認められた行為を除き、当機構に無断で
+引用、転載、複製を行うことはできません」と明記されており、政府標準利用規約のような
+出典表示のみで再利用可能なオープンライセンスではありません。本サイトはページや記事を複製・転載せず、
+公開されている価格・数量等の数値（それ自体は著作権法上の保護対象外である事実データ）を独自に
+集計・グラフ化して掲載しています。</p>`
     : '';
 
   const comRows = com
