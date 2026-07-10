@@ -78,8 +78,17 @@ User-Agent を付与しても到達できません（サイト側の403ではな
 
 ### 利用条件・出典表記
 - 全野菜ページに「**出典：独立行政法人農畜産業振興機構『ベジ探』のデータを加工して作成**」を表示。
-- 利用規約原文（https://vegetan.alic.go.jp/riyou.html / chosaku.html）は本サンドボックスから
-  取得不能のため、`scripts/probe.mjs` の SEED_URLS に設定済み。次回プローブで捕獲し内容を確認すること。
+- **2026-07-10 追記: 利用規約原文を本番プローブ（round 3）で取得・確認済み**
+  （`data/raw-samples/files/001-vegetan.alic.go.jp_riyou.html.html` /
+  `002-vegetan.alic.go.jp_chosaku.html.html`）。著作権条件を記載しているのは `chosaku.html`
+  （「著作権について」）で、`riyou.html`（「当ホームページのご利用に当たって」）は推奨ブラウザ・
+  SSL・PDF閲覧に関する別ページであり著作権とは無関係だった。
+  `chosaku.html` の要旨:「掲載されている情報の著作権は、特記されていない限り、機構に帰属します。
+  内容の全部又は一部については、私的使用又は引用等著作権法上認められた行為を除き、当機構に無断で
+  引用、転載、複製を行うことはできません」— **政府標準利用規約のようなオープンライセンス（出典表示のみ
+  で二次利用可）ではない**。詳細な法的整理・リスク評価・推奨アクションは `docs/legal-notes.md` を参照。
+  `src/lib/sources.mjs` の `vegetanAdapter.license` / `licenseUrl` はこの事実を反映済み
+  （`licenseUrl` は `chosaku.html` を指す）。
 
 ## 3. 農林水産省 食品価格動向調査（野菜等の小売価格・週次）
 - URL: https://www.maff.go.jp/j/zyukyu/anpo/kouri/
@@ -129,9 +138,12 @@ User-Agent を付与しても到達できません（サイト側の403ではな
   ランナー上で `node scripts/probe.mjs` が下記の候補URLへ実際にHTTPリクエストを行い、
   HTTPステータス・content-type・本文サンプル（テキストは先頭200KB、バイナリは先頭1MB）を
   `data/raw-samples/index.json` と `data/raw-samples/files/` に保存し、実行ブランチへコミット・プッシュします。
-- 現在の対象URL（round 3）: ベジ探の利用規約・著作権ページ
-  （`https://vegetan.alic.go.jp/riyou.html`, `https://vegetan.alic.go.jp/chosaku.html`）。
-  価格データの構造確定は round 2 のフィクスチャで完了しているため、残る利用条件原文の捕獲に絞っている。
+- round 3（完了）: ベジ探の利用規約・著作権ページ
+  （`https://vegetan.alic.go.jp/riyou.html`, `https://vegetan.alic.go.jp/chosaku.html`）を取得。
+  結果は上記「利用条件・出典表記」の追記を参照。
+- round 4（次期・未実施）: 一次ソース移行のため、e-Stat「青果物卸売市場調査」と東京都中央卸売市場
+  「市場統計情報」のデータURLを特定する。東京都サイトはJS動的CMSのため、HTML直取得ではなく
+  API/documentsエンドポイントの調査が必要。詳細は `docs/roadmap.md` フェーズAを参照。
 - `scripts/probe.mjs` は `scripts/fetch.mjs` と同じfail-safe設計です。1つのURLが失敗（403等）しても
   他のURLの取得を継続し、結果はすべて記録したうえで必ず終了コード0で終わります。
   再実行時は `data/raw-samples/` を**上書き**するため、実行のたびに肥大化することはありません
