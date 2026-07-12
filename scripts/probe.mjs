@@ -49,22 +49,35 @@ const LINK_EXT_RE = /\.(csv|xlsx?|zip)(?:[?#]|$)/i;
 const LINK_FILEDL_RE = /\/stat-search\/file-download\?[^"']*statInfId=/i;
 const LINK_KEYWORD_RE = /(日報|旬報|月報|統計|価格)/;
 
+// e-Stat API のアプリケーションID。公開リポジトリのため値は絶対にコミットせず、
+// GitHub Actions の Secret (ESTAT_APP_ID) から env 経由でのみ受け取る。
+// URL は {APPID} プレースホルダのまま保持し、実際のHTTPリクエスト直前にだけ
+// 差し込む。ログ・index.json・保存ファイルには実IDが残らないようにする。
+const ESTAT_APP_ID = (process.env.ESTAT_APP_ID || '').trim();
+
+function resolveUrl(url) {
+  return url.replace('{APPID}', ESTAT_APP_ID);
+}
+
+// 保存する本文からの防御的スクラブ(レスポンスにIDがエコーされる場合に備える)
+function scrubAppId(text) {
+  if (!ESTAT_APP_ID) return text;
+  return text.split(ESTAT_APP_ID).join('***');
+}
+
 // Candidate production sources. See docs/data-sources.md for the rationale
 // and licensing notes for each.
 const SEED_URLS = [
-  // Round 4: 次期データソース候補の実レスポンスを捕獲する。
-  //   * e-Stat「青果物卸売市場調査」(toukei=00500226) の一覧ページ。ここから
-  //     /stat-search/file-download?statInfId=... のファイル直リンクを辿り、
-  //     CSV/XLSX 本体の構造を確認する（LINK_FILEDL_RE でリンク追跡対象に含めた）。
-  //   * 東京都中央卸売市場の市場統計情報（月報・日報）の一覧。東京都のページは
-  //     全文で 750KB 程度あるため MAX_TEXT_BYTES を 1MB に引き上げ、全文を保存
-  //     してリンクを取りこぼさないようにした。
+  // Round 5: e-Stat API v3(政府標準利用規約・要appId)で「青果物卸売市場調査」
+  // (statsCode=00500226)の統計表一覧を取得する。round 4 でHTML側の一覧はJS動的
+  // 生成と判明したため、APIが唯一の機械取得経路。getStatsList のレスポンスから
+  // statsDataId を抽出し、getStatsData のサンプル(limit=100)を自動追跡する
+  // (probeUrl 内の e-Stat 専用処理)。
   // 注意: probe.mjs は data/raw-samples/ を毎回上書きするが、vegetan/retail アダプタの
   // フィクスチャは test/fixtures/vegetan/ に恒久保存済みのため、上書きしても
   // テスト・--fixtures モードには影響しない。
-  'https://www.e-stat.go.jp/stat-search/files?toukei=00500226',
-  'https://www.shijou.metro.tokyo.lg.jp/torihiki/geppo/',
-  'https://www.shijou.metro.tokyo.lg.jp/torihiki/nippo/',
+  'https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226',
+  'https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&searchWord=%E9%A3%9F%E5%93%81%E4%BE%A1%E6%A0%BC%E5%8B%95%E5%90%91%E8%AA%BF%E6%9F%BB&limit=50',
 ];
 
 function sanitizeName(url) {
@@ -173,20 +186,44 @@ async function probeUrl(url, seq, seen) {
   seen.add(url);
 
   try {
-    const { status, contentType, buf } = await fetchWithRetry(url);
+    const { status, contentType, buf } = await fetchWithRetry(resolveUrl(url));
     record.status = status;
     record.contentType = contentType;
     record.byteLength = buf.length;
     record.ok = status >= 200 && status < 300;
 
     const cap = isTextLike(contentType) ? MAX_TEXT_BYTES : MAX_BINARY_BYTES;
-    const saved = buf.subarray(0, cap);
+    // テキスト系はappIdスクラブ後に保存(バイナリはそのまま)
+    const saved = isTextLike(contentType)
+      ? Buffer.from(scrubAppId(buf.toString('utf8'))).subarray(0, cap)
+      : buf.subarray(0, cap);
     record.savedBytes = saved.length;
     record.truncated = saved.length < buf.length;
 
     const fname = `${String(seq).padStart(3, '0')}-${sanitizeName(url)}${extFor(contentType, url)}`;
     await fs.writeFile(path.join(RAW_SAMPLES_FILES_DIR, fname), saved);
     record.file = `files/${fname}`;
+
+    // e-Stat getStatsList のJSONレスポンスから統計表ID(statsDataId)を抽出し、
+    // getStatsData のサンプル取得を自動追跡する({APPID}のまま保持)。
+    if (record.ok && url.includes('getStatsList') && /json/i.test(contentType)) {
+      try {
+        const body = JSON.parse(buf.toString('utf8'));
+        let tables = body?.GET_STATS_LIST?.DATALIST_INF?.TABLE_INF || [];
+        if (!Array.isArray(tables)) tables = [tables];
+        record.tablesFound = tables.length;
+        record.linksToFollow = tables
+          .map((t) => t['@id'])
+          .filter(Boolean)
+          .slice(0, 4)
+          .map(
+            (id) =>
+              `https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=${id}&limit=100`
+          );
+      } catch (e) {
+        record.parseError = String(e.message || e);
+      }
+    }
 
     if (record.ok && /html/i.test(contentType)) {
       // Scan the full body for links (not just the possibly-truncated saved
