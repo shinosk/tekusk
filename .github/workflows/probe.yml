@@ -39,7 +39,7 @@ jobs:
         run: node scripts/probe.mjs
         env:
           # e-Stat APIのアプリケーションID(公開リポジトリのためSecretでのみ扱う)
-          ESTAT_APP_ID: ${{ secrets.ESTAT_APP_ID }}
+          ESTAT_APP_ID: ${{ secrets.ESTAT_APP_ID || vars.ESTAT_APP_ID }}
 
       - name: Commit raw samples if changed
         run: |
