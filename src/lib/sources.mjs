@@ -5,15 +5,16 @@
 // IMPORTANT (data provenance):
 //   * `commodity` is the VERIFIED, machine-fetchable source used to build and
 //     test the pipeline end-to-end in this repo. See docs/data-sources.md.
-//   * `estat` is the INTENDED PRODUCTION source (Japanese wholesale/retail
-//     vegetable prices). Its endpoints are documented in docs/data-sources.md
-//     but were unreachable from the build sandbox (egress allow-list), so its
-//     parser is intentionally left as a clearly-marked stub to be finalized
-//     against a live response rather than guessed.
+//   * `estat` is a live PRODUCTION source: 農林水産省「青果物卸売市場調査」via the
+//     e-Stat API v3 (statsCode=00500226). It is an ANNUAL survey used as the
+//     public-record detail layer (産地別シェア＋消費地域別の月別卸売価格) behind the
+//     daily ベジ探 data. Discovery + normalization live in src/lib/estat.mjs and
+//     are unit-tested against committed fixtures (test/fixtures/estat/).
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { VEGETAN_FIXTURES_DIR } from './paths.mjs';
+import { VEGETAN_FIXTURES_DIR, ESTAT_FIXTURES_DIR } from './paths.mjs';
+import { ESTAT_TABLE_CATEGORY_RE } from './estat.mjs';
 
 const UA =
   'tekusk-price-bot/1.0 (+https://github.com/; static-site data updater)';
@@ -216,24 +217,105 @@ export const retailAdapter = {
   },
 };
 
-// ---- Adapter: estat (production target, stub) ---------------------------
+// ---- Adapter: estat (production source: e-Stat 青果物卸売市場調査) --------------
+// 農林水産省「青果物卸売市場調査」(statsCode=00500226) via the e-Stat API v3.
+// This is an ANNUAL survey (年次公表), used as the "public-record" detail layer
+// (産地別シェア＋消費地域別の月別卸売価格) behind the daily ベジ探 source.
+//
+// appId handling: the application id comes ONLY from process.env.ESTAT_APP_ID
+// (a GitHub Secret) and is injected at the last moment, in resolveUrl, right
+// before the HTTP call. It is NEVER logged or embedded in error messages —
+// scrubUrl strips both the raw id and the appId query parameter, so a thrown
+// error can be surfaced safely.
+const ESTAT_API = 'https://api.e-stat.go.jp/rest/3.0/app/json';
+const ESTAT_STATS_CODE = '00500226';
+const ESTAT_APP_ID = (process.env.ESTAT_APP_ID || '').trim();
+
+function scrubUrl(s) {
+  let out = String(s);
+  if (ESTAT_APP_ID) out = out.split(ESTAT_APP_ID).join('***');
+  return out.replace(/appId=[^&\s]*/gi, 'appId=***');
+}
+
+// Fetch + JSON-parse, converting any error into an appId-safe message.
+async function fetchEstatJson(url, opts) {
+  let text;
+  try {
+    text = await fetchWithRetry(url, opts);
+  } catch (err) {
+    throw new Error(`estat fetch failed: ${scrubUrl(err.message)}`);
+  }
+  const scrubbed = ESTAT_APP_ID ? text.split(ESTAT_APP_ID).join('***') : text;
+  let json;
+  try {
+    json = JSON.parse(scrubbed);
+  } catch {
+    throw new Error('estat response was not valid JSON');
+  }
+  // Surface e-Stat API-level errors (STATUS != 0) without leaking the id.
+  const result =
+    (json.GET_STATS_LIST && json.GET_STATS_LIST.RESULT) ||
+    (json.GET_STATS_DATA && json.GET_STATS_DATA.RESULT);
+  if (result && result.STATUS && result.STATUS !== 0) {
+    throw new Error(`estat API error STATUS=${result.STATUS}: ${scrubUrl(result.ERROR_MSG || '')}`);
+  }
+  return json;
+}
+
+// Locate a committed estat fixture by embedded statsDataId (probe.mjs saves e.g.
+// "001-...getStatsData_appId_APPID_statsDataId_0004044496_limit_10000.json").
+async function findEstatDataFixture(statsDataId) {
+  const files = await fs.readdir(ESTAT_FIXTURES_DIR);
+  const hit = files.find((f) => f.includes(`statsDataId_${statsDataId}`));
+  if (!hit) return null;
+  return JSON.parse(await fs.readFile(path.join(ESTAT_FIXTURES_DIR, hit), 'utf8'));
+}
+
 export const estatAdapter = {
   id: 'estat',
-  title: '日本の卸売・小売 青果価格（本番想定ソース）',
-  url: 'https://www.e-stat.go.jp/ / https://www.maff.go.jp/j/zyukyu/anpo/kouri/',
-  homepage: 'https://www.e-stat.go.jp/',
-  license: '政府標準利用規約（第2.0版）/ CC-BY 互換',
-  licenseUrl: 'https://www.digital.go.jp/copyright-policy',
-  attribution: '出典: 農林水産省・総務省統計局 等（e-Stat）',
-  cadence: 'weekly/daily',
-  async fetchCsv() {
-    throw new Error(
-      'estat adapter is a documented stub. The Japanese government endpoints ' +
-        'were unreachable from the build sandbox and the exact CSV layout must ' +
-        'be finalized against a live response. See docs/data-sources.md.'
-    );
+  title: '青果物の産地別・消費地域別 卸売価格（農林水産省「青果物卸売市場調査」/ e-Stat）',
+  url: `${ESTAT_API}/getStatsData (statsCode=${ESTAT_STATS_CODE})`,
+  homepage: 'https://www.e-stat.go.jp/stat-search?toukei=00500226',
+  license: '政府標準利用規約（第2.0版）に準拠。出典の明示により二次利用可。',
+  licenseUrl: 'https://www.e-stat.go.jp/terms-of-use',
+  attribution: '農林水産省「青果物卸売市場調査」（e-Stat）を加工して作成',
+  cadence: 'annual',
+
+  hasAppId() {
+    return ESTAT_APP_ID.length > 0;
+  },
+
+  // getStatsList for statsCode=00500226, narrowed by searchWord. Returns the raw
+  // JSON; discovery parsing lives in estat.mjs (listTables/resolveItemTables).
+  // In --fixtures mode reads the committed catalog-tail sample instead.
+  async fetchCatalog(opts = {}) {
+    if (opts.fixtures) {
+      const p = path.join(ESTAT_FIXTURES_DIR, 'catalog-tail-getStatsList.json');
+      return JSON.parse(await fs.readFile(p, 'utf8'));
+    }
+    if (!ESTAT_APP_ID) throw new Error('ESTAT_APP_ID is not set (env/secret required for live estat)');
+    const url =
+      `${ESTAT_API}/getStatsList?appId=${encodeURIComponent(ESTAT_APP_ID)}` +
+      `&statsCode=${ESTAT_STATS_CODE}&searchWord=${encodeURIComponent('主要消費地域別')}&limit=1000`;
+    return fetchEstatJson(url, opts);
+  },
+
+  // getStatsData for one table id. In --fixtures mode returns the committed
+  // sample for that id, or null when none exists (item is skipped).
+  async fetchData(statsDataId, opts = {}) {
+    if (opts.fixtures) {
+      return findEstatDataFixture(statsDataId);
+    }
+    if (!ESTAT_APP_ID) throw new Error('ESTAT_APP_ID is not set (env/secret required for live estat)');
+    const url =
+      `${ESTAT_API}/getStatsData?appId=${encodeURIComponent(ESTAT_APP_ID)}` +
+      `&statsDataId=${statsDataId}&limit=100000`;
+    return fetchEstatJson(url, opts);
   },
 };
+
+// Re-exported for callers that want the discovery regex without importing estat.
+export { ESTAT_TABLE_CATEGORY_RE };
 
 export const adapters = {
   commodity: commodityAdapter,

@@ -120,6 +120,48 @@ test('build.mjs emits retail pages and item explainer/retail sections', (t) => {
   assert.match(fs.readFileSync(path.join(PUBLIC_DIR, 'index.html'), 'utf8'), /小売価格/);
 });
 
+// e-Stat (青果物卸売市場調査・年次): when data/estat exists, the build must emit
+// standalone fruit item pages, add the 果実 top-page section + nav, embed the
+// 産地/地域別 section on vegetable pages that have estat data, and frame it all as
+// annual (年次) — never with a stale "archive banner". Root-absolute internal
+// links must carry the /tekusk path prefix, and the source must be attributed.
+test('build.mjs emits estat fruit pages, veg estat sections and honest annual framing', (t) => {
+  const metaPath = path.join(DATA_DIR, 'meta.json');
+  const estatDir = path.join(DATA_DIR, 'estat');
+  if (!fs.existsSync(metaPath) || !fs.existsSync(estatDir)) {
+    t.skip('no data/estat — run `node scripts/fetch.mjs --source=estat --fixtures` first');
+    return;
+  }
+  execFileSync('node', ['scripts/build.mjs'], { cwd: ROOT, stdio: 'pipe' });
+
+  // Standalone fruit page (apple) exists with annual framing + attribution.
+  const applePath = path.join(PUBLIC_DIR, 'items/apple/index.html');
+  assert.ok(fs.existsSync(applePath), 'public/items/apple/index.html should exist');
+  const apple = fs.readFileSync(applePath, 'utf8');
+  assert.match(apple, /青果物卸売市場調査/);
+  assert.match(apple, /年次公表/);
+  assert.match(apple, /e-Stat）を加工して作成/);
+  assert.doesNotMatch(apple, /archive-banner/); // annual data is not "archived"
+  assert.match(apple, /主な産地/);
+  assert.match(apple, /消費地域別の月別卸売価格/);
+
+  // Top page: 果実 section + nav link, root-absolute internal links prefixed.
+  const index = fs.readFileSync(path.join(PUBLIC_DIR, 'index.html'), 'utf8');
+  assert.match(index, /id="fruits"/);
+  assert.match(index, /果実の卸売価格と産地/);
+  assert.match(index, /href="\/tekusk\/items\/apple\//);
+  assert.match(index, /href="\/tekusk\/#fruits"/); // nav
+
+  // Vegetable page (radish) gained the embedded 政府統計 section.
+  const radish = fs.readFileSync(path.join(PUBLIC_DIR, 'items/radish/index.html'), 'utf8');
+  assert.match(radish, /産地と地域別の卸売価格（政府統計）/);
+  assert.match(radish, /青果物卸売市場調査/);
+
+  // Sitemap + about attribution.
+  assert.match(fs.readFileSync(path.join(PUBLIC_DIR, 'sitemap.xml'), 'utf8'), /\/items\/apple\//);
+  assert.match(fs.readFileSync(path.join(PUBLIC_DIR, 'about/index.html'), 'utf8'), /青果物卸売市場調査/);
+});
+
 // Per-source freshness + attribution: on a build that has BOTH the live
 // vegetan data and the frozen commodity archive, veg pages must carry live
 // copy + the ベジ探 attribution and NO archive banner, while commodity pages

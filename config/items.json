@@ -327,7 +327,8 @@
       "dailySheet": "キャベツ",
       "source": "vegetan",
       "retailKey": "kyabetu",
-      "retailSheet": "キャベツ"
+      "retailSheet": "キャベツ",
+      "estatTitle": "キャベツ"
     },
     {
       "slug": "spinach",
@@ -343,7 +344,8 @@
       "dailySheet": "ほうれんそう",
       "source": "vegetan",
       "retailKey": "hourensou",
-      "retailSheet": "ほうれんそう"
+      "retailSheet": "ほうれんそう",
+      "estatTitle": "ほうれんそう"
     },
     {
       "slug": "chinese-cabbage",
@@ -359,7 +361,8 @@
       "dailySheet": "はくさい",
       "source": "vegetan",
       "retailKey": "hakusai",
-      "retailSheet": "はくさい"
+      "retailSheet": "はくさい",
+      "estatTitle": "はくさい"
     },
     {
       "slug": "welsh-onion",
@@ -375,7 +378,8 @@
       "dailySheet": "ねぎ",
       "source": "vegetan",
       "retailKey": "negi",
-      "retailSheet": "白ねぎ"
+      "retailSheet": "白ねぎ",
+      "estatTitle": "ねぎ"
     },
     {
       "slug": "lettuce",
@@ -391,7 +395,8 @@
       "dailySheet": "レタス",
       "source": "vegetan",
       "retailKey": "retasu",
-      "retailSheet": "レタス"
+      "retailSheet": "レタス",
+      "estatTitle": "レタス"
     },
     {
       "slug": "onion",
@@ -407,7 +412,8 @@
       "dailySheet": "たまねぎ",
       "source": "vegetan",
       "retailKey": "tamanegi",
-      "retailSheet": "たまねぎ"
+      "retailSheet": "たまねぎ",
+      "estatTitle": "たまねぎ"
     },
     {
       "slug": "broccoli",
@@ -423,7 +429,8 @@
       "dailySheet": "ブロッコリー",
       "source": "vegetan",
       "retailKey": "buroccoli",
-      "retailSheet": "ブロッコリー"
+      "retailSheet": "ブロッコリー",
+      "estatTitle": "ブロッコリー"
     },
     {
       "slug": "cucumber",
@@ -439,7 +446,8 @@
       "dailySheet": "きゅうり",
       "source": "vegetan",
       "retailKey": "kyuuri",
-      "retailSheet": "きゅうり"
+      "retailSheet": "きゅうり",
+      "estatTitle": "きゅうり"
     },
     {
       "slug": "tomato",
@@ -455,7 +463,8 @@
       "dailySheet": "トマト",
       "source": "vegetan",
       "retailKey": "tomato",
-      "retailSheet": "トマト"
+      "retailSheet": "トマト",
+      "estatTitle": "トマト"
     },
     {
       "slug": "eggplant",
@@ -471,7 +480,8 @@
       "dailySheet": "なす",
       "source": "vegetan",
       "retailKey": "nasu",
-      "retailSheet": "なす"
+      "retailSheet": "なす",
+      "estatTitle": "なす"
     },
     {
       "slug": "green-pepper",
@@ -487,7 +497,8 @@
       "dailySheet": "ピーマン",
       "source": "vegetan",
       "retailKey": "piman",
-      "retailSheet": "ピーマン"
+      "retailSheet": "ピーマン",
+      "estatTitle": "ピーマン"
     },
     {
       "slug": "asparagus",
@@ -501,7 +512,8 @@
       "monthlyKey": "asparagus",
       "dailyBook": null,
       "dailySheet": null,
-      "source": "vegetan"
+      "source": "vegetan",
+      "estatTitle": "アスパラガス"
     },
     {
       "slug": "radish",
@@ -517,7 +529,8 @@
       "dailySheet": "だいこん",
       "source": "vegetan",
       "retailKey": "daikon",
-      "retailSheet": "だいこん"
+      "retailSheet": "だいこん",
+      "estatTitle": "だいこん"
     },
     {
       "slug": "carrot",
@@ -533,7 +546,8 @@
       "dailySheet": "にんじん",
       "source": "vegetan",
       "retailKey": "ninjin",
-      "retailSheet": "にんじん"
+      "retailSheet": "にんじん",
+      "estatTitle": "にんじん"
     },
     {
       "slug": "burdock",
@@ -547,7 +561,8 @@
       "monthlyKey": "burdosk",
       "dailyBook": null,
       "dailySheet": null,
-      "source": "vegetan"
+      "source": "vegetan",
+      "estatTitle": "ごぼう"
     },
     {
       "slug": "lotus-root",
@@ -561,7 +576,8 @@
       "monthlyKey": "lotus-root",
       "dailyBook": null,
       "dailySheet": null,
-      "source": "vegetan"
+      "source": "vegetan",
+      "estatTitle": "れんこん"
     },
     {
       "slug": "taro",
@@ -577,7 +593,8 @@
       "dailySheet": "さといも",
       "source": "vegetan",
       "retailKey": "satoimo",
-      "retailSheet": "さといも"
+      "retailSheet": "さといも",
+      "estatTitle": "さといも"
     },
     {
       "slug": "potato",
@@ -593,7 +610,8 @@
       "dailySheet": "ばれいしょ",
       "source": "vegetan",
       "retailKey": "bareisyo",
-      "retailSheet": "ばれいしょ"
+      "retailSheet": "ばれいしょ",
+      "estatTitle": "ばれいしょ"
     },
     {
       "slug": "sweet-potato",
@@ -607,7 +625,169 @@
       "monthlyKey": "sweet-potato",
       "dailyBook": null,
       "dailySheet": null,
-      "source": "vegetan"
+      "source": "vegetan",
+      "estatTitle": "かんしょ"
+    },
+    {
+      "slug": "mini-tomato",
+      "name": "ミニトマト",
+      "emoji": "🍅",
+      "category": "果菜",
+      "unit": "円/kg",
+      "origin": "卸売市場（産地別・年次）",
+      "season": "夏が旬",
+      "buyKeyword": "ミニトマト",
+      "source": "estat",
+      "estatTitle": "ミニトマト"
+    },
+    {
+      "slug": "apple",
+      "name": "りんご",
+      "emoji": "🍎",
+      "category": "果実",
+      "unit": "円/kg",
+      "origin": "卸売市場（産地別・年次）",
+      "season": "秋〜冬が旬",
+      "buyKeyword": "りんご",
+      "source": "estat",
+      "estatTitle": "りんご",
+      "estatVariety": "計"
+    },
+    {
+      "slug": "mandarin",
+      "name": "みかん",
+      "emoji": "🍊",
+      "category": "果実",
+      "unit": "円/kg",
+      "origin": "卸売市場（産地別・年次）",
+      "season": "冬が旬",
+      "buyKeyword": "みかん",
+      "source": "estat",
+      "estatTitle": "みかん"
+    },
+    {
+      "slug": "strawberry",
+      "name": "いちご",
+      "emoji": "🍓",
+      "category": "果実",
+      "unit": "円/kg",
+      "origin": "卸売市場（産地別・年次）",
+      "season": "冬〜春が旬",
+      "buyKeyword": "いちご",
+      "source": "estat",
+      "estatTitle": "いちご"
+    },
+    {
+      "slug": "grape",
+      "name": "ぶどう",
+      "emoji": "🍇",
+      "category": "果実",
+      "unit": "円/kg",
+      "origin": "卸売市場（産地別・年次）",
+      "season": "夏〜秋が旬",
+      "buyKeyword": "ぶどう",
+      "source": "estat",
+      "estatTitle": "ぶどう",
+      "estatVariety": "計"
+    },
+    {
+      "slug": "japanese-pear",
+      "name": "日本なし",
+      "emoji": "🍐",
+      "category": "果実",
+      "unit": "円/kg",
+      "origin": "卸売市場（産地別・年次）",
+      "season": "秋が旬",
+      "buyKeyword": "梨",
+      "source": "estat",
+      "estatTitle": "日本なし",
+      "estatVariety": "計"
+    },
+    {
+      "slug": "peach",
+      "name": "もも",
+      "emoji": "🍑",
+      "category": "果実",
+      "unit": "円/kg",
+      "origin": "卸売市場（産地別・年次）",
+      "season": "夏が旬",
+      "buyKeyword": "桃",
+      "source": "estat",
+      "estatTitle": "もも"
+    },
+    {
+      "slug": "watermelon",
+      "name": "すいか",
+      "emoji": "🍉",
+      "category": "果実",
+      "unit": "円/kg",
+      "origin": "卸売市場（産地別・年次）",
+      "season": "夏が旬",
+      "buyKeyword": "すいか",
+      "source": "estat",
+      "estatTitle": "すいか"
+    },
+    {
+      "slug": "melon",
+      "name": "メロン",
+      "emoji": "🍈",
+      "category": "果実",
+      "unit": "円/kg",
+      "origin": "卸売市場（産地別・年次）",
+      "season": "初夏〜夏が旬",
+      "buyKeyword": "メロン",
+      "source": "estat",
+      "estatTitle": "メロン",
+      "estatVariety": "計"
+    },
+    {
+      "slug": "persimmon",
+      "name": "かき",
+      "emoji": "🟠",
+      "category": "果実",
+      "unit": "円/kg",
+      "origin": "卸売市場（産地別・年次）",
+      "season": "秋が旬",
+      "buyKeyword": "柿",
+      "source": "estat",
+      "estatTitle": "かき",
+      "estatVariety": "計"
+    },
+    {
+      "slug": "kiwi",
+      "name": "キウイフルーツ",
+      "emoji": "🥝",
+      "category": "果実",
+      "unit": "円/kg",
+      "origin": "卸売市場（産地別・年次）",
+      "season": "冬〜春が旬（国産）",
+      "buyKeyword": "キウイ",
+      "source": "estat",
+      "estatTitle": "キウイフルーツ"
+    },
+    {
+      "slug": "cherry",
+      "name": "さくらんぼ",
+      "emoji": "🍒",
+      "category": "果実",
+      "unit": "円/kg",
+      "origin": "卸売市場（産地別・年次）",
+      "season": "初夏が旬",
+      "buyKeyword": "さくらんぼ",
+      "source": "estat",
+      "estatTitle": "おうとう"
+    },
+    {
+      "slug": "western-pear",
+      "name": "西洋なし",
+      "emoji": "🍐",
+      "category": "果実",
+      "unit": "円/kg",
+      "origin": "卸売市場（産地別・年次）",
+      "season": "秋〜冬が旬",
+      "buyKeyword": "洋なし",
+      "source": "estat",
+      "estatTitle": "西洋なし"
     }
   ],
   "vegetanFiles": {

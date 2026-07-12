@@ -21,15 +21,23 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { CONFIG_DIR, DATA_DIR, DATA_ITEMS_DIR, DATA_RETAIL_DIR } from '../src/lib/paths.mjs';
+import { CONFIG_DIR, DATA_DIR, DATA_ITEMS_DIR, DATA_RETAIL_DIR, DATA_ESTAT_DIR } from '../src/lib/paths.mjs';
 import { getAdapter } from '../src/lib/sources.mjs';
 import { normalizeItems, mergeByDate } from '../src/lib/normalize.mjs';
 import { normalizeVegetan } from '../src/lib/vegetan.mjs';
 import { normalizeRetail } from '../src/lib/retail.mjs';
+import {
+  listTables,
+  latestListYear,
+  resolveItemTables,
+  normalizeEstat,
+  expectedLatestYear,
+} from '../src/lib/estat.mjs';
 
 const args = process.argv.slice(2);
 const strict = args.includes('--strict');
 const fixtures = args.includes('--fixtures');
+const force = args.includes('--force');
 const sourceArg =
   (args.find((a) => a.startsWith('--source=')) || '').split('=')[1] ||
   process.env.SOURCE ||
@@ -102,9 +110,9 @@ async function updateMeta(adapter, extra) {
   const primary = sources[primaryId];
 
   // The top-level itemCount/totalPoints reflect the item PAGES (vegetan +
-  // commodity); retail is a separate cross-tabulated dataset and is not summed
-  // in so the OG "N品目" stays honest.
-  const pageSources = Object.entries(sources).filter(([id]) => id !== 'retail');
+  // commodity); retail and estat are separate cross-tabulated datasets and are
+  // not summed in so the OG "N品目" stays honest.
+  const pageSources = Object.entries(sources).filter(([id]) => id !== 'retail' && id !== 'estat');
   const meta = {
     generatedAt: new Date().toISOString(),
     primarySource: primaryId,
@@ -201,10 +209,101 @@ async function runRetail(adapter, catalog) {
   console.log('[fetch] done.');
 }
 
+// e-Stat「青果物卸売市場調査」(annual). Writes data/estat/<slug>.json with the
+// latest published year's 産地別シェア + 消費地域別の月別卸売価格. Idempotent &
+// skip-heavy: this is a YEARLY dataset, so once the committed data already
+// covers the latest expected year we make ZERO API calls (unless --force).
+async function runEstat(adapter, catalog) {
+  const catalogItems = catalog.items.filter((it) => it.estatTitle);
+  console.log(`[fetch] source=${adapter.id} (${adapter.title})${fixtures ? ' [fixtures]' : ''}`);
+  if (catalogItems.length === 0) throw new Error('no catalog items with estatTitle');
+
+  const prevMeta = await readJson(path.join(DATA_DIR, 'meta.json'), {});
+  const prevEstat = (prevMeta.sources && prevMeta.sources.estat) || null;
+
+  // Zero-call skip: on a normal daily run the annual data is already current.
+  // Never skip when the committed data was generated from --fixtures (a partial,
+  // 4-item dev subset): production must do at least one real fetch to replace it.
+  if (!fixtures && !force && prevEstat && prevEstat.year != null && !prevEstat.fromFixtures) {
+    const expected = expectedLatestYear(new Date());
+    if (prevEstat.year >= expected) {
+      console.log(
+        `[fetch] estat already at year ${prevEstat.year} (>= expected ${expected}); ` +
+          'skipping all API calls. Use --force to refetch.'
+      );
+      return;
+    }
+  }
+
+  // Discovery (1 API call, or the committed catalog-tail fixture).
+  const listJson = await adapter.fetchCatalog({ retries: 4, timeoutMs: 30000, fixtures });
+  const tables = listTables(listJson);
+  const year = latestListYear(tables);
+  if (year == null) throw new Error('estat discovery found no 主要消費地域別 tables');
+  const resolved = resolveItemTables(tables, catalogItems, year);
+  console.log(`[fetch] estat latest published year=${year}, matched ${resolved.length} items`);
+
+  await fs.mkdir(DATA_ESTAT_DIR, { recursive: true });
+  const records = [];
+  const skipped = [];
+  const missing = [];
+  for (const r of resolved) {
+    const outPath = path.join(DATA_ESTAT_DIR, `${r.item.slug}.json`);
+    const existing = await readJson(outPath, null);
+    // Per-item idempotency: don't refetch a slug we already have for this year.
+    if (!force && existing && existing.year === r.year) {
+      records.push(existing);
+      skipped.push(r.item.slug);
+      continue;
+    }
+    let dataJson;
+    try {
+      dataJson = await adapter.fetchData(r.id, { retries: 4, timeoutMs: 30000, fixtures });
+    } catch (err) {
+      console.error(`[fetch] estat ${r.item.slug} (${r.id}) failed: ${err.message}`);
+      if (existing) records.push(existing);
+      continue;
+    }
+    if (!dataJson) {
+      // --fixtures: no committed sample for this table → skip (keep existing).
+      missing.push(r.item.slug);
+      if (existing) records.push(existing);
+      continue;
+    }
+    const rec = normalizeEstat(dataJson, r.item, r);
+    if (!rec) {
+      console.error(`[fetch] estat ${r.item.slug} normalized to nothing — skipped`);
+      if (existing) records.push(existing);
+      continue;
+    }
+    rec.updatedAt = new Date().toISOString();
+    await fs.writeFile(outPath, JSON.stringify(rec, null, 2) + '\n');
+    records.push(rec);
+  }
+
+  if (records.length === 0) {
+    throw new Error('estat produced 0 records — refusing to update meta');
+  }
+
+  await updateMeta(adapter, {
+    year,
+    itemCount: records.length,
+    latestDate: `${year}-12-01`,
+    missing,
+    fromFixtures: fixtures,
+  });
+  console.log(
+    `[fetch] wrote ${records.length - skipped.length} estat files (${skipped.length} up-to-date), year=${year}` +
+      (missing.length ? `, no-fixture: ${missing.join(', ')}` : '')
+  );
+  console.log('[fetch] done.');
+}
+
 async function main() {
   const catalog = await readJson(path.join(CONFIG_DIR, 'items.json'), { items: [] });
   const adapter = getAdapter(sourceArg);
   if (adapter.id === 'retail') return runRetail(adapter, catalog);
+  if (adapter.id === 'estat') return runEstat(adapter, catalog);
 
   const catalogItems = catalog.items.filter((it) => (it.source || 'commodity') === adapter.id);
 

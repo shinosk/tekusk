@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-12T13:06:49.424Z",
+  "generatedAt": "2026-07-12T22:34:09.571Z",
   "primarySource": "vegetan",
   "sources": {
     "vegetan": {
@@ -47,6 +47,51 @@
       "latestDate": "2026-06-01",
       "missing": [],
       "updatedAt": "2026-07-12T13:06:49.424Z"
+    },
+    "estat": {
+      "id": "estat",
+      "title": "青果物の産地別・消費地域別 卸売価格（農林水産省「青果物卸売市場調査」/ e-Stat）",
+      "url": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData (statsCode=00500226)",
+      "homepage": "https://www.e-stat.go.jp/stat-search?toukei=00500226",
+      "license": "政府標準利用規約（第2.0版）に準拠。出典の明示により二次利用可。",
+      "licenseUrl": "https://www.e-stat.go.jp/terms-of-use",
+      "attribution": "農林水産省「青果物卸売市場調査」（e-Stat）を加工して作成",
+      "cadence": "annual",
+      "year": 2024,
+      "itemCount": 4,
+      "latestDate": "2024-12-01",
+      "missing": [
+        "spinach",
+        "chinese-cabbage",
+        "welsh-onion",
+        "lettuce",
+        "onion",
+        "broccoli",
+        "cucumber",
+        "tomato",
+        "eggplant",
+        "green-pepper",
+        "asparagus",
+        "carrot",
+        "burdock",
+        "lotus-root",
+        "taro",
+        "potato",
+        "sweet-potato",
+        "mandarin",
+        "strawberry",
+        "grape",
+        "japanese-pear",
+        "peach",
+        "watermelon",
+        "melon",
+        "persimmon",
+        "kiwi",
+        "cherry",
+        "western-pear"
+      ],
+      "fromFixtures": true,
+      "updatedAt": "2026-07-12T22:34:09.571Z"
     }
   },
   "source": {

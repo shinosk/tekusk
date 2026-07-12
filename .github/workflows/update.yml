@@ -49,6 +49,14 @@ jobs:
       - name: Fetch city retail prices (retail, monthly, fail-safe)
         run: node scripts/fetch.mjs --source=retail
 
+      # e-Stat「青果物卸売市場調査」は年次公表。既取得年のデータがあれば API 呼び出し
+      # ゼロで即終了する（毎日叩かない）。ESTAT_APP_ID は Secret 優先・無ければ Variable。
+      # fail-safe 設計なので、未設定・失敗時も既存 data/ は不変で exit 0。
+      - name: Fetch estat 青果 origin/region prices (annual, fail-safe)
+        env:
+          ESTAT_APP_ID: ${{ secrets.ESTAT_APP_ID || vars.ESTAT_APP_ID }}
+        run: node scripts/fetch.mjs --source=estat
+
       - name: Fetch commodity archive (fail-safe)
         run: node scripts/fetch.mjs --source=commodity
 

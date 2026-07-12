@@ -65,6 +65,13 @@ footer.site a{color:var(--muted);text-decoration:underline}
 .breadcrumb{font-size:.82rem;color:var(--muted);margin:4px 0 10px}
 .breadcrumb a{color:var(--muted)}
 .cat-tag{font-size:.78rem;color:var(--muted)}
+.obars{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.obar{display:grid;grid-template-columns:6em 1fr 4.2em;align-items:center;gap:8px;font-size:.9rem}
+.obar .nm{color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.obar .track{background:var(--line);border-radius:6px;height:14px;overflow:hidden}
+.obar .fill{background:var(--accent);height:100%;border-radius:6px;min-width:2px}
+.obar .pc{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.estat-note{font-size:.82rem}
 .archive-banner{background:#7a4a12;color:#fff8ec;text-align:center;font-size:.85rem;padding:8px 14px}
 @media (prefers-color-scheme:dark){.archive-banner{background:#5c3a11;color:#ffe9c7}}
 @media (max-width:520px){h1{font-size:1.35rem}nav.main a{margin-left:10px}}
@@ -163,6 +170,7 @@ ${archiveBanner(freshness)}
   <a class="brand" href="/">🥬 ${esc(site.siteName.replace('価格ナビ', ''))}<span>価格ナビ</span></a>
   <nav class="main">
     <a href="/">トップ</a>
+    <a href="/#fruits">果実</a>
     <a href="/retail/">小売価格</a>
     <a href="/weekly/">週報</a>
     <a href="/archive/">国際市況</a>
