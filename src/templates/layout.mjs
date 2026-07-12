@@ -108,6 +108,25 @@ function footerNotice(freshness) {
 // page: { title, description, path, canonical, breadcrumb, jsonld, body,
 //         freshness } — page.freshness (per data source) overrides site.freshness
 // so a live veg page and an archived commodity page can each show honest copy.
+// GitHub Pages のプロジェクトサイトは https://<user>.github.io/<repo>/ の
+// サブパス配下で配信されるため、ルート絶対パス(/assets/... /items/... 等)には
+// baseUrl のパス部分(例: /tekusk)を前置しないと 404 になる。カスタムドメイン
+// (パス部が /)では空文字になり、書き換えは実質無効化される。
+export function sitePathPrefix(site) {
+  try {
+    return new URL(site.baseUrl).pathname.replace(/\/$/, '');
+  } catch {
+    return '';
+  }
+}
+
+// 最終HTML内のルート絶対 href/src にだけ前置する(http(s)の完全URL・
+// data: URI・protocol-relative "//" は対象外)。
+export function applyPathPrefix(html, prefix) {
+  if (!prefix) return html;
+  return html.replace(/(href|src)="\/(?!\/)/g, `$1="${prefix}/`);
+}
+
 export function renderPage(site, page) {
   const canonical = site.baseUrl.replace(/\/$/, '') + page.path;
   const ogImage = site.baseUrl.replace(/\/$/, '') + '/assets/og.svg';
@@ -116,7 +135,7 @@ export function renderPage(site, page) {
 
   const jsonldBlocks = (page.jsonld || []).map(jsonLd).join('\n');
 
-  return `<!doctype html>
+  return applyPathPrefix(`<!doctype html>
 <html lang="${esc(site.lang)}">
 <head>
 <meta charset="utf-8">
@@ -158,7 +177,7 @@ ${page.body}
   <p><a href="/about/">データ出典・免責事項</a>　|　最終更新: ${esc(page.updatedLabel || '')}</p>
 </div></footer>
 </body>
-</html>`;
+</html>`, sitePathPrefix(site));
 }
 
 function renderBreadcrumb(items) {
