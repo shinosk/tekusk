@@ -1,0 +1,862 @@
+{
+  "slug": "potato",
+  "name": "ばれいしょ",
+  "emoji": "🥔",
+  "category": "いも類",
+  "unit": "円/kg",
+  "source": "estat",
+  "year": 2024,
+  "statsDataId": "0004044446",
+  "title": "野菜の主要消費地域別・産地別の卸売数量及び卸売価格 ばれいしょ",
+  "priceUnit": "円/kg",
+  "regionsOrder": [
+    "北海道",
+    "東北",
+    "東北_仙台・盛岡",
+    "関東",
+    "関東_京浜",
+    "北陸",
+    "東海",
+    "近畿",
+    "中国",
+    "四国",
+    "九州",
+    "九州_北九州"
+  ],
+  "regions": {
+    "北海道": [
+      {
+        "month": 1,
+        "price": 92,
+        "qty": 1257
+      },
+      {
+        "month": 2,
+        "price": 88,
+        "qty": 1362
+      },
+      {
+        "month": 3,
+        "price": 94,
+        "qty": 1702
+      },
+      {
+        "month": 4,
+        "price": 112,
+        "qty": 1247
+      },
+      {
+        "month": 5,
+        "price": 147,
+        "qty": 1022
+      },
+      {
+        "month": 6,
+        "price": 152,
+        "qty": 977
+      },
+      {
+        "month": 7,
+        "price": 209,
+        "qty": 1437
+      },
+      {
+        "month": 8,
+        "price": 203,
+        "qty": 2621
+      },
+      {
+        "month": 9,
+        "price": 129,
+        "qty": 2715
+      },
+      {
+        "month": 10,
+        "price": 103,
+        "qty": 2180
+      },
+      {
+        "month": 11,
+        "price": 110,
+        "qty": 2108
+      },
+      {
+        "month": 12,
+        "price": 128,
+        "qty": 1734
+      }
+    ],
+    "東北": [
+      {
+        "month": 1,
+        "price": 120,
+        "qty": 913
+      },
+      {
+        "month": 2,
+        "price": 122,
+        "qty": 994
+      },
+      {
+        "month": 3,
+        "price": 130,
+        "qty": 1096
+      },
+      {
+        "month": 4,
+        "price": 169,
+        "qty": 918
+      },
+      {
+        "month": 5,
+        "price": 252,
+        "qty": 917
+      },
+      {
+        "month": 6,
+        "price": 278,
+        "qty": 997
+      },
+      {
+        "month": 7,
+        "price": 233,
+        "qty": 1163
+      },
+      {
+        "month": 8,
+        "price": 224,
+        "qty": 922
+      },
+      {
+        "month": 9,
+        "price": 147,
+        "qty": 890
+      },
+      {
+        "month": 10,
+        "price": 114,
+        "qty": 882
+      },
+      {
+        "month": 11,
+        "price": 127,
+        "qty": 841
+      },
+      {
+        "month": 12,
+        "price": 160,
+        "qty": 931
+      }
+    ],
+    "東北_仙台・盛岡": [
+      {
+        "month": 1,
+        "price": 127,
+        "qty": 562
+      },
+      {
+        "month": 2,
+        "price": 124,
+        "qty": 606
+      },
+      {
+        "month": 3,
+        "price": 138,
+        "qty": 639
+      },
+      {
+        "month": 4,
+        "price": 191,
+        "qty": 529
+      },
+      {
+        "month": 5,
+        "price": 258,
+        "qty": 573
+      },
+      {
+        "month": 6,
+        "price": 281,
+        "qty": 654
+      },
+      {
+        "month": 7,
+        "price": 210,
+        "qty": 420
+      },
+      {
+        "month": 8,
+        "price": 220,
+        "qty": 322
+      },
+      {
+        "month": 9,
+        "price": 153,
+        "qty": 470
+      },
+      {
+        "month": 10,
+        "price": 119,
+        "qty": 546
+      },
+      {
+        "month": 11,
+        "price": 129,
+        "qty": 512
+      },
+      {
+        "month": 12,
+        "price": 160,
+        "qty": 544
+      }
+    ],
+    "関東": [
+      {
+        "month": 1,
+        "price": 131,
+        "qty": 9161
+      },
+      {
+        "month": 2,
+        "price": 138,
+        "qty": 9882
+      },
+      {
+        "month": 3,
+        "price": 155,
+        "qty": 9800
+      },
+      {
+        "month": 4,
+        "price": 183,
+        "qty": 10172
+      },
+      {
+        "month": 5,
+        "price": 237,
+        "qty": 9311
+      },
+      {
+        "month": 6,
+        "price": 309,
+        "qty": 6964
+      },
+      {
+        "month": 7,
+        "price": 255,
+        "qty": 4750
+      },
+      {
+        "month": 8,
+        "price": 240,
+        "qty": 6247
+      },
+      {
+        "month": 9,
+        "price": 150,
+        "qty": 7855
+      },
+      {
+        "month": 10,
+        "price": 118,
+        "qty": 9210
+      },
+      {
+        "month": 11,
+        "price": 132,
+        "qty": 8810
+      },
+      {
+        "month": 12,
+        "price": 176,
+        "qty": 8981
+      }
+    ],
+    "関東_京浜": [
+      {
+        "month": 1,
+        "price": 132,
+        "qty": 8056
+      },
+      {
+        "month": 2,
+        "price": 138,
+        "qty": 8610
+      },
+      {
+        "month": 3,
+        "price": 154,
+        "qty": 8623
+      },
+      {
+        "month": 4,
+        "price": 181,
+        "qty": 8980
+      },
+      {
+        "month": 5,
+        "price": 236,
+        "qty": 8392
+      },
+      {
+        "month": 6,
+        "price": 310,
+        "qty": 6133
+      },
+      {
+        "month": 7,
+        "price": 251,
+        "qty": 4303
+      },
+      {
+        "month": 8,
+        "price": 239,
+        "qty": 5660
+      },
+      {
+        "month": 9,
+        "price": 149,
+        "qty": 7037
+      },
+      {
+        "month": 10,
+        "price": 118,
+        "qty": 8190
+      },
+      {
+        "month": 11,
+        "price": 131,
+        "qty": 7931
+      },
+      {
+        "month": 12,
+        "price": 177,
+        "qty": 8069
+      }
+    ],
+    "北陸": [
+      {
+        "month": 1,
+        "price": 129,
+        "qty": 871
+      },
+      {
+        "month": 2,
+        "price": 135,
+        "qty": 848
+      },
+      {
+        "month": 3,
+        "price": 149,
+        "qty": 1024
+      },
+      {
+        "month": 4,
+        "price": 177,
+        "qty": 921
+      },
+      {
+        "month": 5,
+        "price": 231,
+        "qty": 985
+      },
+      {
+        "month": 6,
+        "price": 331,
+        "qty": 574
+      },
+      {
+        "month": 7,
+        "price": 274,
+        "qty": 276
+      },
+      {
+        "month": 8,
+        "price": 269,
+        "qty": 396
+      },
+      {
+        "month": 9,
+        "price": 157,
+        "qty": 515
+      },
+      {
+        "month": 10,
+        "price": 114,
+        "qty": 655
+      },
+      {
+        "month": 11,
+        "price": 139,
+        "qty": 546
+      },
+      {
+        "month": 12,
+        "price": 182,
+        "qty": 696
+      }
+    ],
+    "東海": [
+      {
+        "month": 1,
+        "price": 138,
+        "qty": 3116
+      },
+      {
+        "month": 2,
+        "price": 166,
+        "qty": 3237
+      },
+      {
+        "month": 3,
+        "price": 172,
+        "qty": 3626
+      },
+      {
+        "month": 4,
+        "price": 197,
+        "qty": 3637
+      },
+      {
+        "month": 5,
+        "price": 231,
+        "qty": 3290
+      },
+      {
+        "month": 6,
+        "price": 316,
+        "qty": 2043
+      },
+      {
+        "month": 7,
+        "price": 301,
+        "qty": 1504
+      },
+      {
+        "month": 8,
+        "price": 248,
+        "qty": 2539
+      },
+      {
+        "month": 9,
+        "price": 148,
+        "qty": 3033
+      },
+      {
+        "month": 10,
+        "price": 119,
+        "qty": 3315
+      },
+      {
+        "month": 11,
+        "price": 141,
+        "qty": 2808
+      },
+      {
+        "month": 12,
+        "price": 188,
+        "qty": 3163
+      }
+    ],
+    "近畿": [
+      {
+        "month": 1,
+        "price": 121,
+        "qty": 5486
+      },
+      {
+        "month": 2,
+        "price": 123,
+        "qty": 6628
+      },
+      {
+        "month": 3,
+        "price": 147,
+        "qty": 7165
+      },
+      {
+        "month": 4,
+        "price": 181,
+        "qty": 7129
+      },
+      {
+        "month": 5,
+        "price": 233,
+        "qty": 6410
+      },
+      {
+        "month": 6,
+        "price": 292,
+        "qty": 4317
+      },
+      {
+        "month": 7,
+        "price": 280,
+        "qty": 3530
+      },
+      {
+        "month": 8,
+        "price": 235,
+        "qty": 5250
+      },
+      {
+        "month": 9,
+        "price": 131,
+        "qty": 5795
+      },
+      {
+        "month": 10,
+        "price": 111,
+        "qty": 6393
+      },
+      {
+        "month": 11,
+        "price": 132,
+        "qty": 5704
+      },
+      {
+        "month": 12,
+        "price": 169,
+        "qty": 5823
+      }
+    ],
+    "中国": [
+      {
+        "month": 1,
+        "price": 120,
+        "qty": 1098
+      },
+      {
+        "month": 2,
+        "price": 126,
+        "qty": 1234
+      },
+      {
+        "month": 3,
+        "price": 158,
+        "qty": 1187
+      },
+      {
+        "month": 4,
+        "price": 223,
+        "qty": 1133
+      },
+      {
+        "month": 5,
+        "price": 240,
+        "qty": 1286
+      },
+      {
+        "month": 6,
+        "price": 323,
+        "qty": 757
+      },
+      {
+        "month": 7,
+        "price": 319,
+        "qty": 348
+      },
+      {
+        "month": 8,
+        "price": 261,
+        "qty": 823
+      },
+      {
+        "month": 9,
+        "price": 144,
+        "qty": 1275
+      },
+      {
+        "month": 10,
+        "price": 123,
+        "qty": 1015
+      },
+      {
+        "month": 11,
+        "price": 136,
+        "qty": 975
+      },
+      {
+        "month": 12,
+        "price": 164,
+        "qty": 1036
+      }
+    ],
+    "四国": [
+      {
+        "month": 1,
+        "price": 123,
+        "qty": 1031
+      },
+      {
+        "month": 2,
+        "price": 122,
+        "qty": 1297
+      },
+      {
+        "month": 3,
+        "price": 162,
+        "qty": 1358
+      },
+      {
+        "month": 4,
+        "price": 218,
+        "qty": 1062
+      },
+      {
+        "month": 5,
+        "price": 234,
+        "qty": 1194
+      },
+      {
+        "month": 6,
+        "price": 277,
+        "qty": 873
+      },
+      {
+        "month": 7,
+        "price": 315,
+        "qty": 439
+      },
+      {
+        "month": 8,
+        "price": 274,
+        "qty": 760
+      },
+      {
+        "month": 9,
+        "price": 153,
+        "qty": 1118
+      },
+      {
+        "month": 10,
+        "price": 128,
+        "qty": 1126
+      },
+      {
+        "month": 11,
+        "price": 141,
+        "qty": 1179
+      },
+      {
+        "month": 12,
+        "price": 171,
+        "qty": 1125
+      }
+    ],
+    "九州": [
+      {
+        "month": 1,
+        "price": 141,
+        "qty": 2775
+      },
+      {
+        "month": 2,
+        "price": 151,
+        "qty": 3297
+      },
+      {
+        "month": 3,
+        "price": 159,
+        "qty": 4169
+      },
+      {
+        "month": 4,
+        "price": 192,
+        "qty": 3753
+      },
+      {
+        "month": 5,
+        "price": 223,
+        "qty": 3755
+      },
+      {
+        "month": 6,
+        "price": 293,
+        "qty": 2430
+      },
+      {
+        "month": 7,
+        "price": 297,
+        "qty": 1712
+      },
+      {
+        "month": 8,
+        "price": 291,
+        "qty": 2282
+      },
+      {
+        "month": 9,
+        "price": 178,
+        "qty": 3093
+      },
+      {
+        "month": 10,
+        "price": 130,
+        "qty": 3635
+      },
+      {
+        "month": 11,
+        "price": 144,
+        "qty": 3525
+      },
+      {
+        "month": 12,
+        "price": 186,
+        "qty": 3392
+      }
+    ],
+    "九州_北九州": [
+      {
+        "month": 1,
+        "price": 142,
+        "qty": 1741
+      },
+      {
+        "month": 2,
+        "price": 146,
+        "qty": 1943
+      },
+      {
+        "month": 3,
+        "price": 169,
+        "qty": 2135
+      },
+      {
+        "month": 4,
+        "price": 206,
+        "qty": 2275
+      },
+      {
+        "month": 5,
+        "price": 226,
+        "qty": 2376
+      },
+      {
+        "month": 6,
+        "price": 295,
+        "qty": 1516
+      },
+      {
+        "month": 7,
+        "price": 319,
+        "qty": 1039
+      },
+      {
+        "month": 8,
+        "price": 286,
+        "qty": 1230
+      },
+      {
+        "month": 9,
+        "price": 169,
+        "qty": 1789
+      },
+      {
+        "month": 10,
+        "price": 129,
+        "qty": 2093
+      },
+      {
+        "month": 11,
+        "price": 142,
+        "qty": 2133
+      },
+      {
+        "month": 12,
+        "price": 178,
+        "qty": 2113
+      }
+    ]
+  },
+  "national": [
+    {
+      "month": 1,
+      "price": 129,
+      "qty": 36067
+    },
+    {
+      "month": 2,
+      "price": 136,
+      "qty": 39938
+    },
+    {
+      "month": 3,
+      "price": 153,
+      "qty": 42524
+    },
+    {
+      "month": 4,
+      "price": 185,
+      "qty": 41756
+    },
+    {
+      "month": 5,
+      "price": 232,
+      "qty": 39511
+    },
+    {
+      "month": 6,
+      "price": 298,
+      "qty": 28235
+    },
+    {
+      "month": 7,
+      "price": 266,
+      "qty": 20921
+    },
+    {
+      "month": 8,
+      "price": 243,
+      "qty": 29052
+    },
+    {
+      "month": 9,
+      "price": 148,
+      "qty": 35585
+    },
+    {
+      "month": 10,
+      "price": 118,
+      "qty": 39240
+    },
+    {
+      "month": 11,
+      "price": 133,
+      "qty": 37072
+    },
+    {
+      "month": 12,
+      "price": 174,
+      "qty": 37607
+    }
+  ],
+  "origins": [
+    {
+      "name": "北海道",
+      "qty": 255696,
+      "share": 0.5981011103755909
+    },
+    {
+      "name": "鹿児島",
+      "qty": 76403,
+      "share": 0.17871503322705976
+    },
+    {
+      "name": "長崎",
+      "qty": 61706,
+      "share": 0.14433713126852282
+    },
+    {
+      "name": "茨城",
+      "qty": 8934,
+      "share": 0.020897610131153908
+    },
+    {
+      "name": "静岡",
+      "qty": 7385,
+      "share": 0.017274328499952047
+    }
+  ],
+  "updatedAt": "2026-07-12T22:41:20.565Z"
+}

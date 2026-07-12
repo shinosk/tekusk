@@ -1,0 +1,617 @@
+{
+  "slug": "persimmon",
+  "name": "かき",
+  "emoji": "🟠",
+  "category": "果実",
+  "unit": "円/kg",
+  "source": "estat",
+  "year": 2024,
+  "statsDataId": "0004044475",
+  "title": "果実の主要消費地域別・産地別の卸売数量及び卸売価格 かき 計",
+  "priceUnit": "円/kg",
+  "regionsOrder": [
+    "札幌市",
+    "仙台市",
+    "東京都",
+    "横浜市",
+    "金沢市",
+    "名古屋市",
+    "京都市",
+    "大阪府",
+    "神戸市",
+    "広島市",
+    "北九州市",
+    "福岡市"
+  ],
+  "regions": {
+    "札幌市": [
+      {
+        "month": 1,
+        "price": 903,
+        "qty": 20
+      },
+      {
+        "month": 2,
+        "price": null,
+        "qty": 1
+      },
+      {
+        "month": 7,
+        "price": null,
+        "qty": 1
+      },
+      {
+        "month": 8,
+        "price": 776,
+        "qty": 18
+      },
+      {
+        "month": 9,
+        "price": 481,
+        "qty": 360
+      },
+      {
+        "month": 10,
+        "price": 362,
+        "qty": 1071
+      },
+      {
+        "month": 11,
+        "price": 363,
+        "qty": 1307
+      },
+      {
+        "month": 12,
+        "price": 457,
+        "qty": 48
+      }
+    ],
+    "仙台市": [
+      {
+        "month": 7,
+        "price": null,
+        "qty": 0
+      },
+      {
+        "month": 8,
+        "price": 771,
+        "qty": 6
+      },
+      {
+        "month": 9,
+        "price": 451,
+        "qty": 165
+      },
+      {
+        "month": 10,
+        "price": 351,
+        "qty": 511
+      },
+      {
+        "month": 11,
+        "price": 380,
+        "qty": 270
+      },
+      {
+        "month": 12,
+        "price": 432,
+        "qty": 61
+      }
+    ],
+    "東京都": [
+      {
+        "month": 1,
+        "price": 496,
+        "qty": 371
+      },
+      {
+        "month": 2,
+        "price": 518,
+        "qty": 127
+      },
+      {
+        "month": 3,
+        "price": 663,
+        "qty": 5
+      },
+      {
+        "month": 6,
+        "price": null,
+        "qty": 0
+      },
+      {
+        "month": 7,
+        "price": 829,
+        "qty": 10
+      },
+      {
+        "month": 8,
+        "price": 843,
+        "qty": 49
+      },
+      {
+        "month": 9,
+        "price": 430,
+        "qty": 2455
+      },
+      {
+        "month": 10,
+        "price": 360,
+        "qty": 7772
+      },
+      {
+        "month": 11,
+        "price": 379,
+        "qty": 6047
+      },
+      {
+        "month": 12,
+        "price": 423,
+        "qty": 1777
+      }
+    ],
+    "横浜市": [
+      {
+        "month": 1,
+        "price": 513,
+        "qty": 25
+      },
+      {
+        "month": 2,
+        "price": null,
+        "qty": 1
+      },
+      {
+        "month": 7,
+        "price": null,
+        "qty": 3
+      },
+      {
+        "month": 8,
+        "price": 737,
+        "qty": 18
+      },
+      {
+        "month": 9,
+        "price": 446,
+        "qty": 250
+      },
+      {
+        "month": 10,
+        "price": 350,
+        "qty": 1350
+      },
+      {
+        "month": 11,
+        "price": 371,
+        "qty": 808
+      },
+      {
+        "month": 12,
+        "price": 444,
+        "qty": 296
+      }
+    ],
+    "金沢市": [
+      {
+        "month": 1,
+        "price": 471,
+        "qty": 14
+      },
+      {
+        "month": 2,
+        "price": null,
+        "qty": 3
+      },
+      {
+        "month": 7,
+        "price": null,
+        "qty": 0
+      },
+      {
+        "month": 8,
+        "price": null,
+        "qty": 0
+      },
+      {
+        "month": 9,
+        "price": 498,
+        "qty": 13
+      },
+      {
+        "month": 10,
+        "price": 399,
+        "qty": 136
+      },
+      {
+        "month": 11,
+        "price": 388,
+        "qty": 158
+      },
+      {
+        "month": 12,
+        "price": 349,
+        "qty": 103
+      }
+    ],
+    "名古屋市": [
+      {
+        "month": 1,
+        "price": 487,
+        "qty": 118
+      },
+      {
+        "month": 2,
+        "price": 539,
+        "qty": 31
+      },
+      {
+        "month": 3,
+        "price": null,
+        "qty": 3
+      },
+      {
+        "month": 8,
+        "price": null,
+        "qty": 0
+      },
+      {
+        "month": 9,
+        "price": 449,
+        "qty": 430
+      },
+      {
+        "month": 10,
+        "price": 371,
+        "qty": 1838
+      },
+      {
+        "month": 11,
+        "price": 383,
+        "qty": 1079
+      },
+      {
+        "month": 12,
+        "price": 362,
+        "qty": 991
+      }
+    ],
+    "京都市": [
+      {
+        "month": 1,
+        "price": 492,
+        "qty": 24
+      },
+      {
+        "month": 3,
+        "price": null,
+        "qty": 1
+      },
+      {
+        "month": 6,
+        "price": null,
+        "qty": 0
+      },
+      {
+        "month": 7,
+        "price": null,
+        "qty": 0
+      },
+      {
+        "month": 8,
+        "price": null,
+        "qty": 0
+      },
+      {
+        "month": 9,
+        "price": 471,
+        "qty": 47
+      },
+      {
+        "month": 10,
+        "price": 379,
+        "qty": 286
+      },
+      {
+        "month": 11,
+        "price": 346,
+        "qty": 314
+      },
+      {
+        "month": 12,
+        "price": 356,
+        "qty": 124
+      }
+    ],
+    "大阪府": [
+      {
+        "month": 1,
+        "price": 482,
+        "qty": 202
+      },
+      {
+        "month": 2,
+        "price": 351,
+        "qty": 15
+      },
+      {
+        "month": 6,
+        "price": null,
+        "qty": 0
+      },
+      {
+        "month": 7,
+        "price": 793,
+        "qty": 12
+      },
+      {
+        "month": 8,
+        "price": 814,
+        "qty": 39
+      },
+      {
+        "month": 9,
+        "price": 423,
+        "qty": 1648
+      },
+      {
+        "month": 10,
+        "price": 351,
+        "qty": 4479
+      },
+      {
+        "month": 11,
+        "price": 371,
+        "qty": 3915
+      },
+      {
+        "month": 12,
+        "price": 401,
+        "qty": 1085
+      }
+    ],
+    "神戸市": [
+      {
+        "month": 1,
+        "price": 520,
+        "qty": 6
+      },
+      {
+        "month": 2,
+        "price": null,
+        "qty": 4
+      },
+      {
+        "month": 3,
+        "price": null,
+        "qty": 0
+      },
+      {
+        "month": 6,
+        "price": null,
+        "qty": 0
+      },
+      {
+        "month": 7,
+        "price": null,
+        "qty": 1
+      },
+      {
+        "month": 8,
+        "price": null,
+        "qty": 1
+      },
+      {
+        "month": 9,
+        "price": 395,
+        "qty": 70
+      },
+      {
+        "month": 10,
+        "price": 315,
+        "qty": 354
+      },
+      {
+        "month": 11,
+        "price": 302,
+        "qty": 325
+      },
+      {
+        "month": 12,
+        "price": 357,
+        "qty": 63
+      }
+    ],
+    "広島市": [
+      {
+        "month": 1,
+        "price": 450,
+        "qty": 47
+      },
+      {
+        "month": 2,
+        "price": 493,
+        "qty": 7
+      },
+      {
+        "month": 9,
+        "price": 404,
+        "qty": 28
+      },
+      {
+        "month": 10,
+        "price": 426,
+        "qty": 360
+      },
+      {
+        "month": 11,
+        "price": 379,
+        "qty": 377
+      },
+      {
+        "month": 12,
+        "price": 356,
+        "qty": 321
+      }
+    ],
+    "北九州市": [
+      {
+        "month": 1,
+        "price": 439,
+        "qty": 62
+      },
+      {
+        "month": 2,
+        "price": 449,
+        "qty": 15
+      },
+      {
+        "month": 3,
+        "price": null,
+        "qty": 4
+      },
+      {
+        "month": 8,
+        "price": null,
+        "qty": 0
+      },
+      {
+        "month": 9,
+        "price": 367,
+        "qty": 57
+      },
+      {
+        "month": 10,
+        "price": 387,
+        "qty": 193
+      },
+      {
+        "month": 11,
+        "price": 366,
+        "qty": 255
+      },
+      {
+        "month": 12,
+        "price": 359,
+        "qty": 227
+      }
+    ],
+    "福岡市": [
+      {
+        "month": 1,
+        "price": 457,
+        "qty": 137
+      },
+      {
+        "month": 2,
+        "price": null,
+        "qty": 1
+      },
+      {
+        "month": 7,
+        "price": null,
+        "qty": 0
+      },
+      {
+        "month": 8,
+        "price": null,
+        "qty": 0
+      },
+      {
+        "month": 9,
+        "price": 415,
+        "qty": 155
+      },
+      {
+        "month": 10,
+        "price": 370,
+        "qty": 637
+      },
+      {
+        "month": 11,
+        "price": 347,
+        "qty": 940
+      },
+      {
+        "month": 12,
+        "price": 368,
+        "qty": 508
+      }
+    ]
+  },
+  "national": [
+    {
+      "month": 1,
+      "price": 490,
+      "qty": 1026
+    },
+    {
+      "month": 2,
+      "price": 502,
+      "qty": 195
+    },
+    {
+      "month": 3,
+      "price": 663,
+      "qty": 5
+    },
+    {
+      "month": 7,
+      "price": 809,
+      "qty": 22
+    },
+    {
+      "month": 8,
+      "price": 807,
+      "qty": 130
+    },
+    {
+      "month": 9,
+      "price": 433,
+      "qty": 5678
+    },
+    {
+      "month": 10,
+      "price": 360,
+      "qty": 18987
+    },
+    {
+      "month": 11,
+      "price": 371,
+      "qty": 15795
+    },
+    {
+      "month": 12,
+      "price": 394,
+      "qty": 5604
+    }
+  ],
+  "origins": [
+    {
+      "name": "和歌山",
+      "qty": 18230,
+      "share": 0.384007751774693
+    },
+    {
+      "name": "奈良",
+      "qty": 9981,
+      "share": 0.2102458239420302
+    },
+    {
+      "name": "福岡",
+      "qty": 5526,
+      "share": 0.11640300802561455
+    },
+    {
+      "name": "新潟",
+      "qty": 2752,
+      "share": 0.057969793356223535
+    },
+    {
+      "name": "岐阜",
+      "qty": 1480,
+      "share": 0.031175615613085333
+    }
+  ],
+  "updatedAt": "2026-07-12T22:41:26.223Z"
+}
