@@ -1,35 +1,49 @@
 {
-  "generatedAt": "2026-07-10T04:53:52.736Z",
+  "generatedAt": "2026-07-12T13:11:02.520Z",
   "note": "Raw samples from candidate production data sources (see docs/data-sources.md). Re-running scripts/probe.mjs overwrites this file and files/ in place — it does not accumulate.",
   "seedUrls": [
-    "https://vegetan.alic.go.jp/riyou.html",
-    "https://vegetan.alic.go.jp/chosaku.html"
+    "https://www.e-stat.go.jp/stat-search/files?toukei=00500226",
+    "https://www.shijou.metro.tokyo.lg.jp/torihiki/geppo/",
+    "https://www.shijou.metro.tokyo.lg.jp/torihiki/nippo/"
   ],
   "results": [
     {
-      "url": "https://vegetan.alic.go.jp/riyou.html",
-      "fetchedAt": "2026-07-10T04:53:51.783Z",
+      "url": "https://www.e-stat.go.jp/stat-search/files?toukei=00500226",
+      "fetchedAt": "2026-07-12T13:10:56.660Z",
       "ok": true,
       "status": 200,
-      "contentType": "text/html",
-      "byteLength": 8326,
-      "savedBytes": 8326,
+      "contentType": "text/html; charset=UTF-8",
+      "byteLength": 387279,
+      "savedBytes": 387279,
       "truncated": false,
-      "file": "files/001-vegetan.alic.go.jp_riyou.html.html",
-      "linksFound": 13,
+      "file": "files/001-www.e-stat.go.jp_stat-search_files_toukei_00500226.html",
+      "linksFound": 356,
       "linksToFollow": []
     },
     {
-      "url": "https://vegetan.alic.go.jp/chosaku.html",
-      "fetchedAt": "2026-07-10T04:53:52.560Z",
+      "url": "https://www.shijou.metro.tokyo.lg.jp/torihiki/geppo/",
+      "fetchedAt": "2026-07-12T13:11:00.834Z",
       "ok": true,
       "status": 200,
-      "contentType": "text/html",
-      "byteLength": 8300,
-      "savedBytes": 8300,
+      "contentType": "text/html;charset=UTF-8",
+      "byteLength": 752114,
+      "savedBytes": 752114,
       "truncated": false,
-      "file": "files/002-vegetan.alic.go.jp_chosaku.html.html",
-      "linksFound": 14,
+      "file": "files/002-www.shijou.metro.tokyo.lg.jp_torihiki_geppo_.html",
+      "linksFound": 1614,
+      "linksToFollow": []
+    },
+    {
+      "url": "https://www.shijou.metro.tokyo.lg.jp/torihiki/nippo/",
+      "fetchedAt": "2026-07-12T13:11:01.831Z",
+      "ok": true,
+      "status": 200,
+      "contentType": "text/html;charset=UTF-8",
+      "byteLength": 465217,
+      "savedBytes": 465217,
+      "truncated": false,
+      "file": "files/003-www.shijou.metro.tokyo.lg.jp_torihiki_nippo_.html",
+      "linksFound": 82,
       "linksToFollow": []
     }
   ]
