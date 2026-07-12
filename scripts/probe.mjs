@@ -35,7 +35,7 @@ const UA = 'tekusk-price-bot/1.0 (+https://github.com/; static-site data updater
 
 const TIMEOUT_MS = 30000;
 const RETRIES = 2; // total attempts = RETRIES + 1
-const MAX_TEXT_BYTES = 1024 * 1024; // 1MB cap for text-like bodies (東京都の一覧は
+const MAX_TEXT_BYTES = 4 * 1024 * 1024; // 1MB cap for text-like bodies (東京都の一覧は
 // 750KB あり、全文を保存してリンク抽出したいため 200KB から引き上げ)
 const MAX_BINARY_BYTES = 1024 * 1024; // 1MB cap for binary bodies (xlsx/zip/...)
 const MAX_FOLLOWED_LINKS_PER_PAGE = 20;
@@ -68,10 +68,13 @@ function scrubAppId(text) {
 // Candidate production sources. See docs/data-sources.md for the rationale
 // and licensing notes for each.
 const SEED_URLS = [
-  // Round 7: 4,103表のカタログ末尾(=最新のテーブル群)を取得して、この統計の
-  // 最新調査年と月次テーブルの現行IDを特定する(round 6 で 2025/2026 は0件、
-  // 全量7MBは1MB上限で切り詰められたため、startPosition で末尾のみ取得)。
-  'https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226&startPosition=3700&limit=450',
+  // Round 8: estatアダプタ実装用フィクスチャ。「主要消費地域別・産地別の卸売数量
+  // 及び卸売価格」(2024年・最新公表年)の代表4表の実データを全件取得する。
+  // だいこん/キャベツ/トマト(野菜)、りんご計(果実)。
+  'https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0004044496&limit=10000',
+  'https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0004044497&limit=10000',
+  'https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0004044437&limit=10000',
+  'https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0004044462&limit=10000',
 ];
 
 function sanitizeName(url) {
