@@ -1,37 +1,76 @@
 {
-  "generatedAt": "2026-07-12T22:03:48.578Z",
+  "generatedAt": "2026-07-12T22:05:06.153Z",
   "estatAppIdLength": 40,
   "note": "Raw samples from candidate production data sources (see docs/data-sources.md). Re-running scripts/probe.mjs overwrites this file and files/ in place — it does not accumulate.",
   "seedUrls": [
-    "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226&surveyYears=2026&searchWord=%E4%B8%BB%E8%A6%81%E6%B6%88%E8%B2%BB%E5%9C%B0%E5%9F%9F%E5%88%A5",
-    "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226&surveyYears=2025&searchWord=%E4%B8%BB%E8%A6%81%E6%B6%88%E8%B2%BB%E5%9C%B0%E5%9F%9F%E5%88%A5&limit=100"
+    "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226&startPosition=3700&limit=450"
   ],
   "results": [
     {
-      "url": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226&surveyYears=2026&searchWord=%E4%B8%BB%E8%A6%81%E6%B6%88%E8%B2%BB%E5%9C%B0%E5%9F%9F%E5%88%A5",
-      "fetchedAt": "2026-07-12T22:03:46.847Z",
+      "url": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226&startPosition=3700&limit=450",
+      "fetchedAt": "2026-07-12T22:05:00.950Z",
       "ok": true,
       "status": 200,
       "contentType": "application/json; charset=utf-8",
-      "byteLength": 442,
-      "savedBytes": 442,
+      "byteLength": 618342,
+      "savedBytes": 618342,
       "truncated": false,
-      "file": "files/001-api.e-stat.go.jp_rest_3.0_app_json_getStatsList_appId_APPID_statsCode_00500226_surveyYears_2026_searchWord_E4_B8_BB_E8_A.json",
-      "tablesFound": 0,
-      "linksToFollow": []
+      "file": "files/001-api.e-stat.go.jp_rest_3.0_app_json_getStatsList_appId_APPID_statsCode_00500226_startPosition_3700_limit_450.json",
+      "tablesFound": 404,
+      "linksToFollow": [
+        "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0002112456&limit=1000",
+        "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0002112457&limit=1000",
+        "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0002112458&limit=1000",
+        "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0002112459&limit=1000"
+      ]
     },
     {
-      "url": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226&surveyYears=2025&searchWord=%E4%B8%BB%E8%A6%81%E6%B6%88%E8%B2%BB%E5%9C%B0%E5%9F%9F%E5%88%A5&limit=100",
-      "fetchedAt": "2026-07-12T22:03:47.853Z",
+      "url": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0002112456&limit=1000",
+      "fetchedAt": "2026-07-12T22:05:03.812Z",
       "ok": true,
       "status": 200,
       "contentType": "application/json; charset=utf-8",
-      "byteLength": 454,
-      "savedBytes": 454,
+      "byteLength": 73104,
+      "savedBytes": 73104,
       "truncated": false,
-      "file": "files/002-api.e-stat.go.jp_rest_3.0_app_json_getStatsList_appId_APPID_statsCode_00500226_surveyYears_2025_searchWord_E4_B8_BB_E8_A.json",
-      "tablesFound": 0,
-      "linksToFollow": []
+      "file": "files/002-api.e-stat.go.jp_rest_3.0_app_json_getStatsData_appId_APPID_statsDataId_0002112456_limit_1000.json",
+      "followedFrom": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226&startPosition=3700&limit=450"
+    },
+    {
+      "url": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0002112457&limit=1000",
+      "fetchedAt": "2026-07-12T22:05:04.797Z",
+      "ok": true,
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "byteLength": 73010,
+      "savedBytes": 73010,
+      "truncated": false,
+      "file": "files/003-api.e-stat.go.jp_rest_3.0_app_json_getStatsData_appId_APPID_statsDataId_0002112457_limit_1000.json",
+      "followedFrom": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226&startPosition=3700&limit=450"
+    },
+    {
+      "url": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0002112458&limit=1000",
+      "fetchedAt": "2026-07-12T22:05:05.228Z",
+      "ok": true,
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "byteLength": 73032,
+      "savedBytes": 73032,
+      "truncated": false,
+      "file": "files/004-api.e-stat.go.jp_rest_3.0_app_json_getStatsData_appId_APPID_statsDataId_0002112458_limit_1000.json",
+      "followedFrom": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226&startPosition=3700&limit=450"
+    },
+    {
+      "url": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0002112459&limit=1000",
+      "fetchedAt": "2026-07-12T22:05:05.690Z",
+      "ok": true,
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "byteLength": 73239,
+      "savedBytes": 73239,
+      "truncated": false,
+      "file": "files/005-api.e-stat.go.jp_rest_3.0_app_json_getStatsData_appId_APPID_statsDataId_0002112459_limit_1000.json",
+      "followedFrom": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226&startPosition=3700&limit=450"
     }
   ]
 }
