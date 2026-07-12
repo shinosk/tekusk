@@ -271,6 +271,8 @@ async function main() {
 
   const index = {
     generatedAt: new Date().toISOString(),
+    // 診断用: Secret受け渡しの確認(IDの値は絶対に記録しない。長さのみ)
+    estatAppIdLength: ESTAT_APP_ID.length,
     note:
       'Raw samples from candidate production data sources (see docs/data-sources.md). ' +
       'Re-running scripts/probe.mjs overwrites this file and files/ in place — it does not accumulate.',
