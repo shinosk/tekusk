@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-12T22:35:32.775Z",
+  "generatedAt": "2026-07-12T22:36:12.811Z",
   "primarySource": "vegetan",
   "sources": {
     "vegetan": {
@@ -15,7 +15,7 @@
       "totalPoints": 1408,
       "latestDate": "2026-07-09",
       "missing": [],
-      "updatedAt": "2026-07-12T13:24:58.244Z"
+      "updatedAt": "2026-07-12T22:36:02.561Z"
     },
     "commodity": {
       "id": "commodity",
@@ -30,7 +30,7 @@
       "totalPoints": 11674,
       "latestDate": "2017-06-01",
       "missing": [],
-      "updatedAt": "2026-07-12T13:25:01.635Z"
+      "updatedAt": "2026-07-12T22:36:12.811Z"
     },
     "retail": {
       "id": "retail",
@@ -46,7 +46,7 @@
       "totalPoints": 480,
       "latestDate": "2026-06-01",
       "missing": [],
-      "updatedAt": "2026-07-12T13:25:01.206Z"
+      "updatedAt": "2026-07-12T22:36:05.559Z"
     },
     "estat": {
       "id": "estat",
@@ -57,41 +57,12 @@
       "licenseUrl": "https://www.e-stat.go.jp/terms-of-use",
       "attribution": "農林水産省「青果物卸売市場調査」（e-Stat）を加工して作成",
       "cadence": "annual",
-      "year": 2024,
-      "itemCount": 4,
-      "latestDate": "2024-12-01",
-      "missing": [
-        "spinach",
-        "chinese-cabbage",
-        "welsh-onion",
-        "lettuce",
-        "onion",
-        "broccoli",
-        "cucumber",
-        "tomato",
-        "eggplant",
-        "green-pepper",
-        "asparagus",
-        "carrot",
-        "burdock",
-        "lotus-root",
-        "taro",
-        "potato",
-        "sweet-potato",
-        "mandarin",
-        "strawberry",
-        "grape",
-        "japanese-pear",
-        "peach",
-        "watermelon",
-        "melon",
-        "persimmon",
-        "kiwi",
-        "cherry",
-        "western-pear"
-      ],
-      "fromFixtures": true,
-      "updatedAt": "2026-07-12T22:35:32.775Z"
+      "year": 2019,
+      "itemCount": 2,
+      "latestDate": "2019-12-01",
+      "missing": [],
+      "fromFixtures": false,
+      "updatedAt": "2026-07-12T22:36:12.453Z"
     }
   },
   "source": {
