@@ -68,13 +68,10 @@ function scrubAppId(text) {
 // Candidate production sources. See docs/data-sources.md for the rationale
 // and licensing notes for each.
 const SEED_URLS = [
-  // Round 6: e-Stat「青果物卸売市場調査」の本命テーブルを特定する。
-  // 「野菜の主要消費地域別・産地別の卸売数量及び卸売価格 {品目} {n}月」が
-  // 品目×月次で毎月追加される統計表(round 5 の一覧解析で判明)。
-  // surveyYears で直近年に絞った一覧と、そこからの getStatsData サンプルを捕獲し、
-  // estat アダプタ(動的にID発見→データ取得)の実装フィクスチャとする。
-  'https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226&surveyYears=2026&searchWord=%E4%B8%BB%E8%A6%81%E6%B6%88%E8%B2%BB%E5%9C%B0%E5%9F%9F%E5%88%A5',
-  'https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226&surveyYears=2025&searchWord=%E4%B8%BB%E8%A6%81%E6%B6%88%E8%B2%BB%E5%9C%B0%E5%9F%9F%E5%88%A5&limit=100',
+  // Round 7: 4,103表のカタログ末尾(=最新のテーブル群)を取得して、この統計の
+  // 最新調査年と月次テーブルの現行IDを特定する(round 6 で 2025/2026 は0件、
+  // 全量7MBは1MB上限で切り詰められたため、startPosition で末尾のみ取得)。
+  'https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226&startPosition=3700&limit=450',
 ];
 
 function sanitizeName(url) {
