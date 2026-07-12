@@ -288,16 +288,38 @@ export const estatAdapter = {
   // getStatsList for statsCode=00500226, narrowed by searchWord. Returns the raw
   // JSON; discovery parsing lives in estat.mjs (listTables/resolveItemTables).
   // In --fixtures mode reads the committed catalog-tail sample instead.
+  //
+  // NOTE: getStatsList はID昇順(=古い年代が先)で返し、単発の limit 指定では
+  // 先頭ウィンドウしか取れない(本番でこれを踏み、最大年が2019に化けた)。
+  // RESULT_INF.NEXT_KEY を辿って全ページを取得し、TABLE_INF を結合して返す。
   async fetchCatalog(opts = {}) {
     if (opts.fixtures) {
       const p = path.join(ESTAT_FIXTURES_DIR, 'catalog-tail-getStatsList.json');
       return JSON.parse(await fs.readFile(p, 'utf8'));
     }
     if (!ESTAT_APP_ID) throw new Error('ESTAT_APP_ID is not set (env/secret required for live estat)');
-    const url =
+    const base =
       `${ESTAT_API}/getStatsList?appId=${encodeURIComponent(ESTAT_APP_ID)}` +
       `&statsCode=${ESTAT_STATS_CODE}&searchWord=${encodeURIComponent('主要消費地域別')}&limit=1000`;
-    return fetchEstatJson(url, opts);
+    const allTables = [];
+    let startPosition = null;
+    let first = null;
+    for (let page = 0; page < 20; page++) {
+      const url = startPosition ? `${base}&startPosition=${startPosition}` : base;
+      const json = await fetchEstatJson(url, opts);
+      if (!first) first = json;
+      const inf = json?.GET_STATS_LIST?.DATALIST_INF;
+      if (!inf) break;
+      const t = inf.TABLE_INF;
+      if (t) allTables.push(...(Array.isArray(t) ? t : [t]));
+      const next = inf.RESULT_INF && inf.RESULT_INF.NEXT_KEY;
+      if (!next) break;
+      startPosition = next;
+    }
+    if (first && first.GET_STATS_LIST && first.GET_STATS_LIST.DATALIST_INF) {
+      first.GET_STATS_LIST.DATALIST_INF.TABLE_INF = allTables;
+    }
+    return first;
   },
 
   // getStatsData for one table id. In --fixtures mode returns the committed
