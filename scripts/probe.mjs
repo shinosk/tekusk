@@ -68,16 +68,13 @@ function scrubAppId(text) {
 // Candidate production sources. See docs/data-sources.md for the rationale
 // and licensing notes for each.
 const SEED_URLS = [
-  // Round 5: e-Stat API v3(政府標準利用規約・要appId)で「青果物卸売市場調査」
-  // (statsCode=00500226)の統計表一覧を取得する。round 4 でHTML側の一覧はJS動的
-  // 生成と判明したため、APIが唯一の機械取得経路。getStatsList のレスポンスから
-  // statsDataId を抽出し、getStatsData のサンプル(limit=100)を自動追跡する
-  // (probeUrl 内の e-Stat 専用処理)。
-  // 注意: probe.mjs は data/raw-samples/ を毎回上書きするが、vegetan/retail アダプタの
-  // フィクスチャは test/fixtures/vegetan/ に恒久保存済みのため、上書きしても
-  // テスト・--fixtures モードには影響しない。
-  'https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226',
-  'https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&searchWord=%E9%A3%9F%E5%93%81%E4%BE%A1%E6%A0%BC%E5%8B%95%E5%90%91%E8%AA%BF%E6%9F%BB&limit=50',
+  // Round 6: e-Stat「青果物卸売市場調査」の本命テーブルを特定する。
+  // 「野菜の主要消費地域別・産地別の卸売数量及び卸売価格 {品目} {n}月」が
+  // 品目×月次で毎月追加される統計表(round 5 の一覧解析で判明)。
+  // surveyYears で直近年に絞った一覧と、そこからの getStatsData サンプルを捕獲し、
+  // estat アダプタ(動的にID発見→データ取得)の実装フィクスチャとする。
+  'https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226&surveyYears=2026&searchWord=%E4%B8%BB%E8%A6%81%E6%B6%88%E8%B2%BB%E5%9C%B0%E5%9F%9F%E5%88%A5',
+  'https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226&surveyYears=2025&searchWord=%E4%B8%BB%E8%A6%81%E6%B6%88%E8%B2%BB%E5%9C%B0%E5%9F%9F%E5%88%A5&limit=100',
 ];
 
 function sanitizeName(url) {
@@ -218,7 +215,7 @@ async function probeUrl(url, seq, seen) {
           .slice(0, 4)
           .map(
             (id) =>
-              `https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=${id}&limit=100`
+              `https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=${id}&limit=1000`
           );
       } catch (e) {
         record.parseError = String(e.message || e);
