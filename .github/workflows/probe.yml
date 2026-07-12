@@ -10,6 +10,9 @@ name: Probe production data sources
 
 on:
   workflow_dispatch: {}
+  # MCP経由のdispatchが使えない場合のフォールバック: .probe-trigger の変更プッシュで起動
+  push:
+    paths: ['.probe-trigger']
 
 permissions:
   contents: write
