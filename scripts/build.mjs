@@ -10,7 +10,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { CONFIG_DIR, DATA_DIR, DATA_ITEMS_DIR, DATA_RETAIL_DIR, PUBLIC_DIR } from '../src/lib/paths.mjs';
+import { CONFIG_DIR, DATA_DIR, DATA_ITEMS_DIR, DATA_RETAIL_DIR, DATA_ESTAT_DIR, PUBLIC_DIR } from '../src/lib/paths.mjs';
 import { renderPage, adSlot, STYLESHEET } from '../src/templates/layout.mjs';
 import { computeItemStats, buildRankings } from '../src/lib/stats.mjs';
 import { lineChartSvg } from '../src/lib/chart.mjs';
@@ -19,12 +19,19 @@ import { fmtNum, fmtPct, fmtMonth, fmtDate, trendClass } from '../src/lib/format
 import { weeklyReport, headline, itemBlurb, retailWeeklyParagraph } from '../src/lib/report.mjs';
 import { freshnessCopy } from '../src/lib/freshness.mjs';
 import { latestChange, monthsAcross, cityOf } from '../src/lib/retail.mjs';
+import { pad2 } from '../src/lib/wareki.mjs';
 import { getItemContent } from '../src/content/items.mjs';
 
 const VEGETAN_ATTRIBUTION =
   '出典：独立行政法人農畜産業振興機構『ベジ探』のデータを加工して作成';
 const RETAIL_ATTRIBUTION =
   '出典：独立行政法人農畜産業振興機構『ベジ探』のデータを加工して作成（原資料: 農林水産省「食品価格動向調査」）';
+const ESTAT_ATTRIBUTION =
+  '出典：農林水産省「青果物卸売市場調査」（e-Stat）を加工して作成';
+// Honest annual-source label — this data is 年次公表 (not a daily feed), so it
+// never gets the archive banner; the annual caveat is stated inline instead.
+const estatSurveyLabel = (year) =>
+  `農林水産省「青果物卸売市場調査」${year}年調査（年次公表）`;
 
 // Cities covered by the monthly retail survey, in a rough north→south display
 // order. `national` (全国) is carried in the data for overviews but has no page.
@@ -77,6 +84,21 @@ async function loadRetail() {
   return recs;
 }
 
+async function loadEstat() {
+  let files = [];
+  try {
+    files = (await fs.readdir(DATA_ESTAT_DIR)).filter((f) => f.endsWith('.json'));
+  } catch {
+    return [];
+  }
+  const recs = [];
+  for (const f of files) {
+    const rec = await readJson(path.join(DATA_ESTAT_DIR, f), null);
+    if (rec && rec.slug && Array.isArray(rec.regionsOrder)) recs.push(rec);
+  }
+  return recs;
+}
+
 async function write(rel, content) {
   const out = path.join(PUBLIC_DIR, rel);
   await fs.mkdir(path.dirname(out), { recursive: true });
@@ -115,7 +137,7 @@ function buyBadgeFor(stats) {
 }
 
 // ---- Page: vegetable item (daily + long-term monthly, two charts) ---------
-function renderVegItemPage(site, meta, entry, updatedLabel, freshness, retailRec, cityList) {
+function renderVegItemPage(site, meta, entry, updatedLabel, freshness, retailRec, cityList, estatRec) {
   const { item, stats } = entry;
   const s = item.series;
   const monthly = item.monthly || [];
@@ -140,6 +162,7 @@ function renderVegItemPage(site, meta, entry, updatedLabel, freshness, retailRec
     : '';
 
   const retailSection = renderRetailItemSection(item, retailRec, cityList || []);
+  const estatSection = renderEstatSection(estatRec);
 
   const dailySection = item.hasDaily
     ? `
@@ -183,6 +206,7 @@ ${dailySection}
 ${adSlot(site, site.adsenseSlotItem)}
 ${monthlySection}
 ${retailSection}
+${estatSection}
 ${explainerSection}
 
 <h2>品目情報</h2>
@@ -575,8 +599,210 @@ ${adSlot(site, site.adsenseSlotTop)}
   });
 }
 
+// ---- e-Stat (青果物卸売市場調査・年次) 共通レンダリング --------------------------
+
+// National monthly series as chart points ("YYYY-MM-01").
+function estatNationalSeries(rec) {
+  return (rec.national || []).map((p) => ({ date: `${rec.year}-${pad2(p.month)}-01`, price: p.price }));
+}
+
+// Top-5 origin share as horizontal bars (widths relative to the top origin).
+function estatOriginBars(rec) {
+  const origins = rec.origins || [];
+  if (!origins.length) return '';
+  const maxShare = Math.max(...origins.map((o) => o.share || 0)) || 1;
+  const rows = origins
+    .map((o) => {
+      const pct = o.share != null ? o.share * 100 : 0;
+      const w = ((o.share || 0) / maxShare) * 100;
+      return `<div class="obar"><span class="nm">${esc(o.name)}</span><span class="track"><span class="fill" style="width:${w.toFixed(1)}%"></span></span><span class="pc">${o.share != null ? `${pct.toFixed(1)}%` : '—'}</span></div>`;
+    })
+    .join('');
+  return `<div class="obars">${rows}</div>`;
+}
+
+// 消費地域（市場）× 月 の卸売価格テーブル（末尾に全国加重平均行）。
+function estatRegionTable(rec) {
+  const months = (rec.national || []).map((p) => p.month);
+  if (!months.length || !rec.regionsOrder.length) return '';
+  const head = months.map((m) => `<th class="num">${m}月</th>`).join('');
+  const rows = rec.regionsOrder
+    .map((name) => {
+      const byMonth = new Map((rec.regions[name] || []).map((p) => [p.month, p.price]));
+      const cells = months
+        .map((m) => `<td class="num">${byMonth.get(m) != null ? fmtNum(byMonth.get(m), 0) : '—'}</td>`)
+        .join('');
+      return `<tr><th scope="row">${esc(name)}</th>${cells}</tr>`;
+    })
+    .join('');
+  const nat = new Map((rec.national || []).map((p) => [p.month, p.price]));
+  const natCells = months
+    .map((m) => `<td class="num">${nat.get(m) != null ? fmtNum(nat.get(m), 0) : '—'}</td>`)
+    .join('');
+  return `<div style="overflow-x:auto">
+<table>
+  <thead><tr><th>消費地域</th>${head}</tr></thead>
+  <tbody>${rows}<tr><th scope="row"><strong>全国（加重平均）</strong></th>${natCells}</tr></tbody>
+</table>
+</div>`;
+}
+
+// Evergreen explainer block (shared by veg and fruit item pages).
+function explainerBlock(slug, name) {
+  const c = getItemContent(slug);
+  if (!c) return '';
+  return `
+<h2>${esc(name)}の選び方・保存・価格の見方</h2>
+<div class="explainer">
+  <h3>旬と産地の傾向</h3>
+  <p>${esc(c.season)}</p>
+  <h3>選び方</h3>
+  <p>${esc(c.choosing)}</p>
+  <h3>保存方法</h3>
+  <p>${esc(c.storage)}</p>
+  <h3>価格の動きの特徴</h3>
+  <p>${esc(c.pricePattern)}</p>
+</div>`;
+}
+
+// Section embedded on a vegetable item page: 産地シェア + 消費地域別価格（政府統計）.
+function renderEstatSection(rec) {
+  if (!rec) return '';
+  const top = rec.origins && rec.origins[0];
+  const intro =
+    top && top.share != null
+      ? `${rec.year}年の調査では、${rec.name}の入荷量は${top.name}産が最も多く、全国の約${Math.round(top.share * 100)}%を占めます。`
+      : `${rec.year}年調査の産地別・消費地域別の卸売データです。`;
+  return `
+<h2>産地と地域別の卸売価格（政府統計）</h2>
+<p class="lead">${esc(intro)}以下は${esc(estatSurveyLabel(rec.year))}にもとづく、主要産地の年間入荷量シェアと、消費地域（卸売市場）別の月別卸売価格です。日次のベジ探価格とは調査・時点が異なる、年に一度の確報値です。</p>
+<h3>主な産地（年間入荷量シェア・上位5）</h3>
+${estatOriginBars(rec)}
+<h3>消費地域別の月別卸売価格（円/kg・${rec.year}年）</h3>
+${estatRegionTable(rec)}
+<div class="notice estat-note">${esc(ESTAT_ATTRIBUTION)}。${esc(estatSurveyLabel(rec.year))}の確報値です。</div>`;
+}
+
+// Standalone item page driven by e-Stat data (fruits + estat-only 果菜).
+function renderEstatItemPage(site, meta, rec, updatedLabel, estatFresh) {
+  const canonicalPath = `/items/${rec.slug}/`;
+  const src = meta.sources.estat || {};
+  const series = estatNationalSeries(rec);
+  const prices = series.map((p) => p.price).filter((v) => v != null);
+  const avg = prices.length ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : null;
+  const hi = prices.length ? Math.max(...prices) : null;
+  const lo = prices.length ? Math.min(...prices) : null;
+  const top = rec.origins && rec.origins[0];
+
+  const body = `
+<h1>${rec.emoji} ${esc(rec.name)}の卸売価格・産地 <span class="cat-tag">/ ${esc(rec.category)}</span></h1>
+<p class="lead">${esc(estatSurveyLabel(rec.year))}にもとづく、${esc(rec.name)}の産地別シェアと消費地域別の月別卸売価格です。${top && top.share != null ? `主産地は${esc(top.name)}（全国の約${Math.round(top.share * 100)}%）。` : ''}</p>
+
+<div class="statgrid">
+  ${statBox('年間平均卸売価格', avg != null ? `${fmtNum(avg, 0)}<small> 円/kg</small>` : '—')}
+  ${statBox('月別の高値', hi != null ? `${fmtNum(hi, 0)}<small> 円/kg</small>` : '—')}
+  ${statBox('月別の安値', lo != null ? `${fmtNum(lo, 0)}<small> 円/kg</small>` : '—')}
+  ${statBox('主産地', top ? esc(top.name) : '—')}
+  ${statBox('対象年', `${rec.year}年`)}
+</div>
+
+<h2>月別の卸売価格（全国加重平均・${rec.year}年）</h2>
+${lineChartSvg(series, { ariaLabel: `${rec.name}の月別卸売価格推移`, title: `${rec.name} 月別` })}
+<p class="lead">主要消費地域（卸売市場）の入荷量で加重平均した、${rec.year}年の月別卸売価格（円/kg）です。</p>
+
+${adSlot(site, site.adsenseSlotItem)}
+
+<h2>主な産地（年間入荷量シェア・上位5）</h2>
+${estatOriginBars(rec)}
+
+<h2>消費地域別の月別卸売価格（円/kg・${rec.year}年）</h2>
+${estatRegionTable(rec)}
+${explainerBlock(rec.slug, rec.name)}
+
+<h2>品目情報</h2>
+<table>
+  <tr><th>分類</th><td>${esc(rec.category)}</td></tr>
+  <tr><th>主産地</th><td>${top ? esc(top.name) : '—'}</td></tr>
+  <tr><th>価格の単位</th><td>${esc(rec.priceUnit || '円/kg')}</td></tr>
+  <tr><th>調査</th><td>${esc(estatSurveyLabel(rec.year))}</td></tr>
+</table>
+
+<div class="notice estat-note">${esc(ESTAT_ATTRIBUTION)}。${esc(estatSurveyLabel(rec.year))}の確報値であり、価格は参考値です。日次の市況を示すものではありません。</div>
+`;
+
+  const breadcrumb = [
+    { name: 'トップ', url: '/' },
+    { name: '果実・産地データ', url: '/#fruits' },
+    { name: rec.name, url: canonicalPath },
+  ];
+  const jsonld = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Dataset',
+      name: `${rec.name}の産地別・消費地域別の卸売価格（${rec.year}年）`,
+      description: `${rec.name}の${rec.year}年の産地別入荷量シェアと消費地域別の月別卸売価格（円/kg）。${estatSurveyLabel(rec.year)}。`,
+      creator: { '@type': 'Organization', name: src.attribution || ESTAT_ATTRIBUTION },
+      license: src.licenseUrl,
+      isAccessibleForFree: true,
+      temporalCoverage: `${rec.year}-01/${rec.year}-12`,
+      variableMeasured: '卸売価格（円/kg）・入荷量（t）',
+      url: site.baseUrl.replace(/\/$/, '') + canonicalPath,
+    },
+    breadcrumbLd(site, breadcrumb),
+  ];
+
+  return renderPage(site, {
+    title: `${rec.name}の卸売価格・産地（${rec.year}年・政府統計）`,
+    description: `${rec.name}の${rec.year}年の産地別シェアと消費地域別の月別卸売価格（円/kg）。${top ? `主産地は${top.name}。` : ''}農林水産省「青果物卸売市場調査」（e-Stat）を加工。`,
+    path: canonicalPath,
+    breadcrumb,
+    jsonld,
+    updatedLabel,
+    freshness: estatFresh,
+    body,
+  });
+}
+
+// Top-page section: fruit (+ estat-only) cards grouped by category.
+function estatTopSection(records) {
+  if (!records.length) return '';
+  const byCat = new Map();
+  for (const r of records) {
+    if (!byCat.has(r.category)) byCat.set(r.category, []);
+    byCat.get(r.category).push(r);
+  }
+  const cats = [...byCat.keys()].sort((a, b) =>
+    a === '果実' ? -1 : b === '果実' ? 1 : a.localeCompare(b, 'ja')
+  );
+  const sections = cats
+    .map((cat) => {
+      const list = byCat.get(cat).sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+      const cards = list
+        .map((r) => {
+          const nat = r.national || [];
+          const avg = nat.length ? Math.round(nat.reduce((a, p) => a + p.price, 0) / nat.length) : null;
+          const top = r.origins && r.origins[0];
+          return `<a class="card item-card" href="/items/${esc(r.slug)}/">
+        <span class="em">${r.emoji}</span>
+        <span class="nm">${esc(r.name)}</span>
+        <span class="px">${avg != null ? fmtNum(avg, 0) : '—'} <small>円/kg</small></span>
+        <span class="flat">${top ? esc(`主産地 ${top.name}`) : ''}</span>
+      </a>`;
+        })
+        .join('');
+      return `<h3>${esc(cat)}</h3><div class="grid cards">${cards}</div>`;
+    })
+    .join('');
+  const year = records[0].year;
+  return `
+<h2 id="fruits">果実の卸売価格と産地（政府統計・年次）</h2>
+<p class="lead">農林水産省「青果物卸売市場調査」（e-Stat）の最新公表年（${year}年）をもとにした、果実などの産地別シェアと消費地域別の卸売価格です。日次更新のベジ探とは異なり、年に一度公表される確報値です。</p>
+${sections}
+<div class="notice estat-note">${esc(ESTAT_ATTRIBUTION)}</div>`;
+}
+
 // ---- Page: index (vegetable-first) ----------------------------------------
-function renderIndex(site, meta, vegEntries, rankings, updatedLabel, freshness) {
+function renderIndex(site, meta, vegEntries, rankings, updatedLabel, freshness, estatStandalone = []) {
   const byCat = new Map();
   for (const e of vegEntries) {
     if (!byCat.has(e.item.category)) byCat.set(e.item.category, []);
@@ -639,6 +865,8 @@ ${adSlot(site, site.adsenseSlotTop)}
 
 <h2 id="items">品目一覧</h2>
 ${catSections}
+
+${estatTopSection(estatStandalone)}
 
 <h2>国際市況アーカイブ</h2>
 <p class="lead">バナナ・小麦・コーヒーなど食品コモディティ26品目の国際市況（1980〜2017年・月次）の長期アーカイブも<a href="/archive/">こちら</a>で公開しています。</p>
@@ -763,6 +991,7 @@ function renderAbout(site, meta, updatedLabel, freshnessBySource) {
   const veg = meta.sources.vegetan;
   const com = meta.sources.commodity;
   const ret = meta.sources.retail;
+  const est = meta.sources.estat;
   const vf = freshnessBySource.vegetan;
 
   const vegRows = veg
@@ -804,6 +1033,21 @@ function renderAbout(site, meta, updatedLabel, freshnessBySource) {
 卸売価格（日次）とは別の指標で、消費者が店頭で購入する価格の目安を示します。都市別の一覧は<a href="/retail/">小売価格ページ</a>をご覧ください。</p>`
     : '';
 
+  const estRows = est
+    ? `
+<h2>データの出典（果実・産地別 卸売価格）</h2>
+<p><strong>${esc(ESTAT_ATTRIBUTION)}</strong></p>
+<table>
+  <tr><th>データソース</th><td>${esc(est.title)}</td></tr>
+  <tr><th>提供元・出典表示</th><td>${esc(est.attribution)}</td></tr>
+  <tr><th>取得元</th><td><a href="${esc(est.homepage)}" rel="nofollow">${esc(est.homepage)}</a>（e-Stat API v3・statsCode=00500226）</td></tr>
+  <tr><th>ライセンス</th><td><a href="${esc(est.licenseUrl)}" rel="nofollow">${esc(est.license)}</a></td></tr>
+  <tr><th>更新頻度</th><td><strong>年次公表</strong>（毎日更新ではありません）。最新公表年のみを掲載します。</td></tr>
+  <tr><th>最新公表年</th><td>${est.year ? `${esc(String(est.year))}年調査` : '—'}</td></tr>
+</table>
+<p>果実（りんご・みかん・ぶどう等）の品目ページ、および一部の野菜ページの「産地と地域別の卸売価格（政府統計）」セクションは、農林水産省「青果物卸売市場調査」（e-Stat）の<strong>年次確報</strong>を原資料としています。産地別の入荷量シェアと、主要消費地域（卸売市場）別の月別卸売価格を、政府標準利用規約に基づき出典を明示して加工・掲載しています。日次のベジ探価格とは調査・時点が異なる、年に一度公表される確報値です。</p>`
+    : '';
+
   const comRows = com
     ? `
 <h2>データの出典（国際市況アーカイブ）</h2>
@@ -821,6 +1065,7 @@ function renderAbout(site, meta, updatedLabel, freshnessBySource) {
 <p class="lead">${esc(site.siteName)}は、公開オープンデータをもとに野菜の価格情報を<strong>自動生成・毎日更新</strong>するユーティリティサイトです。</p>
 ${vegRows}
 ${retRows}
+${estRows}
 ${comRows}
 
 <h2>自動更新であることの開示</h2>
@@ -899,6 +1144,7 @@ async function main() {
   const meta = await readJson(path.join(DATA_DIR, 'meta.json'), null);
   const records = await loadItems();
   const retailRecords = await loadRetail();
+  const estatRecords = await loadEstat();
 
   if (!meta || records.length === 0) {
     throw new Error('build: no data found. Run `npm run fetch` first.');
@@ -955,6 +1201,25 @@ async function main() {
   const retailMap = new Map(retailRecords.map((r) => [r.slug, r]));
   const cityList = retailCityList(retailRecords);
 
+  // e-Stat (青果物卸売市場調査) is ANNUAL (年次公表), so its pages never get the
+  // stale "archive banner" — the annual caveat is stated inline instead. Records
+  // whose slug matches a vegetable item page are embedded as a section there;
+  // the rest (fruits + estat-only 果菜) get standalone /items/<slug>/ pages.
+  const estatMeta = meta.sources.estat;
+  const estatYear = (estatMeta && estatMeta.year) || (estatRecords[0] && estatRecords[0].year) || null;
+  const estatFresh = {
+    archive: false,
+    banner: null,
+    label: estatYear ? `${estatYear}年` : '—',
+    priceLabel: '最新公表年の卸売価格',
+    updateNotice: '',
+    footerNotice:
+      '本サイトの果実・産地データは、農林水産省「青果物卸売市場調査」（e-Stat）の<strong>年次確報</strong>をもとに自動集計しています（日次更新ではありません）。',
+  };
+  const vegSlugSet = new Set(vegEntries.map((e) => e.item.slug));
+  const estatMap = new Map(estatRecords.map((r) => [r.slug, r]));
+  const estatStandalone = estatRecords.filter((r) => !vegSlugSet.has(r.slug));
+
   // Rankings and the buy signal are vegetable/daily-based: isBuy comes from the
   // source-provided 平年比 (normalRatio < 0.9), rankPct from the daily series.
   const rankings = buildRankings(vegEntries.length ? vegEntries : entries);
@@ -972,7 +1237,7 @@ async function main() {
   const urls = ['/', '/weekly/', '/about/'];
 
   if (vegEntries.length) {
-    await write('index.html', renderIndex(site, meta, vegEntries, rankings, updatedLabel, vegFresh));
+    await write('index.html', renderIndex(site, meta, vegEntries, rankings, updatedLabel, vegFresh, estatStandalone));
     await write('weekly/index.html', renderWeekly(site, meta, vegEntries, rankings, updatedLabel, vegFresh, retailRecords, cityList));
   } else {
     // Degenerate fallback (no veg data yet): keep the site buildable from the
@@ -990,13 +1255,21 @@ async function main() {
   for (const e of vegEntries) {
     await write(
       `items/${e.item.slug}/index.html`,
-      renderVegItemPage(site, meta, e, updatedLabel, vegFresh, retailMap.get(e.item.slug), cityList)
+      renderVegItemPage(site, meta, e, updatedLabel, vegFresh, retailMap.get(e.item.slug), cityList, estatMap.get(e.item.slug))
     );
     urls.push(`/items/${e.item.slug}/`);
   }
   for (const e of comEntries) {
     await write(`items/${e.item.slug}/index.html`, renderCommodityItemPage(site, meta, e, updatedLabel, comFresh));
     urls.push(`/items/${e.item.slug}/`);
+  }
+
+  // Standalone e-Stat item pages (fruits + estat-only 果菜).
+  let estatPageCount = 0;
+  for (const rec of estatStandalone) {
+    await write(`items/${rec.slug}/index.html`, renderEstatItemPage(site, meta, rec, updatedLabel, estatFresh));
+    urls.push(`/items/${rec.slug}/`);
+    estatPageCount += 1;
   }
 
   // Retail: index + one page per surveyed city.
@@ -1018,7 +1291,7 @@ async function main() {
   await write('sitemap.xml', sitemap(site, urls, meta.generatedAt.slice(0, 10)));
   await write('robots.txt', robots(site));
 
-  console.log(`[build] ${entries.length} items (${vegEntries.length} veg / ${comEntries.length} archive) + ${retailPageCount} retail -> ${urls.length} pages in public/`);
+  console.log(`[build] ${entries.length} items (${vegEntries.length} veg / ${comEntries.length} archive) + ${retailPageCount} retail + ${estatPageCount} estat -> ${urls.length} pages in public/`);
   console.log('[build] done.');
 }
 
