@@ -325,7 +325,9 @@
       "monthlyKey": "cabbage",
       "dailyBook": "youkeisai",
       "dailySheet": "キャベツ",
-      "source": "vegetan"
+      "source": "vegetan",
+      "retailKey": "kyabetu",
+      "retailSheet": "キャベツ"
     },
     {
       "slug": "spinach",
@@ -339,7 +341,9 @@
       "monthlyKey": "spinach",
       "dailyBook": "youkeisai",
       "dailySheet": "ほうれんそう",
-      "source": "vegetan"
+      "source": "vegetan",
+      "retailKey": "hourensou",
+      "retailSheet": "ほうれんそう"
     },
     {
       "slug": "chinese-cabbage",
@@ -353,7 +357,9 @@
       "monthlyKey": "chinese-cabbage",
       "dailyBook": "youkeisai",
       "dailySheet": "はくさい",
-      "source": "vegetan"
+      "source": "vegetan",
+      "retailKey": "hakusai",
+      "retailSheet": "はくさい"
     },
     {
       "slug": "welsh-onion",
@@ -367,7 +373,9 @@
       "monthlyKey": "welsh-onion",
       "dailyBook": "youkeisai",
       "dailySheet": "ねぎ",
-      "source": "vegetan"
+      "source": "vegetan",
+      "retailKey": "negi",
+      "retailSheet": "白ねぎ"
     },
     {
       "slug": "lettuce",
@@ -381,7 +389,9 @@
       "monthlyKey": "rettuce",
       "dailyBook": "youkeisai",
       "dailySheet": "レタス",
-      "source": "vegetan"
+      "source": "vegetan",
+      "retailKey": "retasu",
+      "retailSheet": "レタス"
     },
     {
       "slug": "onion",
@@ -395,7 +405,9 @@
       "monthlyKey": "onion",
       "dailyBook": "youkeisai",
       "dailySheet": "たまねぎ",
-      "source": "vegetan"
+      "source": "vegetan",
+      "retailKey": "tamanegi",
+      "retailSheet": "たまねぎ"
     },
     {
       "slug": "broccoli",
@@ -409,7 +421,9 @@
       "monthlyKey": "broccoli",
       "dailyBook": "youkeisai",
       "dailySheet": "ブロッコリー",
-      "source": "vegetan"
+      "source": "vegetan",
+      "retailKey": "buroccoli",
+      "retailSheet": "ブロッコリー"
     },
     {
       "slug": "cucumber",
@@ -423,7 +437,9 @@
       "monthlyKey": "cucumber",
       "dailyBook": "kasai",
       "dailySheet": "きゅうり",
-      "source": "vegetan"
+      "source": "vegetan",
+      "retailKey": "kyuuri",
+      "retailSheet": "きゅうり"
     },
     {
       "slug": "tomato",
@@ -437,7 +453,9 @@
       "monthlyKey": "tomato",
       "dailyBook": "kasai",
       "dailySheet": "トマト",
-      "source": "vegetan"
+      "source": "vegetan",
+      "retailKey": "tomato",
+      "retailSheet": "トマト"
     },
     {
       "slug": "eggplant",
@@ -451,7 +469,9 @@
       "monthlyKey": "eggplant",
       "dailyBook": "kasai",
       "dailySheet": "なす",
-      "source": "vegetan"
+      "source": "vegetan",
+      "retailKey": "nasu",
+      "retailSheet": "なす"
     },
     {
       "slug": "green-pepper",
@@ -465,7 +485,9 @@
       "monthlyKey": "green-pepper",
       "dailyBook": "kasai",
       "dailySheet": "ピーマン",
-      "source": "vegetan"
+      "source": "vegetan",
+      "retailKey": "piman",
+      "retailSheet": "ピーマン"
     },
     {
       "slug": "asparagus",
@@ -493,7 +515,9 @@
       "monthlyKey": "radish",
       "dailyBook": "konsai",
       "dailySheet": "だいこん",
-      "source": "vegetan"
+      "source": "vegetan",
+      "retailKey": "daikon",
+      "retailSheet": "だいこん"
     },
     {
       "slug": "carrot",
@@ -507,7 +531,9 @@
       "monthlyKey": "carrot",
       "dailyBook": "konsai",
       "dailySheet": "にんじん",
-      "source": "vegetan"
+      "source": "vegetan",
+      "retailKey": "ninjin",
+      "retailSheet": "にんじん"
     },
     {
       "slug": "burdock",
@@ -549,7 +575,9 @@
       "monthlyKey": "taros",
       "dailyBook": "imo",
       "dailySheet": "さといも",
-      "source": "vegetan"
+      "source": "vegetan",
+      "retailKey": "satoimo",
+      "retailSheet": "さといも"
     },
     {
       "slug": "potato",
@@ -563,7 +591,9 @@
       "monthlyKey": "wthite-potato",
       "dailyBook": "imo",
       "dailySheet": "ばれいしょ",
-      "source": "vegetan"
+      "source": "vegetan",
+      "retailKey": "bareisyo",
+      "retailSheet": "ばれいしょ"
     },
     {
       "slug": "sweet-potato",
@@ -588,5 +618,21 @@
       "imo": "kakakugurafu/imo.xlsx"
     },
     "monthlyDir": "wp-content/uploads/"
+  },
+  "retail": {
+    "workbookDir": "kouri_cyousa/",
+    "note": "都市別小売価格（月次調査）。品目ごとに kouri_cyousa/{retailKey}.xlsx を取得し、シート retailSheet の「小売価格（円/kg）」ブロックを都市×月で正規化する。",
+    "cities": {
+      "札幌市": "sapporo",
+      "仙台市": "sendai",
+      "東京23区": "tokyo",
+      "金沢市": "kanazawa",
+      "名古屋市": "nagoya",
+      "大阪市": "osaka",
+      "広島市": "hiroshima",
+      "高松市": "takamatsu",
+      "福岡市": "fukuoka",
+      "全国": "national"
+    }
   }
 }

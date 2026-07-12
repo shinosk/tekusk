@@ -42,8 +42,10 @@ probe.yml (workflow_dispatch, 本番ランナー)
 ```
 
 「実データを見ないまま憶測でパーサを書かない」方針はこの仕組みで維持している。
-probe.mjs の SEED_URLS は現在ベジ探の利用規約ページ（riyou.html / chosaku.html）を
-指しており、次回プローブで利用条件の原文を捕獲する。
+probe.mjs の SEED_URLS は round 4 で次期データソース候補（e-Stat「青果物卸売市場調査」
+`toukei=00500226` と 東京都中央卸売市場の月報・日報一覧）を指す。e-Stat のファイル直リンク
+`/stat-search/file-download?statInfId=...` をリンク追跡対象に追加し、MAX_TEXT_BYTES を 1MB に
+引き上げて東京都の大きな一覧ページ（〜750KB）を全文保存する。
 
 ## ベジ探データの構造（フィクスチャで確認済みの事実）
 
@@ -61,7 +63,13 @@ probe.mjs の SEED_URLS は現在ベジ探の利用規約ページ（riyou.html 
     （「平成18年」「2008年」）＋**先頭に無ラベルの2005年列**＋末尾に「平年値」列
     （平年値=直近5か年平均であることを実データで検算して列対応を確定）
   - 単位: 円/kg。当年の未来月も埋まっているため fetch 時に当月までにキャップ
-- **都市別小売** `kouri_cyousa/*.xlsx` — 実装スコープ外（フィクスチャのみ確保）
+- **都市別小売** `kouri_cyousa/{name}.xlsx`（品目別。先方表記の romaji: `kyabetu`,
+  `negi`, `tomato` 等）— `retail` アダプタ＋ `src/lib/retail.mjs` で実装済み
+  - 1品目=1シート（シート名=品目名。ねぎは 白ねぎ/青ねぎ の2シート→白ねぎを採用）
+  - 先頭の「小売価格（円/kg）」ブロック: 行=都市（9都市＋全国）×列=月。年度は4月始まりで
+    列2が無ラベルの4月、列3以降に「５月」..「３月」。表題「（令和8年度）」を正として西暦へ
+  - **月次調査**。`data/retail/<slug>.json` に品目×都市×月で mergeByDate 蓄積（年度替わりで
+    ブックの列がリセットされても履歴が積み上がる）。鮮度表現は「月次調査」（毎日更新と書かない）
 
 ## モジュール
 
@@ -72,6 +80,8 @@ probe.mjs の SEED_URLS は現在ベジ探の利用規約ページ（riyou.html 
 | `src/lib/xlsx.mjs` | **依存ゼロ .xlsx パーサ**。ZIPは**セントラルディレクトリ**を正として解析し `node:zlib.inflateRawSync` で展開。workbook.xml/rels/sharedStrings/worksheet を最小限パースし、シート名一覧と2次元配列を返す |
 | `src/lib/wareki.mjs` | 和暦（平成/令和等）→西暦変換、Excelシリアル日付変換。**純関数** |
 | `src/lib/vegetan.mjs` | ベジ探ブックの正規化（日次ブロック抽出・月次年列マップ）。**純関数** |
+| `src/lib/retail.mjs` | 都市別小売（kouri_cyousa）ブックの正規化（品目×都市×月）。年度パース・月列復元・都市slug付与＋ view helper（latestChange/monthsAcross）。**純関数** |
+| `src/content/items.mjs` | 野菜19品目の常設解説文（旬・選び方・保存・価格の動き）。品目ページで表示。**データ非依存の静的コンテンツ** |
 | `src/lib/csv.mjs` | 依存なしCSVパーサ、数値パース（`nan`→null） |
 | `src/lib/normalize.mjs` | 横持ちCSV→品目別時系列。`mergeSeries`/`mergeByDate`（冪等・蓄積・全フィールド保持）。**純関数** |
 | `src/lib/stats.mjs` | 統計。vegetan日次品目は**ソース提供の平年比**で買い時判定（`normalRatio < 0.9`）+ 日次ベースの直近1週間変化（rankPct）、月次品目は従来の前月比ベース。**純関数** |

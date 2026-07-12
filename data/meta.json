@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-11T22:48:20.120Z",
+  "generatedAt": "2026-07-12T13:06:49.424Z",
   "primarySource": "vegetan",
   "sources": {
     "vegetan": {
@@ -31,6 +31,22 @@
       "latestDate": "2017-06-01",
       "missing": [],
       "updatedAt": "2026-07-11T22:48:20.120Z"
+    },
+    "retail": {
+      "id": "retail",
+      "title": "都市別 野菜小売価格（独立行政法人農畜産業振興機構「ベジ探」・月次調査）",
+      "url": "https://vegetan.alic.go.jp/kouri_cyousa/",
+      "homepage": "https://vegetan.alic.go.jp/",
+      "license": "著作権は機構に帰属（オープンライセンスではない）。本サイトは価格等の数値（事実データ）を独自に集計・可視化して掲載しており、ページ・記事等の転載は行っていない。",
+      "licenseUrl": "https://vegetan.alic.go.jp/chosaku.html",
+      "attribution": "独立行政法人農畜産業振興機構『ベジ探』のデータを加工して作成（原資料: 農林水産省「食品価格動向調査」）",
+      "cadence": "monthly",
+      "itemCount": 15,
+      "cityCount": 10,
+      "totalPoints": 480,
+      "latestDate": "2026-06-01",
+      "missing": [],
+      "updatedAt": "2026-07-12T13:06:49.424Z"
     }
   },
   "source": {

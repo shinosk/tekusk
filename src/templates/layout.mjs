@@ -163,6 +163,7 @@ ${archiveBanner(freshness)}
   <a class="brand" href="/">🥬 ${esc(site.siteName.replace('価格ナビ', ''))}<span>価格ナビ</span></a>
   <nav class="main">
     <a href="/">トップ</a>
+    <a href="/retail/">小売価格</a>
     <a href="/weekly/">週報</a>
     <a href="/archive/">国際市況</a>
     <a href="/about/">データ出典</a>

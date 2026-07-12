@@ -77,6 +77,49 @@ test('build.mjs runs end-to-end when data exists', (t) => {
   assert.ok(fs.existsSync(path.join(PUBLIC_DIR, 'robots.txt')));
 });
 
+// Retail pages: when data/retail exists, the build must emit the /retail/ index
+// plus per-city pages, wire them into the nav/sitemap, and add the retail +
+// explainer sections to the item pages — all with root-absolute internal links
+// (so the /tekusk path prefix applies) and honest "月次調査" framing.
+test('build.mjs emits retail pages and item explainer/retail sections', (t) => {
+  const metaPath = path.join(DATA_DIR, 'meta.json');
+  const retailDir = path.join(DATA_DIR, 'retail');
+  if (!fs.existsSync(metaPath) || !fs.existsSync(retailDir)) {
+    t.skip('no data/retail — run `node scripts/fetch.mjs --source=retail --fixtures` first');
+    return;
+  }
+  execFileSync('node', ['scripts/build.mjs'], { cwd: ROOT, stdio: 'pipe' });
+
+  // Retail index + at least one known city page exist.
+  const retailIndex = path.join(PUBLIC_DIR, 'retail/index.html');
+  const sapporo = path.join(PUBLIC_DIR, 'retail/sapporo/index.html');
+  assert.ok(fs.existsSync(retailIndex), 'public/retail/index.html should exist');
+  assert.ok(fs.existsSync(sapporo), 'public/retail/sapporo/index.html should exist');
+
+  const idxHtml = fs.readFileSync(retailIndex, 'utf8');
+  const cityHtml = fs.readFileSync(sapporo, 'utf8');
+  // Honest monthly framing, never a daily-update claim on retail pages.
+  assert.match(idxHtml, /月次調査/);
+  assert.match(cityHtml, /月次/);
+  assert.doesNotMatch(cityHtml, /毎日更新/);
+  // Root-absolute internal links carry the site path prefix (/tekusk).
+  assert.match(cityHtml, /href="\/tekusk\/items\//);
+  // JSON-LD Dataset + attribution present.
+  assert.match(cityHtml, /"@type":"Dataset"/);
+  assert.match(cityHtml, /食品価格動向調査/);
+
+  // Item page (tomato) gained the retail table + evergreen explainer section.
+  const tomato = fs.readFileSync(path.join(PUBLIC_DIR, 'items/tomato/index.html'), 'utf8');
+  assert.match(tomato, /都市別の小売価格（月次調査）/);
+  assert.match(tomato, /選び方・保存・価格の見方/);
+  assert.match(tomato, /href="\/tekusk\/retail\/sapporo\//);
+
+  // Sitemap includes the retail URLs; nav link is present site-wide.
+  const sitemap = fs.readFileSync(path.join(PUBLIC_DIR, 'sitemap.xml'), 'utf8');
+  assert.match(sitemap, /\/retail\/sapporo\//);
+  assert.match(fs.readFileSync(path.join(PUBLIC_DIR, 'index.html'), 'utf8'), /小売価格/);
+});
+
 // Per-source freshness + attribution: on a build that has BOTH the live
 // vegetan data and the frozen commodity archive, veg pages must carry live
 // copy + the ベジ探 attribution and NO archive banner, while commodity pages

@@ -34,10 +34,22 @@ npm run update     # fetch → build を一括実行
 |---|---|---|
 | 日次卸売 | `kakakugurafu/{youkeisai,kasai,konsai,imo}.xlsx`（葉茎菜・果菜・根菜・いも類） | 品目別シート。1シートに市場ブロック×4（東京・名古屋・大阪・福岡）。各ブロックは日付行＋「入荷量」「卸売価格」「平均価格（平年値）」「平年比」の行。**先頭の東京都中央卸売市場ブロックを採用**。当月分のみの提供のため、日次の蓄積は `data/` への追記マージで実現 |
 | 月次長期 | `wp-content/uploads/{item}.xlsx`（19品目。`rettuce`・`wthite-potato`・`burdosk` 等**先方のtypoごと正確に**） | 行=月（1〜12月）、列=年（「平成18年」「2008年」の和暦・西暦混在＋先頭に**無ラベルの2005年列**＋末尾に平年値列）。単位は円/kg |
-| 都市別小売 | `kouri_cyousa/*.xlsx` | **今回は実装スコープ外**（フィクスチャは取得済み。将来の拡張用） |
+| 都市別小売 | `kouri_cyousa/{name}.xlsx`（品目別。`kyabetu`・`negi`・`tomato` 等**先方の表記のまま**） | 品目ごとに1シート（シート名=品目名）。先頭の「小売価格（円/kg）」ブロックが 行=都市（札幌市・仙台市・東京23区…9都市＋全国）×列=月（年度=4月始まりの12列）。年度は表題「（令和8年度）」を正として日付化。**月次調査**なので鮮度表現は「月次調査」（毎日更新ではない）。`retail` データセットとして `data/retail/<slug>.json` に品目×都市×月で蓄積 |
 
 品目slug ↔ xlsxファイル名・シート名の対応は `config/items.json` の各品目の
-`monthlyKey` / `dailyBook` / `dailySheet` フィールドが正です。
+`monthlyKey` / `dailyBook` / `dailySheet`（卸売）・`retailKey` / `retailSheet`（都市別小売）
+フィールドが正です。都市名→slug の対応表は同ファイルの `retail.cities`。
+
+都市別小売の取得・生成:
+
+```bash
+node scripts/fetch.mjs --source=retail --fixtures   # 開発: 実フィクスチャから data/retail/ を生成
+node scripts/fetch.mjs --source=retail              # 本番: HTTP から（要ネットワーク到達）
+```
+
+生成ページ: `/retail/`（全都市一覧＋概況）、`/retail/{city-slug}/`（都市別の品目×月テーブル・
+前月比・全国平均比で割安な品目）。各品目ページ `/items/{slug}/` にも「都市別の小売価格」テーブルと
+選び方・保存・価格の見方の解説を追加。
 
 **出典表記**: 全野菜ページに「出典：独立行政法人農畜産業振興機構『ベジ探』のデータを加工して作成」を表示しています。
 
