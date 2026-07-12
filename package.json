@@ -8,7 +8,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "fetch": "node scripts/fetch.mjs --source=vegetan && node scripts/fetch.mjs --source=commodity",
+    "fetch": "node scripts/fetch.mjs --source=vegetan && node scripts/fetch.mjs --source=retail && node scripts/fetch.mjs --source=commodity",
     "build": "node scripts/build.mjs",
     "update": "npm run fetch && node scripts/build.mjs",
     "test": "node --test",

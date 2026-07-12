@@ -35,27 +35,36 @@ const UA = 'tekusk-price-bot/1.0 (+https://github.com/; static-site data updater
 
 const TIMEOUT_MS = 30000;
 const RETRIES = 2; // total attempts = RETRIES + 1
-const MAX_TEXT_BYTES = 200 * 1024; // 200KB cap for text-like bodies
+const MAX_TEXT_BYTES = 1024 * 1024; // 1MB cap for text-like bodies (東京都の一覧は
+// 750KB あり、全文を保存してリンク抽出したいため 200KB から引き上げ)
 const MAX_BINARY_BYTES = 1024 * 1024; // 1MB cap for binary bodies (xlsx/zip/...)
 const MAX_FOLLOWED_LINKS_PER_PAGE = 20;
 
-// href must look like a document link (csv/xlsx/xls/zip) or mention one of
-// these Japanese keywords for daily/ten-day/monthly reports, statistics, or
-// price data — the kinds of pages likely to hold the actual price tables.
+// href must look like a document link (csv/xlsx/xls/zip), an e-Stat file直リンク
+// (/stat-search/file-download?statInfId=...  — 拡張子を持たないがファイル本体),
+// or mention one of these Japanese keywords for daily/ten-day/monthly reports,
+// statistics, or price data — the kinds of pages likely to hold the actual
+// price tables.
 const LINK_EXT_RE = /\.(csv|xlsx?|zip)(?:[?#]|$)/i;
+const LINK_FILEDL_RE = /\/stat-search\/file-download\?[^"']*statInfId=/i;
 const LINK_KEYWORD_RE = /(日報|旬報|月報|統計|価格)/;
 
 // Candidate production sources. See docs/data-sources.md for the rationale
 // and licensing notes for each.
 const SEED_URLS = [
-  // Round 3: ベジ探の利用規約・著作権ページを捕獲する（round 2 で価格データの
-  // .xlsx 構造は確定済み → vegetan アダプタとして実装済み。残るは正式な
-  // 利用条件テキストの確認。次回プローブでこの2ページを保存する）。
-  // 注意: probe.mjs は data/raw-samples/ を毎回上書きするが、vegetan アダプタの
+  // Round 4: 次期データソース候補の実レスポンスを捕獲する。
+  //   * e-Stat「青果物卸売市場調査」(toukei=00500226) の一覧ページ。ここから
+  //     /stat-search/file-download?statInfId=... のファイル直リンクを辿り、
+  //     CSV/XLSX 本体の構造を確認する（LINK_FILEDL_RE でリンク追跡対象に含めた）。
+  //   * 東京都中央卸売市場の市場統計情報（月報・日報）の一覧。東京都のページは
+  //     全文で 750KB 程度あるため MAX_TEXT_BYTES を 1MB に引き上げ、全文を保存
+  //     してリンクを取りこぼさないようにした。
+  // 注意: probe.mjs は data/raw-samples/ を毎回上書きするが、vegetan/retail アダプタの
   // フィクスチャは test/fixtures/vegetan/ に恒久保存済みのため、上書きしても
   // テスト・--fixtures モードには影響しない。
-  'https://vegetan.alic.go.jp/riyou.html',
-  'https://vegetan.alic.go.jp/chosaku.html',
+  'https://www.e-stat.go.jp/stat-search/files?toukei=00500226',
+  'https://www.shijou.metro.tokyo.lg.jp/torihiki/geppo/',
+  'https://www.shijou.metro.tokyo.lg.jp/torihiki/nippo/',
 ];
 
 function sanitizeName(url) {
@@ -142,7 +151,7 @@ function extractSameHostLinks(html, baseUrl) {
 }
 
 function pickLinksToFollow(links) {
-  const fileLinks = links.filter((u) => LINK_EXT_RE.test(u));
+  const fileLinks = links.filter((u) => LINK_EXT_RE.test(u) || LINK_FILEDL_RE.test(u));
   const keywordLinks = links.filter((u) => {
     try {
       return LINK_KEYWORD_RE.test(decodeURIComponent(u));

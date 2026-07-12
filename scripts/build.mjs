@@ -10,17 +10,34 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { CONFIG_DIR, DATA_DIR, DATA_ITEMS_DIR, PUBLIC_DIR } from '../src/lib/paths.mjs';
+import { CONFIG_DIR, DATA_DIR, DATA_ITEMS_DIR, DATA_RETAIL_DIR, PUBLIC_DIR } from '../src/lib/paths.mjs';
 import { renderPage, adSlot, STYLESHEET } from '../src/templates/layout.mjs';
 import { computeItemStats, buildRankings } from '../src/lib/stats.mjs';
 import { lineChartSvg } from '../src/lib/chart.mjs';
 import { esc } from '../src/lib/html.mjs';
 import { fmtNum, fmtPct, fmtMonth, fmtDate, trendClass } from '../src/lib/format.mjs';
-import { weeklyReport, headline, itemBlurb } from '../src/lib/report.mjs';
+import { weeklyReport, headline, itemBlurb, retailWeeklyParagraph } from '../src/lib/report.mjs';
 import { freshnessCopy } from '../src/lib/freshness.mjs';
+import { latestChange, monthsAcross, cityOf } from '../src/lib/retail.mjs';
+import { getItemContent } from '../src/content/items.mjs';
 
 const VEGETAN_ATTRIBUTION =
   '出典：独立行政法人農畜産業振興機構『ベジ探』のデータを加工して作成';
+const RETAIL_ATTRIBUTION =
+  '出典：独立行政法人農畜産業振興機構『ベジ探』のデータを加工して作成（原資料: 農林水産省「食品価格動向調査」）';
+
+// Cities covered by the monthly retail survey, in a rough north→south display
+// order. `national` (全国) is carried in the data for overviews but has no page.
+const RETAIL_CITY_ORDER = [
+  'sapporo', 'sendai', 'tokyo', 'kanazawa', 'nagoya',
+  'osaka', 'hiroshima', 'takamatsu', 'fukuoka',
+];
+
+// "YYYY-MM-01" -> "6月" (compact month column header).
+function fmtMonthCol(date) {
+  const m = Number(String(date).split('-')[1]);
+  return `${m}月`;
+}
 
 async function readJson(p, fallback) {
   try {
@@ -41,6 +58,21 @@ async function loadItems() {
   for (const f of files) {
     const rec = await readJson(path.join(DATA_ITEMS_DIR, f), null);
     if (rec && Array.isArray(rec.series) && rec.series.length) recs.push(rec);
+  }
+  return recs;
+}
+
+async function loadRetail() {
+  let files = [];
+  try {
+    files = (await fs.readdir(DATA_RETAIL_DIR)).filter((f) => f.endsWith('.json'));
+  } catch {
+    return [];
+  }
+  const recs = [];
+  for (const f of files) {
+    const rec = await readJson(path.join(DATA_RETAIL_DIR, f), null);
+    if (rec && Array.isArray(rec.cities) && rec.cities.length) recs.push(rec);
   }
   return recs;
 }
@@ -83,12 +115,31 @@ function buyBadgeFor(stats) {
 }
 
 // ---- Page: vegetable item (daily + long-term monthly, two charts) ---------
-function renderVegItemPage(site, meta, entry, updatedLabel, freshness) {
+function renderVegItemPage(site, meta, entry, updatedLabel, freshness, retailRec, cityList) {
   const { item, stats } = entry;
   const s = item.series;
   const monthly = item.monthly || [];
   const canonicalPath = `/items/${item.slug}/`;
   const src = meta.sources.vegetan;
+
+  // Evergreen explainer copy (旬・選び方・保存・価格の動き). Omitted when absent.
+  const c = getItemContent(item.slug);
+  const explainerSection = c
+    ? `
+<h2>${esc(item.name)}の選び方・保存・価格の見方</h2>
+<div class="explainer">
+  <h3>旬と産地の傾向</h3>
+  <p>${esc(c.season)}</p>
+  <h3>選び方</h3>
+  <p>${esc(c.choosing)}</p>
+  <h3>保存方法</h3>
+  <p>${esc(c.storage)}</p>
+  <h3>価格の動きの特徴</h3>
+  <p>${esc(c.pricePattern)}</p>
+</div>`
+    : '';
+
+  const retailSection = renderRetailItemSection(item, retailRec, cityList || []);
 
   const dailySection = item.hasDaily
     ? `
@@ -131,6 +182,8 @@ ${dailySection}
 
 ${adSlot(site, site.adsenseSlotItem)}
 ${monthlySection}
+${retailSection}
+${explainerSection}
 
 <h2>品目情報</h2>
 <table>
@@ -245,6 +298,275 @@ ${adSlot(site, site.adsenseSlotItem)}
     title: `${item.name}の国際市況価格推移（アーカイブ）`,
     description: `${item.name}の国際市況価格アーカイブ（${fmtMonth(stats.firstDate)}〜${fmtMonth(stats.lastDate)}・月次）。長期の価格推移チャートを掲載。`,
     path: canonicalPath,
+    breadcrumb,
+    jsonld,
+    updatedLabel,
+    freshness,
+    body,
+  });
+}
+
+// ---- Retail (都市別小売価格・月次) --------------------------------------------
+
+// City slug -> display name, learned from the data (falls back to slug). Built
+// once per build from the loaded retail records.
+function buildCityNames(retailRecords) {
+  const names = new Map();
+  for (const rec of retailRecords) {
+    for (const c of rec.cities || []) {
+      if (c.citySlug && c.cityName && !names.has(c.citySlug)) names.set(c.citySlug, c.cityName);
+    }
+  }
+  return names;
+}
+
+// Ordered list of {citySlug, cityName} that actually appear in the data,
+// excluding the全国 aggregate (which has no page).
+function retailCityList(retailRecords) {
+  const names = buildCityNames(retailRecords);
+  const present = new Set();
+  for (const rec of retailRecords) for (const c of rec.cities || []) present.add(c.citySlug);
+  const ordered = RETAIL_CITY_ORDER.filter((s) => present.has(s));
+  // Append any city seen in data but missing from the display order, so nothing
+  // is silently dropped if the survey adds a city.
+  for (const s of present) if (s !== 'national' && !ordered.includes(s)) ordered.push(s);
+  return ordered.map((citySlug) => ({ citySlug, cityName: names.get(citySlug) || citySlug }));
+}
+
+// Section embedded on a vegetable item page: this item's price across cities.
+function renderRetailItemSection(item, retailRec, cityList) {
+  if (!retailRec) return '';
+  const months = monthsAcross(retailRec.cities.map((c) => c.series));
+  if (months.length === 0) return '';
+  const bySlug = new Map(retailRec.cities.map((c) => [c.citySlug, c]));
+
+  const rows = [...cityList, { citySlug: 'national', cityName: '全国' }]
+    .map(({ citySlug, cityName }) => {
+      const c = bySlug.get(citySlug);
+      if (!c) return '';
+      const byDate = new Map(c.series.map((p) => [p.date, p.price]));
+      const cells = months
+        .map((d) => `<td class="num">${byDate.has(d) ? fmtNum(byDate.get(d), 0) : '—'}</td>`)
+        .join('');
+      const lc = latestChange(c.series);
+      const label =
+        citySlug === 'national'
+          ? '<strong>全国</strong>'
+          : `<a href="/retail/${esc(citySlug)}/">${esc(cityName)}</a>`;
+      return `<tr><th scope="row">${label}</th>${cells}<td class="num">${pctCell(lc && lc.momPct)}</td></tr>`;
+    })
+    .join('');
+
+  const head = months.map((d) => `<th class="num">${esc(fmtMonthCol(d))}</th>`).join('');
+  return `
+<h2>都市別の小売価格（月次調査）</h2>
+<p class="lead">主要都市の店頭小売価格（円/kg）の推移です。卸売価格とは異なり、消費者が実際に買う価格の目安になります。数値は月次の調査値で、末尾の「前月比」は各都市の直近月の変化です。</p>
+<div style="overflow-x:auto">
+<table>
+  <thead><tr><th>都市</th>${head}<th class="num">前月比</th></tr></thead>
+  <tbody>${rows}</tbody>
+</table>
+</div>
+<p class="lead">都市ごとの全品目一覧は<a href="/retail/">小売価格ページ</a>から確認できます。</p>
+<div class="notice">${esc(RETAIL_ATTRIBUTION)}。小売価格は月次の調査値であり、店頭の実売価格を保証するものではありません。</div>`;
+}
+
+// Items where this city's latest price is below the全国 latest for the same
+// item (＝相対的に割安), most-under first.
+function cheapVsNational(retailRecords, citySlug) {
+  const out = [];
+  for (const rec of retailRecords) {
+    const c = cityOf(rec, citySlug);
+    const nat = cityOf(rec, 'national');
+    if (!c || !nat) continue;
+    const cl = latestChange(c.series);
+    const nl = latestChange(nat.series);
+    if (!cl || !nl || !nl.price || cl.date !== nl.date) continue;
+    out.push({ rec, cityLatest: cl, vsNat: ((cl.price - nl.price) / nl.price) * 100 });
+  }
+  return out.filter((x) => x.vsNat < 0).sort((a, b) => a.vsNat - b.vsNat);
+}
+
+function renderRetailCityPage(site, meta, city, retailRecords, updatedLabel, freshness) {
+  const { citySlug, cityName } = city;
+  const canonicalPath = `/retail/${citySlug}/`;
+  const src = meta.sources.retail;
+
+  // Item rows: latest price + 前月比 + the month columns.
+  const withData = retailRecords
+    .map((rec) => ({ rec, city: cityOf(rec, citySlug) }))
+    .filter((x) => x.city && x.city.series.length);
+  const months = monthsAcross(withData.map((x) => x.city.series));
+
+  const head = months.map((d) => `<th class="num">${esc(fmtMonthCol(d))}</th>`).join('');
+  const rows = withData
+    .map(({ rec, city: c }) => {
+      const byDate = new Map(c.series.map((p) => [p.date, p.price]));
+      const cells = months
+        .map((d) => `<td class="num">${byDate.has(d) ? fmtNum(byDate.get(d), 0) : '—'}</td>`)
+        .join('');
+      const lc = latestChange(c.series);
+      return `<tr><th scope="row"><a href="/items/${esc(rec.slug)}/">${rec.emoji} ${esc(rec.name)}</a></th>${cells}<td class="num">${pctCell(lc && lc.momPct)}</td></tr>`;
+    })
+    .join('');
+
+  const cheap = cheapVsNational(retailRecords, citySlug).slice(0, 6);
+  const cheapCards = cheap.length
+    ? `<div class="grid cards">${cheap
+        .map(
+          (x) => `<a class="card item-card" href="/items/${esc(x.rec.slug)}/">
+        <span class="em">${x.rec.emoji}</span>
+        <span class="nm">${esc(x.rec.name)}</span>
+        <span class="px">${fmtNum(x.cityLatest.price, 0)} <small>円/kg</small></span>
+        <span class="down">全国平均比 ${fmtPct(x.vsNat)}</span>
+      </a>`
+        )
+        .join('')}</div>`
+    : `<p class="lead">直近の調査では、${esc(cityName)}で全国平均を下回った品目はありませんでした。</p>`;
+
+  const latestMonth = months.length ? fmtMonth(months[months.length - 1]) : '—';
+  const otherCities = retailCityList(retailRecords).filter((c) => c.citySlug !== citySlug);
+
+  const body = `
+<h1>${esc(cityName)}の野菜小売価格 <span class="cat-tag">/ 月次調査</span></h1>
+<p class="lead">${esc(cityName)}における主要野菜${withData.length}品目の店頭小売価格（円/kg）です。最新の調査は${esc(latestMonth)}。全国平均と比べて割安な品目もチェックできます。</p>
+
+<h2>🟢 ${esc(cityName)}でいま割安な品目（全国平均比）</h2>
+<p class="lead">最新調査月で、${esc(cityName)}の小売価格が全国平均を下回っている品目です。</p>
+${cheapCards}
+
+${adSlot(site, site.adsenseSlotItem)}
+
+<h2>品目別の小売価格（月次）</h2>
+<div style="overflow-x:auto">
+<table>
+  <thead><tr><th>品目</th>${head}<th class="num">前月比</th></tr></thead>
+  <tbody>${rows}</tbody>
+</table>
+</div>
+
+<h2>ほかの都市</h2>
+<div class="grid cards">${otherCities
+    .map(
+      (c) => `<a class="card item-card" href="/retail/${esc(c.citySlug)}/"><span class="nm">${esc(c.cityName)}</span></a>`
+    )
+    .join('')}</div>
+
+<div class="notice">${esc(RETAIL_ATTRIBUTION)}。掲載価格は月次の調査値であり、店頭の実売価格を保証するものではありません。</div>
+`;
+
+  const breadcrumb = [
+    { name: 'トップ', url: '/' },
+    { name: '小売価格', url: '/retail/' },
+    { name: cityName, url: canonicalPath },
+  ];
+  const jsonld = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Dataset',
+      name: `${cityName}の野菜小売価格`,
+      description: `${cityName}における主要野菜の月次小売価格（円/kg）。最新 ${latestMonth}。`,
+      creator: { '@type': 'Organization', name: src.attribution },
+      license: src.licenseUrl,
+      isAccessibleForFree: true,
+      temporalCoverage: months.length ? `${months[0]}/${months[months.length - 1]}` : undefined,
+      variableMeasured: '小売価格（円/kg）',
+      url: site.baseUrl.replace(/\/$/, '') + canonicalPath,
+    },
+    breadcrumbLd(site, breadcrumb),
+  ];
+
+  return renderPage(site, {
+    title: `${cityName}の野菜小売価格`,
+    description: `${cityName}の主要野菜${withData.length}品目の月次小売価格（円/kg）。全国平均と比べて割安な品目、品目別の価格推移を掲載。`,
+    path: canonicalPath,
+    breadcrumb,
+    jsonld,
+    updatedLabel,
+    freshness,
+    body,
+  });
+}
+
+function renderRetailIndex(site, meta, retailRecords, cityList, updatedLabel, freshness) {
+  const src = meta.sources.retail;
+  // National overview table: latest全国 price + 前月比 per item.
+  const overview = retailRecords
+    .map((rec) => ({ rec, nat: cityOf(rec, 'national') }))
+    .filter((x) => x.nat && x.nat.series.length)
+    .map((x) => ({ rec: x.rec, lc: latestChange(x.nat.series) }));
+  const latestMonth = overview.length
+    ? fmtMonth(
+        overview
+          .map((o) => o.lc.date)
+          .sort()
+          .slice(-1)[0]
+      )
+    : '—';
+
+  const overviewRows = overview
+    .map(
+      (o) =>
+        `<tr><th scope="row"><a href="/items/${esc(o.rec.slug)}/">${o.rec.emoji} ${esc(o.rec.name)}</a></th><td class="num">${fmtNum(o.lc.price, 0)}<small> 円/kg</small></td><td class="num">${pctCell(o.lc.momPct)}</td></tr>`
+    )
+    .join('');
+
+  const cityCards = cityList
+    .map(
+      (c) => `<a class="card item-card" href="/retail/${esc(c.citySlug)}/">
+        <span class="nm">${esc(c.cityName)}</span>
+        <span class="down">小売価格を見る →</span>
+      </a>`
+    )
+    .join('');
+
+  const body = `
+<h1>都市別の野菜小売価格（月次調査）</h1>
+<p class="lead">${esc(retailWeeklyParagraph(retailRecords, cityList))}</p>
+<div class="notice">最新の調査月: <strong>${esc(latestMonth)}</strong>／対象 ${cityList.length} 都市・${overview.length} 品目。これは<strong>月次</strong>の小売価格調査で、卸売価格（日次）とは別の指標です。</div>
+
+<h2>都市を選ぶ</h2>
+<div class="grid cards">${cityCards}</div>
+
+${adSlot(site, site.adsenseSlotTop)}
+
+<h2>全国平均の小売価格（最新月）</h2>
+<div style="overflow-x:auto">
+<table>
+  <thead><tr><th>品目</th><th class="num">全国平均</th><th class="num">前月比</th></tr></thead>
+  <tbody>${overviewRows}</tbody>
+</table>
+</div>
+
+<h2>卸売価格もチェック</h2>
+<p class="lead">市場での日次の卸売価格や「いまが買い時」の野菜は<a href="/">トップページ</a>で毎日更新しています。</p>
+
+<div class="notice">${esc(RETAIL_ATTRIBUTION)}。掲載価格は月次の調査値であり、店頭の実売価格を保証するものではありません。</div>
+`;
+
+  const breadcrumb = [
+    { name: 'トップ', url: '/' },
+    { name: '小売価格', url: '/retail/' },
+  ];
+  const jsonld = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Dataset',
+      name: '都市別の野菜小売価格（月次調査）',
+      description: `全国主要${cityList.length}都市の野菜小売価格（円/kg・月次）。最新 ${latestMonth}。`,
+      creator: { '@type': 'Organization', name: src.attribution },
+      license: src.licenseUrl,
+      isAccessibleForFree: true,
+      variableMeasured: '小売価格（円/kg）',
+      url: site.baseUrl.replace(/\/$/, '') + '/retail/',
+    },
+    breadcrumbLd(site, breadcrumb),
+  ];
+
+  return renderPage(site, {
+    title: '都市別の野菜小売価格（月次調査）',
+    description: `全国主要${cityList.length}都市の野菜小売価格（円/kg・月次）。都市別ページ、全国平均、品目別の価格推移を掲載。最新 ${latestMonth}。`,
+    path: '/retail/',
     breadcrumb,
     jsonld,
     updatedLabel,
@@ -398,8 +720,11 @@ ${catSections}
 }
 
 // ---- Page: weekly ----------------------------------------------------------
-function renderWeekly(site, meta, entries, rankings, updatedLabel, freshness) {
+function renderWeekly(site, meta, entries, rankings, updatedLabel, freshness, retailRecords, cityList) {
   const rep = weeklyReport(meta, entries, rankings, freshness);
+  // Append a machine-generated paragraph on the monthly city retail survey.
+  const retailPara = retailWeeklyParagraph(retailRecords || [], cityList || []);
+  if (retailPara) rep.paragraphs = [...rep.paragraphs, retailPara];
   const movers = [...rankings.risers.slice(0, 3), ...rankings.fallers.slice(0, 3)];
   const body = `
 <h1>${esc(rep.title)}</h1>
@@ -437,6 +762,7 @@ ${adSlot(site, site.adsenseSlotTop)}
 function renderAbout(site, meta, updatedLabel, freshnessBySource) {
   const veg = meta.sources.vegetan;
   const com = meta.sources.commodity;
+  const ret = meta.sources.retail;
   const vf = freshnessBySource.vegetan;
 
   const vegRows = veg
@@ -462,6 +788,22 @@ function renderAbout(site, meta, updatedLabel, freshnessBySource) {
 集計・グラフ化して掲載しています。</p>`
     : '';
 
+  const retRows = ret
+    ? `
+<h2>データの出典（都市別小売価格）</h2>
+<p><strong>${esc(RETAIL_ATTRIBUTION)}</strong></p>
+<table>
+  <tr><th>データソース</th><td>${esc(ret.title)}</td></tr>
+  <tr><th>提供元・出典表示</th><td>${esc(ret.attribution)}</td></tr>
+  <tr><th>取得元URL</th><td><a href="${esc(ret.homepage)}" rel="nofollow">${esc(ret.homepage)}</a></td></tr>
+  <tr><th>調査対象</th><td>全国主要都市の店頭小売価格（円/kg）</td></tr>
+  <tr><th>更新頻度</th><td><strong>月次調査</strong>（毎日更新ではありません）。本サイトは自動で取得し、月次で更新します。</td></tr>
+  <tr><th>最新データ</th><td>${fmtMonth(ret.latestDate)}</td></tr>
+</table>
+<p>都市別小売価格は農林水産省「食品価格動向調査」を原資料として「ベジ探」が公開している<strong>月次</strong>の調査値です。
+卸売価格（日次）とは別の指標で、消費者が店頭で購入する価格の目安を示します。都市別の一覧は<a href="/retail/">小売価格ページ</a>をご覧ください。</p>`
+    : '';
+
   const comRows = com
     ? `
 <h2>データの出典（国際市況アーカイブ）</h2>
@@ -478,6 +820,7 @@ function renderAbout(site, meta, updatedLabel, freshnessBySource) {
 <h1>データ出典・このサイトについて</h1>
 <p class="lead">${esc(site.siteName)}は、公開オープンデータをもとに野菜の価格情報を<strong>自動生成・毎日更新</strong>するユーティリティサイトです。</p>
 ${vegRows}
+${retRows}
 ${comRows}
 
 <h2>自動更新であることの開示</h2>
@@ -555,6 +898,7 @@ async function main() {
   const rawSite = await readJson(path.join(CONFIG_DIR, 'site.json'), {});
   const meta = await readJson(path.join(DATA_DIR, 'meta.json'), null);
   const records = await loadItems();
+  const retailRecords = await loadRetail();
 
   if (!meta || records.length === 0) {
     throw new Error('build: no data found. Run `npm run fetch` first.');
@@ -597,6 +941,20 @@ async function main() {
   const vegFresh = freshnessBySource.vegetan || primaryFresh;
   const comFresh = freshnessBySource.commodity || freshnessCopy(null, now);
 
+  // Retail (都市別小売価格) is a MONTHLY survey. Reuse the freshness machinery for
+  // the stale-banner behaviour, but force honest monthly copy for the footer and
+  // price labels — this data is never "毎日更新".
+  const retailMeta = meta.sources.retail;
+  const retailBase = freshnessCopy(retailMeta ? retailMeta.latestDate : null, now);
+  const retailFresh = {
+    ...retailBase,
+    priceLabel: '最新月の小売価格',
+    footerNotice:
+      '本サイトの都市別小売価格は、独立行政法人農畜産業振興機構「ベジ探」が公開する<strong>月次の食品価格動向調査</strong>をもとに自動集計しています。',
+  };
+  const retailMap = new Map(retailRecords.map((r) => [r.slug, r]));
+  const cityList = retailCityList(retailRecords);
+
   // Rankings and the buy signal are vegetable/daily-based: isBuy comes from the
   // source-provided 平年比 (normalRatio < 0.9), rankPct from the daily series.
   const rankings = buildRankings(vegEntries.length ? vegEntries : entries);
@@ -615,12 +973,12 @@ async function main() {
 
   if (vegEntries.length) {
     await write('index.html', renderIndex(site, meta, vegEntries, rankings, updatedLabel, vegFresh));
-    await write('weekly/index.html', renderWeekly(site, meta, vegEntries, rankings, updatedLabel, vegFresh));
+    await write('weekly/index.html', renderWeekly(site, meta, vegEntries, rankings, updatedLabel, vegFresh, retailRecords, cityList));
   } else {
     // Degenerate fallback (no veg data yet): keep the site buildable from the
     // commodity archive alone rather than failing the deploy.
     await write('index.html', renderArchiveIndex(site, meta, comEntries, updatedLabel, comFresh));
-    await write('weekly/index.html', renderWeekly(site, meta, comEntries, rankings, updatedLabel, comFresh));
+    await write('weekly/index.html', renderWeekly(site, meta, comEntries, rankings, updatedLabel, comFresh, retailRecords, cityList));
   }
   await write('about/index.html', renderAbout(site, meta, updatedLabel, freshnessBySource));
 
@@ -630,7 +988,10 @@ async function main() {
   }
 
   for (const e of vegEntries) {
-    await write(`items/${e.item.slug}/index.html`, renderVegItemPage(site, meta, e, updatedLabel, vegFresh));
+    await write(
+      `items/${e.item.slug}/index.html`,
+      renderVegItemPage(site, meta, e, updatedLabel, vegFresh, retailMap.get(e.item.slug), cityList)
+    );
     urls.push(`/items/${e.item.slug}/`);
   }
   for (const e of comEntries) {
@@ -638,10 +999,26 @@ async function main() {
     urls.push(`/items/${e.item.slug}/`);
   }
 
+  // Retail: index + one page per surveyed city.
+  let retailPageCount = 0;
+  if (retailRecords.length && retailMeta && cityList.length) {
+    await write('retail/index.html', renderRetailIndex(site, meta, retailRecords, cityList, updatedLabel, retailFresh));
+    urls.push('/retail/');
+    retailPageCount += 1;
+    for (const city of cityList) {
+      await write(
+        `retail/${city.citySlug}/index.html`,
+        renderRetailCityPage(site, meta, city, retailRecords, updatedLabel, retailFresh)
+      );
+      urls.push(`/retail/${city.citySlug}/`);
+      retailPageCount += 1;
+    }
+  }
+
   await write('sitemap.xml', sitemap(site, urls, meta.generatedAt.slice(0, 10)));
   await write('robots.txt', robots(site));
 
-  console.log(`[build] ${entries.length} items (${vegEntries.length} veg / ${comEntries.length} archive) -> ${urls.length} pages in public/`);
+  console.log(`[build] ${entries.length} items (${vegEntries.length} veg / ${comEntries.length} archive) + ${retailPageCount} retail -> ${urls.length} pages in public/`);
   console.log('[build] done.');
 }
 

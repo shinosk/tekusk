@@ -170,6 +170,52 @@ export const vegetanAdapter = {
   },
 };
 
+// ---- Adapter: retail (production source: ALIC「ベジ探」都市別小売価格) --------
+// Monthly city-level retail prices. One .xlsx per item under kouri_cyousa/,
+// named with the site's own romaji spellings (kyabetu, negi, ...); the catalog
+// carries each item's `retailKey` (file name) and `retailSheet` (sheet). This
+// is a MONTHLY survey — copy must say「月次調査」, never「毎日更新」.
+// fetchRaw returns { retailKey: Buffer } from EITHER live HTTP (production) or
+// the committed fixtures (--fixtures); the normalize path (src/lib/retail.mjs)
+// is identical for both.
+const RETAIL_DIR = 'kouri_cyousa/';
+
+export const retailAdapter = {
+  id: 'retail',
+  title: '都市別 野菜小売価格（独立行政法人農畜産業振興機構「ベジ探」・月次調査）',
+  url: `${VEGETAN_BASE}${RETAIL_DIR}`,
+  homepage: 'https://vegetan.alic.go.jp/',
+  license:
+    '著作権は機構に帰属（オープンライセンスではない）。本サイトは価格等の数値（事実データ）を' +
+    '独自に集計・可視化して掲載しており、ページ・記事等の転載は行っていない。',
+  licenseUrl: 'https://vegetan.alic.go.jp/chosaku.html',
+  attribution:
+    '独立行政法人農畜産業振興機構『ベジ探』のデータを加工して作成（原資料: 農林水産省「食品価格動向調査」）',
+  cadence: 'monthly',
+
+  // catalogItems: the vegetan-source items that carry a `retailKey`. opts.fixtures
+  // switches the byte source; everything after this call is source-agnostic.
+  async fetchRaw(catalogItems, opts = {}) {
+    const keys = [...new Set(catalogItems.map((it) => it.retailKey).filter(Boolean))];
+    const retail = {};
+    if (opts.fixtures) {
+      for (const key of keys) {
+        const buf = await findFixture(`_kouri_cyousa_${key}.xlsx.xlsx`);
+        if (buf) retail[key] = buf;
+      }
+    } else {
+      for (const key of keys) {
+        try {
+          retail[key] = await fetchBufferWithRetry(`${VEGETAN_BASE}${RETAIL_DIR}${key}.xlsx`, opts);
+        } catch (err) {
+          console.error(`[retail] ${key} failed: ${err.message}`);
+        }
+      }
+    }
+    return retail;
+  },
+};
+
 // ---- Adapter: estat (production target, stub) ---------------------------
 export const estatAdapter = {
   id: 'estat',
@@ -192,6 +238,7 @@ export const estatAdapter = {
 export const adapters = {
   commodity: commodityAdapter,
   vegetan: vegetanAdapter,
+  retail: retailAdapter,
   estat: estatAdapter,
 };
 

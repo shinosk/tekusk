@@ -8,6 +8,7 @@
 //   * monthly (commodity archive): the change metric is 前月比 as before.
 
 import { fmtMonth, fmtDate, fmtPct, fmtNum, trendWord } from './format.mjs';
+import { latestChange, cityOf } from './retail.mjs';
 
 function joinNames(list, max = 3) {
   const names = list.slice(0, max).map((x) => x.item.name);
@@ -106,6 +107,40 @@ export function weeklyReport(meta, itemsWithStats, rankings, freshness = null) {
     paragraphs: p,
     monthLabel,
   };
+}
+
+// Machine-generated one-paragraph overview of the monthly city retail survey,
+// built from the全国 (national) series of each retail record. Returns '' when
+// there is no usable data. Honest framing: this is a MONTHLY survey, so the
+// copy never claims daily updates.
+export function retailWeeklyParagraph(retailRecords, cityList = []) {
+  const nat = (retailRecords || [])
+    .map((rec) => ({ rec, lc: latestChange((cityOf(rec, 'national') || {}).series) }))
+    .filter((x) => x.lc);
+  if (nat.length === 0) return '';
+
+  const latestDate = nat.map((x) => x.lc.date).sort().slice(-1)[0];
+  const monthLabel = fmtMonth(latestDate);
+  const withMom = nat.filter((x) => x.lc.momPct != null);
+  const parts = [
+    `都市別の小売価格（月次調査）では、${monthLabel}の全国平均をもとに主要${nat.length}品目・${cityList.length}都市の店頭価格をまとめています。`,
+  ];
+  if (withMom.length) {
+    const riser = [...withMom].sort((a, b) => b.lc.momPct - a.lc.momPct)[0];
+    const faller = [...withMom].sort((a, b) => a.lc.momPct - b.lc.momPct)[0];
+    if (riser && riser.lc.momPct > 0) {
+      parts.push(
+        `前月と比べて全国平均が上がったのは${riser.rec.name}（前月比${fmtPct(riser.lc.momPct)}、${fmtNum(riser.lc.price, 0)}円/kg）などです。`
+      );
+    }
+    if (faller && faller.lc.momPct < 0 && faller.rec.slug !== riser.rec.slug) {
+      parts.push(
+        `一方、${faller.rec.name}は前月比${fmtPct(faller.lc.momPct)}と値下がりし、家計にはうれしい動きとなりました。`
+      );
+    }
+  }
+  parts.push('小売価格は卸売価格（日次）とは別の月次調査で、都市ごとの傾向は小売価格ページから確認できます。');
+  return parts.join('');
 }
 
 // Per-item short description sentence.

@@ -21,10 +21,11 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { CONFIG_DIR, DATA_DIR, DATA_ITEMS_DIR } from '../src/lib/paths.mjs';
+import { CONFIG_DIR, DATA_DIR, DATA_ITEMS_DIR, DATA_RETAIL_DIR } from '../src/lib/paths.mjs';
 import { getAdapter } from '../src/lib/sources.mjs';
 import { normalizeItems, mergeByDate } from '../src/lib/normalize.mjs';
 import { normalizeVegetan } from '../src/lib/vegetan.mjs';
+import { normalizeRetail } from '../src/lib/retail.mjs';
 
 const args = process.argv.slice(2);
 const strict = args.includes('--strict');
@@ -73,9 +74,138 @@ async function collectItems(adapter, catalogItems, opts) {
   return normalizeItems(csv, catalogItems);
 }
 
+// Merge a source descriptor into the multi-source meta.json without disturbing
+// the other sources' entries, then rewrite the back-compat top-level fields.
+async function updateMeta(adapter, extra) {
+  const prevMeta = await readJson(path.join(DATA_DIR, 'meta.json'), {});
+  const sources = { ...(prevMeta.sources || {}) };
+  sources[adapter.id] = {
+    id: adapter.id,
+    title: adapter.title,
+    url: adapter.url,
+    homepage: adapter.homepage,
+    license: adapter.license,
+    licenseUrl: adapter.licenseUrl,
+    attribution: adapter.attribution,
+    cadence: adapter.cadence,
+    ...extra,
+    updatedAt: new Date().toISOString(),
+  };
+
+  // Primary source drives the site's default framing: vegetan (the live
+  // production source) when present, else whichever exists.
+  const primaryId = sources.vegetan
+    ? 'vegetan'
+    : sources.commodity
+      ? 'commodity'
+      : adapter.id;
+  const primary = sources[primaryId];
+
+  // The top-level itemCount/totalPoints reflect the item PAGES (vegetan +
+  // commodity); retail is a separate cross-tabulated dataset and is not summed
+  // in so the OG "N品目" stays honest.
+  const pageSources = Object.entries(sources).filter(([id]) => id !== 'retail');
+  const meta = {
+    generatedAt: new Date().toISOString(),
+    primarySource: primaryId,
+    sources,
+    source: {
+      id: primary.id,
+      title: primary.title,
+      url: primary.url,
+      homepage: primary.homepage,
+      license: primary.license,
+      licenseUrl: primary.licenseUrl,
+      attribution: primary.attribution,
+      cadence: primary.cadence,
+    },
+    itemCount: pageSources.reduce((a, [, s]) => a + (s.itemCount || 0), 0),
+    totalPoints: pageSources.reduce((a, [, s]) => a + (s.totalPoints || 0), 0),
+    latestDate: primary.latestDate,
+    missing: primary.missing,
+  };
+  await fs.writeFile(path.join(DATA_DIR, 'meta.json'), JSON.stringify(meta, null, 2) + '\n');
+}
+
+// Retail (都市別小売価格・月次) has a different shape than the item series files:
+// item × city × month. It is written to data/retail/<slug>.json and accumulated
+// per city with mergeByDate so history survives across fiscal-year workbooks.
+async function runRetail(adapter, catalog) {
+  const catalogItems = catalog.items.filter((it) => it.retailKey);
+  const cityMap = (catalog.retail && catalog.retail.cities) || {};
+  console.log(`[fetch] source=${adapter.id} (${adapter.title})${fixtures ? ' [fixtures]' : ''}`);
+  console.log(`[fetch] url=${adapter.url}`);
+  if (catalogItems.length === 0) throw new Error('no catalog items with retailKey');
+
+  const raw = await adapter.fetchRaw(catalogItems, { retries: 4, timeoutMs: 30000, fixtures });
+  const { items, missing } = normalizeRetail(raw, catalogItems, cityMap);
+  if (items.length === 0) {
+    throw new Error('retail normalize produced 0 items — refusing to overwrite data');
+  }
+
+  await fs.mkdir(DATA_RETAIL_DIR, { recursive: true });
+  let totalPoints = 0;
+  let latestDate = '';
+  const cityNames = new Set();
+  for (const it of items) {
+    const existing = await readJson(path.join(DATA_RETAIL_DIR, `${it.slug}.json`), null);
+    const existingCities = new Map(
+      (existing && Array.isArray(existing.cities) ? existing.cities : []).map((c) => [c.citySlug, c])
+    );
+    const merged = new Map();
+    for (const [slug, c] of existingCities) merged.set(slug, { ...c });
+    for (const c of it.cities) {
+      const prev = merged.get(c.citySlug);
+      merged.set(c.citySlug, {
+        citySlug: c.citySlug,
+        cityName: c.cityName,
+        series: mergeByDate(prev ? prev.series : [], c.series),
+      });
+    }
+    const cities = [...merged.values()]
+      .map((c) => ({ ...c, series: capMonthly(c.series) }))
+      .filter((c) => c.series.length);
+    for (const c of cities) {
+      cityNames.add(c.citySlug);
+      totalPoints += c.series.length;
+      const last = c.series.length ? c.series[c.series.length - 1].date : '';
+      if (last > latestDate) latestDate = last;
+    }
+    const record = {
+      slug: it.slug,
+      name: it.name,
+      emoji: it.emoji,
+      category: it.category,
+      unit: it.unit,
+      source: 'retail',
+      updatedAt: new Date().toISOString(),
+      cities,
+    };
+    await fs.writeFile(
+      path.join(DATA_RETAIL_DIR, `${it.slug}.json`),
+      JSON.stringify(record, null, 2) + '\n'
+    );
+  }
+
+  await updateMeta(adapter, {
+    itemCount: items.length,
+    cityCount: cityNames.size,
+    totalPoints,
+    latestDate,
+    missing,
+  });
+  console.log(
+    `[fetch] wrote ${items.length} retail items (${cityNames.size} cities), latest=${latestDate}, points=${totalPoints}` +
+      (missing.length ? `, missing: ${missing.join(', ')}` : '')
+  );
+  console.log('[fetch] done.');
+}
+
 async function main() {
   const catalog = await readJson(path.join(CONFIG_DIR, 'items.json'), { items: [] });
   const adapter = getAdapter(sourceArg);
+  if (adapter.id === 'retail') return runRetail(adapter, catalog);
+
   const catalogItems = catalog.items.filter((it) => (it.source || 'commodity') === adapter.id);
 
   console.log(`[fetch] source=${adapter.id} (${adapter.title})${fixtures ? ' [fixtures]' : ''}`);
@@ -136,51 +266,8 @@ async function main() {
   }
 
   // Merge this source's descriptor into a multi-source meta.json without
-  // disturbing the other source's entry.
-  const prevMeta = await readJson(path.join(DATA_DIR, 'meta.json'), {});
-  const sources = { ...(prevMeta.sources || {}) };
-  sources[adapter.id] = {
-    id: adapter.id,
-    title: adapter.title,
-    url: adapter.url,
-    homepage: adapter.homepage,
-    license: adapter.license,
-    licenseUrl: adapter.licenseUrl,
-    attribution: adapter.attribution,
-    cadence: adapter.cadence,
-    itemCount: items.length,
-    totalPoints,
-    latestDate,
-    missing,
-    updatedAt: new Date().toISOString(),
-  };
-
-  // Primary source drives the site's default framing: vegetan (the live
-  // production source) when present, else whichever exists.
-  const primaryId = sources.vegetan ? 'vegetan' : sources.commodity ? 'commodity' : adapter.id;
-  const primary = sources[primaryId];
-
-  const meta = {
-    generatedAt: new Date().toISOString(),
-    primarySource: primaryId,
-    sources,
-    // Back-compat top-level fields (existing build/templates/tests read these).
-    source: {
-      id: primary.id,
-      title: primary.title,
-      url: primary.url,
-      homepage: primary.homepage,
-      license: primary.license,
-      licenseUrl: primary.licenseUrl,
-      attribution: primary.attribution,
-      cadence: primary.cadence,
-    },
-    itemCount: Object.values(sources).reduce((a, s) => a + (s.itemCount || 0), 0),
-    totalPoints: Object.values(sources).reduce((a, s) => a + (s.totalPoints || 0), 0),
-    latestDate: primary.latestDate,
-    missing: primary.missing,
-  };
-  await fs.writeFile(path.join(DATA_DIR, 'meta.json'), JSON.stringify(meta, null, 2) + '\n');
+  // disturbing the other sources' entries.
+  await updateMeta(adapter, { itemCount: items.length, totalPoints, latestDate, missing });
 
   console.log(`[fetch] wrote ${items.length} item files, latest=${latestDate}, points=${totalPoints}`);
   console.log('[fetch] done.');

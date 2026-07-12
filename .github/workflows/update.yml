@@ -44,6 +44,11 @@ jobs:
       - name: Fetch vegetable prices (vegetan, fail-safe)
         run: node scripts/fetch.mjs --source=vegetan
 
+      # 都市別小売価格は月次調査。日々の実行では多くの場合差分ゼロだが、月替わりで
+      # 新しい月の値を取り込む。fail-safe 設計なので失敗しても既存 data/ は不変。
+      - name: Fetch city retail prices (retail, monthly, fail-safe)
+        run: node scripts/fetch.mjs --source=retail
+
       - name: Fetch commodity archive (fail-safe)
         run: node scripts/fetch.mjs --source=commodity
 
