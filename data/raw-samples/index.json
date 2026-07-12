@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-12T17:25:32.406Z",
+  "generatedAt": "2026-07-12T17:26:37.295Z",
   "estatAppIdLength": 0,
   "note": "Raw samples from candidate production data sources (see docs/data-sources.md). Re-running scripts/probe.mjs overwrites this file and files/ in place — it does not accumulate.",
   "seedUrls": [
@@ -9,7 +9,7 @@
   "results": [
     {
       "url": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226",
-      "fetchedAt": "2026-07-12T17:25:31.029Z",
+      "fetchedAt": "2026-07-12T17:26:36.132Z",
       "ok": true,
       "status": 200,
       "contentType": "application/json; charset=utf-8",
@@ -22,7 +22,7 @@
     },
     {
       "url": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&searchWord=%E9%A3%9F%E5%93%81%E4%BE%A1%E6%A0%BC%E5%8B%95%E5%90%91%E8%AA%BF%E6%9F%BB&limit=50",
-      "fetchedAt": "2026-07-12T17:25:32.193Z",
+      "fetchedAt": "2026-07-12T17:26:37.092Z",
       "ok": true,
       "status": 200,
       "contentType": "application/json; charset=utf-8",
