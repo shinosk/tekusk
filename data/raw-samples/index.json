@@ -1,35 +1,36 @@
 {
-  "generatedAt": "2026-07-10T04:53:52.736Z",
+  "generatedAt": "2026-07-12T15:35:22.915Z",
+  "estatAppIdLength": 0,
   "note": "Raw samples from candidate production data sources (see docs/data-sources.md). Re-running scripts/probe.mjs overwrites this file and files/ in place — it does not accumulate.",
   "seedUrls": [
-    "https://vegetan.alic.go.jp/riyou.html",
-    "https://vegetan.alic.go.jp/chosaku.html"
+    "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226",
+    "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&searchWord=%E9%A3%9F%E5%93%81%E4%BE%A1%E6%A0%BC%E5%8B%95%E5%90%91%E8%AA%BF%E6%9F%BB&limit=50"
   ],
   "results": [
     {
-      "url": "https://vegetan.alic.go.jp/riyou.html",
-      "fetchedAt": "2026-07-10T04:53:51.783Z",
+      "url": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226",
+      "fetchedAt": "2026-07-12T15:35:21.482Z",
       "ok": true,
       "status": 200,
-      "contentType": "text/html",
-      "byteLength": 8326,
-      "savedBytes": 8326,
+      "contentType": "application/json; charset=utf-8",
+      "byteLength": 318,
+      "savedBytes": 318,
       "truncated": false,
-      "file": "files/001-vegetan.alic.go.jp_riyou.html.html",
-      "linksFound": 13,
+      "file": "files/001-api.e-stat.go.jp_rest_3.0_app_json_getStatsList_appId_APPID_statsCode_00500226.json",
+      "tablesFound": 0,
       "linksToFollow": []
     },
     {
-      "url": "https://vegetan.alic.go.jp/chosaku.html",
-      "fetchedAt": "2026-07-10T04:53:52.560Z",
+      "url": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&searchWord=%E9%A3%9F%E5%93%81%E4%BE%A1%E6%A0%BC%E5%8B%95%E5%90%91%E8%AA%BF%E6%9F%BB&limit=50",
+      "fetchedAt": "2026-07-12T15:35:22.340Z",
       "ok": true,
       "status": 200,
-      "contentType": "text/html",
-      "byteLength": 8300,
-      "savedBytes": 8300,
+      "contentType": "application/json; charset=utf-8",
+      "byteLength": 370,
+      "savedBytes": 370,
       "truncated": false,
-      "file": "files/002-vegetan.alic.go.jp_chosaku.html.html",
-      "linksFound": 14,
+      "file": "files/002-api.e-stat.go.jp_rest_3.0_app_json_getStatsList_appId_APPID_searchWord_E9_A3_9F_E5_93_81_E4_BE_A1_E6_A0_BC_E5_8B_95_E5_9.json",
+      "tablesFound": 0,
       "linksToFollow": []
     }
   ]
