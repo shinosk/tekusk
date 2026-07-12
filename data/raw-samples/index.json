@@ -1,49 +1,35 @@
 {
-  "generatedAt": "2026-07-12T13:11:02.520Z",
+  "generatedAt": "2026-07-12T15:29:50.036Z",
   "note": "Raw samples from candidate production data sources (see docs/data-sources.md). Re-running scripts/probe.mjs overwrites this file and files/ in place — it does not accumulate.",
   "seedUrls": [
-    "https://www.e-stat.go.jp/stat-search/files?toukei=00500226",
-    "https://www.shijou.metro.tokyo.lg.jp/torihiki/geppo/",
-    "https://www.shijou.metro.tokyo.lg.jp/torihiki/nippo/"
+    "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226",
+    "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&searchWord=%E9%A3%9F%E5%93%81%E4%BE%A1%E6%A0%BC%E5%8B%95%E5%90%91%E8%AA%BF%E6%9F%BB&limit=50"
   ],
   "results": [
     {
-      "url": "https://www.e-stat.go.jp/stat-search/files?toukei=00500226",
-      "fetchedAt": "2026-07-12T13:10:56.660Z",
+      "url": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&statsCode=00500226",
+      "fetchedAt": "2026-07-12T15:29:48.330Z",
       "ok": true,
       "status": 200,
-      "contentType": "text/html; charset=UTF-8",
-      "byteLength": 387279,
-      "savedBytes": 387279,
+      "contentType": "application/json; charset=utf-8",
+      "byteLength": 318,
+      "savedBytes": 318,
       "truncated": false,
-      "file": "files/001-www.e-stat.go.jp_stat-search_files_toukei_00500226.html",
-      "linksFound": 356,
+      "file": "files/001-api.e-stat.go.jp_rest_3.0_app_json_getStatsList_appId_APPID_statsCode_00500226.json",
+      "tablesFound": 0,
       "linksToFollow": []
     },
     {
-      "url": "https://www.shijou.metro.tokyo.lg.jp/torihiki/geppo/",
-      "fetchedAt": "2026-07-12T13:11:00.834Z",
+      "url": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?appId={APPID}&searchWord=%E9%A3%9F%E5%93%81%E4%BE%A1%E6%A0%BC%E5%8B%95%E5%90%91%E8%AA%BF%E6%9F%BB&limit=50",
+      "fetchedAt": "2026-07-12T15:29:49.437Z",
       "ok": true,
       "status": 200,
-      "contentType": "text/html;charset=UTF-8",
-      "byteLength": 752114,
-      "savedBytes": 752114,
+      "contentType": "application/json; charset=utf-8",
+      "byteLength": 370,
+      "savedBytes": 370,
       "truncated": false,
-      "file": "files/002-www.shijou.metro.tokyo.lg.jp_torihiki_geppo_.html",
-      "linksFound": 1614,
-      "linksToFollow": []
-    },
-    {
-      "url": "https://www.shijou.metro.tokyo.lg.jp/torihiki/nippo/",
-      "fetchedAt": "2026-07-12T13:11:01.831Z",
-      "ok": true,
-      "status": 200,
-      "contentType": "text/html;charset=UTF-8",
-      "byteLength": 465217,
-      "savedBytes": 465217,
-      "truncated": false,
-      "file": "files/003-www.shijou.metro.tokyo.lg.jp_torihiki_nippo_.html",
-      "linksFound": 82,
+      "file": "files/002-api.e-stat.go.jp_rest_3.0_app_json_getStatsList_appId_APPID_searchWord_E9_A3_9F_E5_93_81_E4_BE_A1_E6_A0_BC_E5_8B_95_E5_9.json",
+      "tablesFound": 0,
       "linksToFollow": []
     }
   ]
