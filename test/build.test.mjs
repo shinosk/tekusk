@@ -7,7 +7,7 @@ import { lineChartSvg } from '../src/lib/chart.mjs';
 import { renderPage } from '../src/templates/layout.mjs';
 import { weeklyReport } from '../src/lib/report.mjs';
 import { computeItemStats, buildRankings } from '../src/lib/stats.mjs';
-import { ROOT, DATA_DIR, PUBLIC_DIR } from '../src/lib/paths.mjs';
+import { ROOT, DATA_DIR, PUBLIC_DIR, CONFIG_DIR } from '../src/lib/paths.mjs';
 
 test('lineChartSvg produces valid svg and handles short series', () => {
   const svg = lineChartSvg([
@@ -201,4 +201,51 @@ test('per-source freshness: veg pages live, commodity pages archived', (t) => {
 
   // about page: attribution required
   assert.match(about, /ベジ探』のデータを加工して作成/);
+});
+
+// Custom-domain support (config/site.json `customDomain`, opt-in): when unset
+// (the default), no GitHub Pages CNAME or ads.txt should be emitted. When set,
+// CNAME must contain the domain, and ads.txt (declaring this site an
+// authorized AdSense seller) must be emitted iff adsenseClientId is also set.
+test('build.mjs emits CNAME/ads.txt only when customDomain is configured', (t) => {
+  if (!fs.existsSync(path.join(DATA_DIR, 'meta.json'))) {
+    t.skip('no data/meta.json — run `npm run fetch` first');
+    return;
+  }
+  const sitePath = path.join(CONFIG_DIR, 'site.json');
+  const original = fs.readFileSync(sitePath, 'utf8');
+  const site = JSON.parse(original);
+
+  try {
+    // Default (empty customDomain, as committed): neither file is emitted.
+    assert.equal(site.customDomain, '', 'customDomain should default to empty in config/site.json');
+    execFileSync('node', ['scripts/build.mjs'], { cwd: ROOT, stdio: 'pipe' });
+    assert.ok(!fs.existsSync(path.join(PUBLIC_DIR, 'CNAME')), 'CNAME should not exist when customDomain is empty');
+    assert.ok(!fs.existsSync(path.join(PUBLIC_DIR, 'ads.txt')), 'ads.txt should not exist when customDomain is empty');
+
+    // customDomain set + adsenseClientId set: both CNAME and ads.txt emitted.
+    fs.writeFileSync(
+      sitePath,
+      JSON.stringify({ ...site, customDomain: 'example.com', adsenseClientId: 'ca-pub-1234567890123456' }, null, 2)
+    );
+    execFileSync('node', ['scripts/build.mjs'], { cwd: ROOT, stdio: 'pipe' });
+    const cname = fs.readFileSync(path.join(PUBLIC_DIR, 'CNAME'), 'utf8').trim();
+    assert.equal(cname, 'example.com');
+    const adsTxt = fs.readFileSync(path.join(PUBLIC_DIR, 'ads.txt'), 'utf8').trim();
+    assert.equal(adsTxt, 'google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0');
+
+    // customDomain set but adsenseClientId empty: CNAME only, no ads.txt.
+    fs.writeFileSync(
+      sitePath,
+      JSON.stringify({ ...site, customDomain: 'example.com', adsenseClientId: '' }, null, 2)
+    );
+    execFileSync('node', ['scripts/build.mjs'], { cwd: ROOT, stdio: 'pipe' });
+    assert.ok(fs.existsSync(path.join(PUBLIC_DIR, 'CNAME')));
+    assert.ok(!fs.existsSync(path.join(PUBLIC_DIR, 'ads.txt')), 'ads.txt should not exist when adsenseClientId is empty');
+  } finally {
+    fs.writeFileSync(sitePath, original);
+    // Rebuild once more with the restored (committed) config so the public/
+    // directory left behind after the test run matches the real site config.
+    execFileSync('node', ['scripts/build.mjs'], { cwd: ROOT, stdio: 'pipe' });
+  }
 });
