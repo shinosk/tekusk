@@ -1223,7 +1223,10 @@ async function main() {
   // Rankings and the buy signal are vegetable/daily-based: isBuy comes from the
   // source-provided 平年比 (normalRatio < 0.9), rankPct from the daily series.
   const rankings = buildRankings(vegEntries.length ? vegEntries : entries);
-  const updatedLabel = fmtDate(new Date().toISOString().slice(0, 10)) + '（自動生成）';
+  // 日本のサイトなので「最終更新」はJSTの日付で表示する(UTCのままだと
+  // JST朝のビルドが前日表記になる)
+  const jstToday = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+  const updatedLabel = fmtDate(jstToday) + '（自動生成・日本時間）';
 
   // clean public (keep dir)
   await fs.rm(PUBLIC_DIR, { recursive: true, force: true });
