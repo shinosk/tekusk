@@ -1138,6 +1138,15 @@ Sitemap: ${base}/sitemap.xml
 `;
 }
 
+// ads.txt (IAB) authorized-seller line for AdSense, derived from
+// adsenseClientId (e.g. "ca-pub-1234567890123456" -> pub id "pub-1234567890123456").
+// Returns null when adsenseClientId is unset or not in the expected ca-pub-<digits> form.
+function adsTxtContent(adsenseClientId) {
+  const m = /^ca-(pub-\d+)$/.exec(adsenseClientId || '');
+  if (!m) return null;
+  return `google.com, ${m[1]}, DIRECT, f08c47fec0942fa0\n`;
+}
+
 // ---- main --------------------------------------------------------------------
 async function main() {
   const rawSite = await readJson(path.join(CONFIG_DIR, 'site.json'), {});
@@ -1293,6 +1302,17 @@ async function main() {
 
   await write('sitemap.xml', sitemap(site, urls, meta.generatedAt.slice(0, 10)));
   await write('robots.txt', robots(site));
+
+  // Custom domain (opt-in, config/site.json `customDomain`): emit the GitHub
+  // Pages CNAME file and, when AdSense is configured, ads.txt declaring this
+  // site as an authorized direct seller. Both are skipped entirely when
+  // customDomain is empty (the default — GitHub Pages project-page subpath
+  // needs neither file).
+  if (site.customDomain) {
+    await write('CNAME', `${site.customDomain}\n`);
+    const ads = adsTxtContent(site.adsenseClientId);
+    if (ads) await write('ads.txt', ads);
+  }
 
   console.log(`[build] ${entries.length} items (${vegEntries.length} veg / ${comEntries.length} archive) + ${retailPageCount} retail + ${estatPageCount} estat -> ${urls.length} pages in public/`);
   console.log('[build] done.');
