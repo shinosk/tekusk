@@ -1,45 +1,75 @@
 {
-  "generatedAt": "2026-07-14T03:58:11.234Z",
+  "generatedAt": "2026-07-14T04:27:54.890Z",
   "estatAppIdLength": 40,
   "note": "Raw samples from candidate production data sources (see docs/data-sources.md). Re-running scripts/probe.mjs overwrites this file and files/ in place — it does not accumulate.",
   "seedUrls": [
-    "https://dns.google/resolve?name=kaidoki-navi.net&type=A",
-    "https://dns.google/resolve?name=kaidoki-navi.net&type=NS",
-    "https://dns.google/resolve?name=www.kaidoki-navi.net&type=CNAME"
+    "https://kaidoki-navi.net/",
+    "https://kaidoki-navi.net/ads.txt",
+    "https://kaidoki-navi.net/sitemap.xml",
+    "https://shinosk.github.io/tekusk/",
+    "https://www.kaidoki-navi.net/"
   ],
   "results": [
     {
-      "url": "https://dns.google/resolve?name=kaidoki-navi.net&type=A",
-      "fetchedAt": "2026-07-14T03:58:04.189Z",
+      "url": "https://kaidoki-navi.net/",
+      "fetchedAt": "2026-07-14T04:27:53.432Z",
       "ok": true,
       "status": 200,
-      "contentType": "application/json; charset=UTF-8",
-      "byteLength": 1081,
-      "savedBytes": 1081,
+      "contentType": "text/html; charset=utf-8",
+      "byteLength": 15430,
+      "savedBytes": 15430,
       "truncated": false,
-      "file": "files/001-dns.google_resolve_name_kaidoki-navi.net_type_A.json"
+      "file": "files/001-kaidoki-navi.net_.html",
+      "linksFound": 38,
+      "linksToFollow": []
     },
     {
-      "url": "https://dns.google/resolve?name=kaidoki-navi.net&type=NS",
-      "fetchedAt": "2026-07-14T03:58:07.814Z",
+      "url": "https://kaidoki-navi.net/ads.txt",
+      "fetchedAt": "2026-07-14T04:27:53.988Z",
       "ok": true,
       "status": 200,
-      "contentType": "application/json; charset=UTF-8",
-      "byteLength": 1418,
-      "savedBytes": 1418,
+      "contentType": "text/plain; charset=utf-8",
+      "byteLength": 59,
+      "savedBytes": 59,
       "truncated": false,
-      "file": "files/002-dns.google_resolve_name_kaidoki-navi.net_type_NS.json"
+      "file": "files/002-kaidoki-navi.net_ads.txt.txt"
     },
     {
-      "url": "https://dns.google/resolve?name=www.kaidoki-navi.net&type=CNAME",
-      "fetchedAt": "2026-07-14T03:58:09.525Z",
+      "url": "https://kaidoki-navi.net/sitemap.xml",
+      "fetchedAt": "2026-07-14T04:27:54.027Z",
       "ok": true,
       "status": 200,
-      "contentType": "application/json; charset=UTF-8",
-      "byteLength": 1506,
-      "savedBytes": 1506,
+      "contentType": "application/xml",
+      "byteLength": 8975,
+      "savedBytes": 8975,
       "truncated": false,
-      "file": "files/003-dns.google_resolve_name_www.kaidoki-navi.net_type_CNAME.json"
+      "file": "files/003-kaidoki-navi.net_sitemap.xml.xml"
+    },
+    {
+      "url": "https://shinosk.github.io/tekusk/",
+      "fetchedAt": "2026-07-14T04:27:54.071Z",
+      "ok": true,
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "byteLength": 15430,
+      "savedBytes": 15430,
+      "truncated": false,
+      "file": "files/004-shinosk.github.io_tekusk_.html",
+      "linksFound": 38,
+      "linksToFollow": []
+    },
+    {
+      "url": "https://www.kaidoki-navi.net/",
+      "fetchedAt": "2026-07-14T04:27:54.129Z",
+      "ok": true,
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "byteLength": 15430,
+      "savedBytes": 15430,
+      "truncated": false,
+      "file": "files/005-www.kaidoki-navi.net_.html",
+      "linksFound": 38,
+      "linksToFollow": []
     }
   ]
 }
