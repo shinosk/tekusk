@@ -9,7 +9,7 @@
   "buyKeyword": "トマト",
   "source": "vegetan",
   "hasDaily": true,
-  "updatedAt": "2026-07-14T05:40:18.409Z",
+  "updatedAt": "2026-07-14T07:52:43.029Z",
   "series": [
     {
       "date": "2026-06-01",
@@ -220,6 +220,13 @@
       "arrival": 181.263,
       "normalPrice": 366,
       "normalRatio": 1.4125683060109289
+    },
+    {
+      "date": "2026-07-13",
+      "price": 494,
+      "arrival": 227.686,
+      "normalPrice": 366,
+      "normalRatio": 1.349726775956284
     }
   ],
   "monthly": [
