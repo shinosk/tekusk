@@ -139,8 +139,16 @@ footer.site a{color:var(--muted);text-decoration:underline}
   .hero-art{order:-1;max-width:320px}
   .hero-title{font-size:1.8rem}
 }
+/* ヘッダー: ナビ項目が多くスマホ1行に収まらないため、ブランドを1行目・
+   ナビを2行目に折り返す(左右詰め込みによる崩れを防ぐ) */
+@media (max-width:640px){
+  header.site .wrap{flex-wrap:wrap;gap:6px 0}
+  .brand{font-size:1.05rem}
+  nav.main{width:100%;display:flex;flex-wrap:wrap;justify-content:flex-start}
+  nav.main a{margin:2px 16px 2px 0}
+}
 @media (max-width:520px){
-  h1{font-size:1.35rem}nav.main a{margin-left:10px}
+  h1{font-size:1.35rem}
   .hero-title{font-size:1.55rem}.hero-sub{font-size:.96rem}
   .btn{flex:1;justify-content:center}
 }
