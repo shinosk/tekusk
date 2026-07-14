@@ -9,6 +9,14 @@ import { weeklyReport } from '../src/lib/report.mjs';
 import { computeItemStats, buildRankings } from '../src/lib/stats.mjs';
 import { ROOT, DATA_DIR, PUBLIC_DIR, CONFIG_DIR } from '../src/lib/paths.mjs';
 
+// 内部リンク検証用: 現在の config/site.json からパスプレフィックスを導出
+// (カスタムドメイン=ルート配信なら空、github.ioプロジェクト配信なら /<repo>)
+const SITE_CONF = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, 'site.json'), 'utf8'));
+const PREFIX = (() => {
+  try { return new URL(SITE_CONF.baseUrl).pathname.replace(/\/$/, ''); } catch { return ''; }
+})();
+const escPrefix = PREFIX.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 test('lineChartSvg produces valid svg and handles short series', () => {
   const svg = lineChartSvg([
     { date: '2016-01-01', price: 10 },
@@ -103,7 +111,7 @@ test('build.mjs emits retail pages and item explainer/retail sections', (t) => {
   assert.match(cityHtml, /月次/);
   assert.doesNotMatch(cityHtml, /毎日更新/);
   // Root-absolute internal links carry the site path prefix (/tekusk).
-  assert.match(cityHtml, /href="\/tekusk\/items\//);
+  assert.match(cityHtml, new RegExp(`href="${escPrefix}/items/`));
   // JSON-LD Dataset + attribution present.
   assert.match(cityHtml, /"@type":"Dataset"/);
   assert.match(cityHtml, /食品価格動向調査/);
@@ -112,7 +120,7 @@ test('build.mjs emits retail pages and item explainer/retail sections', (t) => {
   const tomato = fs.readFileSync(path.join(PUBLIC_DIR, 'items/tomato/index.html'), 'utf8');
   assert.match(tomato, /都市別の小売価格（月次調査）/);
   assert.match(tomato, /選び方・保存・価格の見方/);
-  assert.match(tomato, /href="\/tekusk\/retail\/sapporo\//);
+  assert.match(tomato, new RegExp(`href="${escPrefix}/retail/sapporo/`));
 
   // Sitemap includes the retail URLs; nav link is present site-wide.
   const sitemap = fs.readFileSync(path.join(PUBLIC_DIR, 'sitemap.xml'), 'utf8');
@@ -149,8 +157,8 @@ test('build.mjs emits estat fruit pages, veg estat sections and honest annual fr
   const index = fs.readFileSync(path.join(PUBLIC_DIR, 'index.html'), 'utf8');
   assert.match(index, /id="fruits"/);
   assert.match(index, /果実の卸売価格と産地/);
-  assert.match(index, /href="\/tekusk\/items\/apple\//);
-  assert.match(index, /href="\/tekusk\/#fruits"/); // nav
+  assert.match(index, new RegExp(`href="${escPrefix}/items/apple/`));
+  assert.match(index, new RegExp(`href="${escPrefix}/#fruits"`)); // nav
 
   // Vegetable page (radish) gained the embedded 政府統計 section.
   const radish = fs.readFileSync(path.join(PUBLIC_DIR, 'items/radish/index.html'), 'utf8');
@@ -217,8 +225,8 @@ test('build.mjs emits CNAME/ads.txt only when customDomain is configured', (t) =
   const site = JSON.parse(original);
 
   try {
-    // Default (empty customDomain, as committed): neither file is emitted.
-    assert.equal(site.customDomain, '', 'customDomain should default to empty in config/site.json');
+    // customDomain を空にした場合: どちらのファイルも生成されない。
+    fs.writeFileSync(sitePath, JSON.stringify({ ...site, customDomain: '' }, null, 2));
     execFileSync('node', ['scripts/build.mjs'], { cwd: ROOT, stdio: 'pipe' });
     assert.ok(!fs.existsSync(path.join(PUBLIC_DIR, 'CNAME')), 'CNAME should not exist when customDomain is empty');
     assert.ok(!fs.existsSync(path.join(PUBLIC_DIR, 'ads.txt')), 'ads.txt should not exist when customDomain is empty');
