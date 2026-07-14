@@ -4,12 +4,16 @@ import { esc, jsonLd } from '../lib/html.mjs';
 export const STYLESHEET = `
 :root{
   --bg:#ffffff; --fg:#1a1c1e; --muted:#5b6570; --line:#e6e8eb;
-  --card:#f7f8fa; --accent:#1f7a4d; --up:#c0392b; --down:#1f7a4d; --flat:#6b7280;
+  --card:#f7f8fa; --accent:#1f7a4d; --accent2:#d98324; --on-accent:#ffffff;
+  --up:#c0392b; --down:#1f7a4d; --flat:#6b7280;
   --link:#1558b0; --shadow:0 1px 2px rgba(0,0,0,.06);
+  --hero-bg:linear-gradient(135deg,rgba(31,122,77,.08),rgba(217,131,36,.06));
 }
 @media (prefers-color-scheme:dark){
   :root{--bg:#15181b;--fg:#e7eaed;--muted:#9aa4af;--line:#2a2f34;
-  --card:#1e2226;--accent:#4ecb8b;--up:#ff6b5e;--down:#4ecb8b;--flat:#9aa4af;--link:#7fb2ff;}
+  --card:#1e2226;--accent:#4ecb8b;--accent2:#e5a955;--on-accent:#0f2419;
+  --up:#ff6b5e;--down:#4ecb8b;--flat:#9aa4af;--link:#7fb2ff;
+  --hero-bg:linear-gradient(135deg,rgba(78,203,139,.10),rgba(229,167,85,.07));}
 }
 *{box-sizing:border-box}
 html{font-size:16px}
@@ -74,7 +78,72 @@ footer.site a{color:var(--muted);text-decoration:underline}
 .estat-note{font-size:.82rem}
 .archive-banner{background:#7a4a12;color:#fff8ec;text-align:center;font-size:.85rem;padding:8px 14px}
 @media (prefers-color-scheme:dark){.archive-banner{background:#5c3a11;color:#ffe9c7}}
-@media (max-width:520px){h1{font-size:1.35rem}nav.main a{margin-left:10px}}
+/* --- brand mark --- */
+.brand{display:inline-flex;align-items:center}
+.brand-mark{vertical-align:middle;margin-right:8px;flex:none}
+.bm-bg{fill:var(--accent)}
+.bm-line{fill:none;stroke:var(--on-accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.bm-dot{fill:var(--on-accent)}
+.brand .bt{color:var(--accent)}
+.accent{color:var(--accent)}
+/* --- buttons --- */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:11px 20px;border-radius:11px;
+  font-weight:700;font-size:.98rem;line-height:1.2;border:1px solid transparent;cursor:pointer}
+.btn:hover{text-decoration:none}
+.btn-primary{background:var(--accent);color:var(--on-accent);box-shadow:var(--shadow)}
+.btn-primary:hover{filter:brightness(1.06)}
+.btn-ghost{background:transparent;color:var(--fg);border-color:var(--line)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+/* --- hero --- */
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:center;
+  background:var(--hero-bg);border:1px solid var(--line);border-radius:18px;
+  padding:32px 30px;margin:22px 0 30px}
+.hero-eyebrow{display:inline-block;font-size:.8rem;font-weight:600;letter-spacing:.02em;
+  color:var(--accent);background:var(--card);border:1px solid var(--line);
+  border-radius:999px;padding:4px 12px;margin:0 0 14px}
+.hero-title{font-size:2.1rem;line-height:1.32;font-weight:800;margin:0 0 .5em;letter-spacing:.01em}
+.hero-sub{color:var(--muted);font-size:1.02rem;margin:0 0 20px;max-width:34em}
+.hero-cta{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px}
+.hero-meta{font-size:.86rem;color:var(--muted);margin:0}
+.hero-meta strong{color:var(--fg);font-variant-numeric:tabular-nums}
+.hero-art{align-self:center}
+.hero-svg{width:100%;height:auto;display:block}
+.hs-panel{fill:var(--card);stroke:var(--line);stroke-width:1.5}
+.hs-grid{stroke:var(--line);stroke-width:1}
+.hs-area{fill:var(--accent);opacity:.10}
+.hs-line{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.hs-ring{fill:none;stroke:var(--accent);stroke-width:2;opacity:.4}
+.hs-dot{fill:var(--accent)}
+.hs-tag{fill:var(--accent)}
+.hs-tag-t{fill:var(--on-accent);font-size:11px;font-weight:700;font-family:inherit}
+.hs-leaf{fill:var(--accent);opacity:.85}
+.hs-fruit{fill:var(--accent2)}
+.hs-fruit-v{stroke:var(--accent2);stroke-width:1.5;fill:none;opacity:.7}
+/* --- use-cases / about block --- */
+.about-block{margin:8px 0 6px}
+.use-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin:16px 0}
+.use-card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:16px 16px 14px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow)}
+.use-card .use-ico{width:34px;height:34px}
+.use-card h3{margin:0;font-size:1.02rem}
+.use-card p{margin:0;color:var(--muted);font-size:.92rem;flex:1}
+.use-card .use-link{font-size:.9rem;font-weight:600;color:var(--accent);margin-top:2px}
+.uc-stroke{fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.uc-fill{fill:var(--accent);opacity:.15}
+.dot{display:inline-block;width:.62em;height:.62em;border-radius:50%;
+  margin-right:.45em;vertical-align:middle}
+.dot-buy{background:var(--down)}
+.more-links{font-size:.92rem;color:var(--muted);margin:6px 0 0}
+@media (max-width:760px){
+  .hero{grid-template-columns:1fr;padding:26px 22px;gap:18px}
+  .hero-art{order:-1;max-width:320px}
+  .hero-title{font-size:1.8rem}
+}
+@media (max-width:520px){
+  h1{font-size:1.35rem}nav.main a{margin-left:10px}
+  .hero-title{font-size:1.55rem}.hero-sub{font-size:.96rem}
+  .btn{flex:1;justify-content:center}
+}
 `;
 
 // AdSense placeholder — only emits markup when a client id is configured.
@@ -109,7 +178,7 @@ function archiveBanner(freshness) {
 function footerNotice(freshness) {
   const f = freshness;
   if (f && f.footerNotice) return f.footerNotice;
-  return '本サイトは公開オープンデータをもとに<strong>自動生成・毎日更新</strong>される情報サイトです。';
+  return '本サイトは、公的なオープンデータをもとに野菜・果物の価格を<strong>毎日自動で集計・更新</strong>している情報サイトです。';
 }
 
 // page: { title, description, path, canonical, breadcrumb, jsonld, body,
@@ -132,6 +201,22 @@ export function sitePathPrefix(site) {
 export function applyPathPrefix(html, prefix) {
   if (!prefix) return html;
   return html.replace(/(href|src)="\/(?!\/)/g, `$1="${prefix}/`);
+}
+
+// Small inline logomark: a rounded badge with a price line dipping to a
+// highlighted "buy" point — a quiet visual pun on 買い時 (price down = good).
+function brandMark() {
+  return `<svg class="brand-mark" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false"><rect x="1.5" y="1.5" width="21" height="21" rx="7" class="bm-bg"/><path class="bm-line" d="M6 9 L10 12 L13 10 L17.5 15.5"/><circle class="bm-dot" cx="17.5" cy="15.5" r="2.2"/></svg>`;
+}
+
+// Brand wordmark: accent the leading portion, keep the trailing "ナビ" in the
+// base color for a calm two-tone look. Name-agnostic (falls back gracefully).
+function brandName(siteName) {
+  const n = String(siteName || '');
+  if (n.endsWith('ナビ') && n.length > 2) {
+    return `<span class="bt">${esc(n.slice(0, -2))}</span>ナビ`;
+  }
+  return esc(n);
 }
 
 export function renderPage(site, page) {
@@ -167,7 +252,7 @@ ${jsonldBlocks}
 <body>
 ${archiveBanner(freshness)}
 <header class="site"><div class="wrap">
-  <a class="brand" href="/">🥬 ${esc(site.siteName.replace('価格ナビ', ''))}<span>価格ナビ</span></a>
+  <a class="brand" href="/">${brandMark()}${brandName(site.siteName)}</a>
   <nav class="main">
     <a href="/">トップ</a>
     <a href="/#fruits">果実</a>

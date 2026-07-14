@@ -53,7 +53,7 @@ export function freshnessCopy(latestDate, now = new Date(), thresholdDays = STAL
       indexTitle: '今日の野菜 買い時ナビ',
       priceLabel: '最新の卸売価格',
       updateNotice: 'データは毎日自動で取得・更新しています（東京都中央卸売市場・日次）。',
-      footerNotice: '本サイトは公開オープンデータをもとに<strong>自動生成・毎日更新</strong>される野菜価格の情報サイトです。',
+      footerNotice: '本サイトは、公的なオープンデータをもとに野菜・果物の価格を<strong>毎日自動で集計・更新</strong>している情報サイトです。',
       banner: null,
     };
   }
