@@ -68,12 +68,13 @@ function scrubAppId(text) {
 // Candidate production sources. See docs/data-sources.md for the rationale
 // and licensing notes for each.
 const SEED_URLS = [
-  // Round 9: 独自ドメイン kaidoki-navi.net のDNS委任状態を本番ランナーの
-  // クリーンなネットワークから確認する(開発サンドボックスはDNSが傍受されて
-  // おり判定不能)。Google/Cloudflare の DNS over HTTPS(JSON)を利用。
-  'https://dns.google/resolve?name=kaidoki-navi.net&type=A',
-  'https://dns.google/resolve?name=kaidoki-navi.net&type=NS',
-  'https://dns.google/resolve?name=www.kaidoki-navi.net&type=CNAME',
+  // Round 10: 独自ドメイン移行の最終ヘルスチェック。HTTPS応答・本文・
+  // ads.txt・旧URLからのリダイレクトを本番ネットワークから確認する。
+  'https://kaidoki-navi.net/',
+  'https://kaidoki-navi.net/ads.txt',
+  'https://kaidoki-navi.net/sitemap.xml',
+  'https://shinosk.github.io/tekusk/',
+  'https://www.kaidoki-navi.net/',
 ];
 
 function sanitizeName(url) {
