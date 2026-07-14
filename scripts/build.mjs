@@ -130,7 +130,7 @@ function breadcrumbLd(site, items) {
 
 function buyBadgeFor(stats) {
   return stats.isBuy
-    ? `<span class="badge pill-down">いま買い時 🟢</span>`
+    ? `<span class="badge pill-down">いま買い時</span>`
     : stats.vsNormalPct != null && stats.vsNormalPct > 5
       ? `<span class="badge pill-up">やや割高</span>`
       : `<span class="badge">通常水準</span>`;
@@ -455,7 +455,7 @@ function renderRetailCityPage(site, meta, city, retailRecords, updatedLabel, fre
 <h1>${esc(cityName)}の野菜小売価格 <span class="cat-tag">/ 月次調査</span></h1>
 <p class="lead">${esc(cityName)}における主要野菜${withData.length}品目の店頭小売価格（円/kg）です。最新の調査は${esc(latestMonth)}。全国平均と比べて割安な品目もチェックできます。</p>
 
-<h2>🟢 ${esc(cityName)}でいま割安な品目（全国平均比）</h2>
+<h2><span class="dot dot-buy"></span>${esc(cityName)}でいま割安な品目（全国平均比）</h2>
 <p class="lead">最新調査月で、${esc(cityName)}の小売価格が全国平均を下回っている品目です。</p>
 ${cheapCards}
 
@@ -801,6 +801,87 @@ ${sections}
 <div class="notice estat-note">${esc(ESTAT_ATTRIBUTION)}</div>`;
 }
 
+// Self-drawn hero illustration: a rounded market panel with a price line
+// dipping to a highlighted "買い時" (buy) point, plus two understated produce
+// motifs. Colors come from the CSS accent vars, so it adapts to light/dark.
+// Kept intentionally light (~1KB) to respect the per-page size budget.
+function heroSvg() {
+  return `<svg class="hero-svg" viewBox="0 0 420 300" role="img" aria-label="卸売価格の推移と買い時のイメージ図">
+  <rect class="hs-panel" x="8" y="8" width="404" height="284" rx="18"/>
+  <line class="hs-grid" x1="30" y1="98" x2="392" y2="98"/>
+  <line class="hs-grid" x1="30" y1="158" x2="392" y2="158"/>
+  <line class="hs-grid" x1="30" y1="218" x2="392" y2="218"/>
+  <path class="hs-area" d="M40 118 L100 100 L155 146 L210 126 L265 180 L320 216 L376 192 L376 252 L40 252 Z"/>
+  <path class="hs-line" d="M40 118 L100 100 L155 146 L210 126 L265 180 L320 216 L376 192"/>
+  <circle class="hs-ring" cx="320" cy="216" r="11"/>
+  <circle class="hs-dot" cx="320" cy="216" r="5"/>
+  <rect class="hs-tag" x="290" y="172" width="60" height="24" rx="7"/>
+  <text class="hs-tag-t" x="320" y="188" text-anchor="middle">買い時</text>
+  <g transform="translate(72 60)">
+    <path class="hs-leaf" d="M-2 -17 C6 -22 15 -18 15 -18 C15 -10 8 -6 0 -9 Z"/>
+    <circle class="hs-fruit" cx="0" cy="3" r="15"/>
+  </g>
+  <g transform="translate(352 58)">
+    <circle class="hs-fruit" cx="0" cy="0" r="14" opacity="0.92"/>
+    <path class="hs-fruit-v" d="M0 -14 A14 14 0 0 1 0 14"/>
+  </g>
+</svg>`;
+}
+
+// Small line-art icons for the "できること" cards (accent stroke, dark-mode safe).
+const USE_ICONS = {
+  buy: `<svg class="use-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="uc-stroke" d="M3 8l5 4 3-2 4 4"/><circle class="uc-stroke" cx="15" cy="14" r="0.6"/><path class="uc-stroke" d="M15 18v2M11 20h8"/></svg>`,
+  trend: `<svg class="use-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="uc-stroke" d="M4 4v16h16"/><path class="uc-stroke" d="M7 15l3-4 3 2 5-7"/></svg>`,
+  origin: `<svg class="use-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="uc-stroke" d="M12 21s6-5.4 6-10a6 6 0 10-12 0c0 4.6 6 10 6 10Z"/><circle class="uc-stroke" cx="12" cy="11" r="2.2"/></svg>`,
+};
+
+function useCard(ico, title, desc, linkText, href) {
+  return `<div class="use-card">
+    ${ico}
+    <h3>${esc(title)}</h3>
+    <p>${esc(desc)}</p>
+    <a class="use-link" href="${href}">${esc(linkText)} →</a>
+  </div>`;
+}
+
+// Hero + "できること" + honest data disclosure — the top-of-page framing that
+// tells a first-time visitor what this site is and how to use it.
+function renderIntro(site, meta, vegEntries) {
+  const hero = `
+<section class="hero">
+  <div class="hero-copy">
+    <span class="hero-eyebrow">全国の卸売市場データを毎日更新</span>
+    <h1 class="hero-title">野菜と果物の<span class="accent">買い時</span>が、<br>ひと目でわかる。</h1>
+    <p class="hero-sub">公的な市場データから、いま平年より安い品目・価格の推移・産地の相場を毎日自動で集計。今週の献立にも、お店の仕入れにも役立つ、登録不要の無料サイトです。</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#buy">今週の買い時を見る</a>
+      <a class="btn btn-ghost" href="#items">品目一覧</a>
+    </div>
+    <p class="hero-meta">最新集計 <strong>${fmtDate(meta.latestDate)}</strong>　・　野菜${vegEntries.length}品目＋果実データ　・　完全無料</p>
+  </div>
+  <div class="hero-art">${heroSvg()}</div>
+</section>`;
+
+  const cards = [
+    useCard(USE_ICONS.buy, '今週の買い時がわかる', '当日の卸売価格が平年より割安な品目をピックアップ。毎日の献立や、飲食店・八百屋の仕入れの判断に。', '買い時を見る', '#buy'),
+    useCard(USE_ICONS.trend, '価格の推移と旬がわかる', '品目ごとの日次・長期の価格チャートに、選び方・保存・旬のポイントを添えて掲載しています。', '品目一覧を見る', '#items'),
+    useCard(USE_ICONS.origin, '産地・地域別の相場がわかる', '主要産地の入荷量シェアと、消費地域（卸売市場）別の月別卸売価格を政府統計から掲載。', '産地データを見る', '#fruits'),
+  ].join('');
+
+  const about = `
+<section class="about-block">
+  <h2>${esc(site.siteName)}でできること</h2>
+  <p class="lead">全国の卸売市場で取引される野菜・果物の価格を、公的なオープンデータから毎日自動で集計し、無料で公開しています。難しい登録は不要。気になる品目の「いま」と「これまで」がすぐに分かります。</p>
+  <div class="grid use-grid">${cards}</div>
+  <p class="more-links">このほか、<a href="/retail/">都市別の小売価格</a>や<a href="/weekly/">今週の値動きレポート</a>もご覧いただけます。</p>
+  <div class="notice">
+    価格データは3つの公的な出典にもとづいています。<strong>①日次の卸売価格</strong>（独立行政法人農畜産業振興機構「ベジ探」。原資料は農林水産省の卸売市場調査）／<strong>②都市別の小売価格</strong>（同・月次調査）／<strong>③産地・地域別の卸売価格</strong>（農林水産省「青果物卸売市場調査」・e-Stat。年次の確報値）。卸売価格は市場での公表まで数営業日ほどかかるため直近数日は反映が遅れることがあり、産地別データは最新の公表年をもとにしています。更新は毎日自動で行っているため、人手をかけずに最新の数値を反映しています。
+  </div>
+</section>`;
+
+  return hero + about;
+}
+
 // ---- Page: index (vegetable-first) ----------------------------------------
 function renderIndex(site, meta, vegEntries, rankings, updatedLabel, freshness, estatStandalone = []) {
   const byCat = new Map();
@@ -847,12 +928,12 @@ function renderIndex(site, meta, vegEntries, rankings, updatedLabel, freshness, 
     .join('');
 
   const body = `
-<h1>${esc(freshness.indexTitle)}</h1>
-<p class="lead">${esc(headline(meta, rankings))}</p>
-<div class="notice">最新集計: <strong>${fmtDate(meta.latestDate)}</strong>／対象 ${vegEntries.length} 品目（東京都中央卸売市場ほか）。${esc(freshness.updateNotice)}</div>
+${renderIntro(site, meta, vegEntries)}
 
-<h2>🟢 いまが買い時の野菜</h2>
-<p class="lead">当日の卸売価格が平年（過去5か年の同時期平均）を10%以上下回っている＝割安な野菜です。</p>
+<h2 id="buy"><span class="dot dot-buy"></span>いまが買い時の野菜</h2>
+<p class="lead">${esc(headline(meta, rankings))}</p>
+<p class="lead">当日の卸売価格が平年（過去5か年の同時期平均）を10%以上下回っている、いま割安な野菜です。</p>
+<div class="notice">最新集計: <strong>${fmtDate(meta.latestDate)}</strong>／対象 ${vegEntries.length} 品目（東京都中央卸売市場ほか）。${esc(freshness.updateNotice)}</div>
 ${buyCards}
 
 ${adSlot(site, site.adsenseSlotTop)}
@@ -956,7 +1037,7 @@ function renderWeekly(site, meta, entries, rankings, updatedLabel, freshness, re
   const movers = [...rankings.risers.slice(0, 3), ...rankings.fallers.slice(0, 3)];
   const body = `
 <h1>${esc(rep.title)}</h1>
-<p class="lead">データから自動生成した野菜価格のまとめです（${fmtDate(meta.latestDate)}時点）。</p>
+<p class="lead">市場データをもとに自動でまとめた、野菜価格の週次レポートです（${fmtDate(meta.latestDate)}時点）。</p>
 <div class="report">${rep.paragraphs.map((t) => `<p>${esc(t)}</p>`).join('')}</div>
 
 ${adSlot(site, site.adsenseSlotTop)}
@@ -1061,8 +1142,14 @@ function renderAbout(site, meta, updatedLabel, freshnessBySource) {
     : '';
 
   const body = `
-<h1>データ出典・このサイトについて</h1>
-<p class="lead">${esc(site.siteName)}は、公開オープンデータをもとに野菜の価格情報を<strong>自動生成・毎日更新</strong>するユーティリティサイトです。</p>
+<h1>このサイトについて・データ出典</h1>
+<p class="lead">${esc(site.siteName)}は、全国の卸売市場で取引される野菜・果物の価格を、公的なオープンデータから毎日自動で集計して無料で公開している情報サイトです。</p>
+
+<h2>サイトの目的</h2>
+<p>スーパーや市場に並ぶ野菜・果物の価格は、天候や産地の切り替わりで日々動いています。ただ、その「いまが高いのか安いのか」を消費者やお店の人が自分で調べるのは簡単ではありません。${esc(site.siteName)}は、公的機関が公開している価格データをわかりやすく整理し、<strong>「いま平年より割安な品目（買い時）」「価格の推移と旬」「産地・地域別の相場」</strong>を、登録なしでひと目で確認できるようにすることを目的としています。毎日の献立を考える消費者の方にも、飲食店や八百屋など仕入れを行うプロの方にも、同じように役立つことを目指しています。</p>
+
+<h2>運営方針</h2>
+<p>掲載している数値は、いずれも国や独立行政法人が公表している一次データにもとづいています。価格そのものは加工せず、集計・グラフ化・平年比の判定といった「見やすくする」処理だけを行い、出典は各ページに明記しています。データの取得から集計、ページの生成・公開までは毎日自動で行っており、人手による価格の入力や書き換えは行っていません。これにより、鮮度を保ちながら、恣意的な操作の入り込む余地をなくしています。データの鮮度は出典ごとに判定し、更新が止まった系統（国際市況アーカイブ）のページには、その旨を自動で表示します。</p>
 ${vegRows}
 ${retRows}
 ${estRows}
@@ -1235,7 +1322,7 @@ async function main() {
   // 日本のサイトなので「最終更新」はJSTの日付で表示する(UTCのままだと
   // JST朝のビルドが前日表記になる)
   const jstToday = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
-  const updatedLabel = fmtDate(jstToday) + '（自動生成・日本時間）';
+  const updatedLabel = fmtDate(jstToday) + '（日本時間）';
 
   // clean public (keep dir)
   await fs.rm(PUBLIC_DIR, { recursive: true, force: true });
