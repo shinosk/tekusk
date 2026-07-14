@@ -1,57 +1,45 @@
 {
-  "generatedAt": "2026-07-12T22:07:25.189Z",
+  "generatedAt": "2026-07-14T03:58:11.234Z",
   "estatAppIdLength": 40,
   "note": "Raw samples from candidate production data sources (see docs/data-sources.md). Re-running scripts/probe.mjs overwrites this file and files/ in place — it does not accumulate.",
   "seedUrls": [
-    "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0004044496&limit=10000",
-    "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0004044497&limit=10000",
-    "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0004044437&limit=10000",
-    "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0004044462&limit=10000"
+    "https://dns.google/resolve?name=kaidoki-navi.net&type=A",
+    "https://dns.google/resolve?name=kaidoki-navi.net&type=NS",
+    "https://dns.google/resolve?name=www.kaidoki-navi.net&type=CNAME"
   ],
   "results": [
     {
-      "url": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0004044496&limit=10000",
-      "fetchedAt": "2026-07-12T22:07:14.823Z",
+      "url": "https://dns.google/resolve?name=kaidoki-navi.net&type=A",
+      "fetchedAt": "2026-07-14T03:58:04.189Z",
       "ok": true,
       "status": 200,
-      "contentType": "application/json; charset=utf-8",
-      "byteLength": 964494,
-      "savedBytes": 964494,
+      "contentType": "application/json; charset=UTF-8",
+      "byteLength": 1081,
+      "savedBytes": 1081,
       "truncated": false,
-      "file": "files/001-api.e-stat.go.jp_rest_3.0_app_json_getStatsData_appId_APPID_statsDataId_0004044496_limit_10000.json"
+      "file": "files/001-dns.google_resolve_name_kaidoki-navi.net_type_A.json"
     },
     {
-      "url": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0004044497&limit=10000",
-      "fetchedAt": "2026-07-12T22:07:18.783Z",
+      "url": "https://dns.google/resolve?name=kaidoki-navi.net&type=NS",
+      "fetchedAt": "2026-07-14T03:58:07.814Z",
       "ok": true,
       "status": 200,
-      "contentType": "application/json; charset=utf-8",
-      "byteLength": 963232,
-      "savedBytes": 963232,
+      "contentType": "application/json; charset=UTF-8",
+      "byteLength": 1418,
+      "savedBytes": 1418,
       "truncated": false,
-      "file": "files/002-api.e-stat.go.jp_rest_3.0_app_json_getStatsData_appId_APPID_statsDataId_0004044497_limit_10000.json"
+      "file": "files/002-dns.google_resolve_name_kaidoki-navi.net_type_NS.json"
     },
     {
-      "url": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0004044437&limit=10000",
-      "fetchedAt": "2026-07-12T22:07:21.596Z",
+      "url": "https://dns.google/resolve?name=www.kaidoki-navi.net&type=CNAME",
+      "fetchedAt": "2026-07-14T03:58:09.525Z",
       "ok": true,
       "status": 200,
-      "contentType": "application/json; charset=utf-8",
-      "byteLength": 964062,
-      "savedBytes": 964062,
+      "contentType": "application/json; charset=UTF-8",
+      "byteLength": 1506,
+      "savedBytes": 1506,
       "truncated": false,
-      "file": "files/003-api.e-stat.go.jp_rest_3.0_app_json_getStatsData_appId_APPID_statsDataId_0004044437_limit_10000.json"
-    },
-    {
-      "url": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0004044462&limit=10000",
-      "fetchedAt": "2026-07-12T22:07:23.786Z",
-      "ok": true,
-      "status": 200,
-      "contentType": "application/json; charset=utf-8",
-      "byteLength": 67856,
-      "savedBytes": 67856,
-      "truncated": false,
-      "file": "files/004-api.e-stat.go.jp_rest_3.0_app_json_getStatsData_appId_APPID_statsDataId_0004044462_limit_10000.json"
+      "file": "files/003-dns.google_resolve_name_www.kaidoki-navi.net_type_CNAME.json"
     }
   ]
 }
