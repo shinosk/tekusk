@@ -68,13 +68,12 @@ function scrubAppId(text) {
 // Candidate production sources. See docs/data-sources.md for the rationale
 // and licensing notes for each.
 const SEED_URLS = [
-  // Round 8: estatアダプタ実装用フィクスチャ。「主要消費地域別・産地別の卸売数量
-  // 及び卸売価格」(2024年・最新公表年)の代表4表の実データを全件取得する。
-  // だいこん/キャベツ/トマト(野菜)、りんご計(果実)。
-  'https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0004044496&limit=10000',
-  'https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0004044497&limit=10000',
-  'https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0004044437&limit=10000',
-  'https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId={APPID}&statsDataId=0004044462&limit=10000',
+  // Round 9: 独自ドメイン kaidoki-navi.net のDNS委任状態を本番ランナーの
+  // クリーンなネットワークから確認する(開発サンドボックスはDNSが傍受されて
+  // おり判定不能)。Google/Cloudflare の DNS over HTTPS(JSON)を利用。
+  'https://dns.google/resolve?name=kaidoki-navi.net&type=A',
+  'https://dns.google/resolve?name=kaidoki-navi.net&type=NS',
+  'https://dns.google/resolve?name=www.kaidoki-navi.net&type=CNAME',
 ];
 
 function sanitizeName(url) {
