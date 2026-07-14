@@ -75,6 +75,32 @@ jobs:
       - name: Build site
         run: node scripts/build.mjs
 
+      # 日次のSNS自動投稿（X）。新しい集計日のときだけ「買い時/値動き」+リンクを
+      # 1日1回投稿する（data/social/x-state.json で冪等管理）。認証情報は Secrets
+      # のみ・値はログ出力しない。未設定・API失敗でも fail-safe で exit 0（deploy を
+      # 妨げない）。停止したいときは config/site.json の social.x.enabled=false。
+      - name: Post to X (fail-safe)
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+        run: node scripts/post-x.mjs
+
+      # 投稿状態（x-state.json）に差分があれば github-actions[bot] 名義でコミット。
+      # [skip ci] でこのコミットが再度ワークフローを起動しないようにする。
+      - name: Commit social state
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/social/
+          if git diff --cached --quiet; then
+            echo "No social state changes to commit."
+          else
+            git commit -m "chore(social): update X post state [skip ci]"
+            git push
+          fi
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:

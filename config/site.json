@@ -15,5 +15,12 @@
     "note": "config/site.json の affiliate.enabled を true にし、リンクを設定すると各ページに表示されます。",
     "links": []
   },
+  "social": {
+    "x": {
+      "enabled": true,
+      "includeLink": true,
+      "maxPerDay": 1
+    }
+  },
   "analyticsId": ""
 }
