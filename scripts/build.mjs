@@ -10,7 +10,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { CONFIG_DIR, DATA_DIR, DATA_ITEMS_DIR, DATA_RETAIL_DIR, DATA_ESTAT_DIR, PUBLIC_DIR } from '../src/lib/paths.mjs';
+import { CONFIG_DIR, DATA_DIR, DATA_ITEMS_DIR, DATA_RETAIL_DIR, DATA_ESTAT_DIR, PUBLIC_DIR, ASSETS_DIR } from '../src/lib/paths.mjs';
 import { renderPage, adSlot, STYLESHEET } from '../src/templates/layout.mjs';
 import { computeItemStats, buildRankings } from '../src/lib/stats.mjs';
 import { lineChartSvg } from '../src/lib/chart.mjs';
@@ -1262,11 +1262,16 @@ async function main() {
   const primaryFresh =
     freshnessBySource[meta.primarySource] || freshnessCopy(meta.latestDate, now);
 
+  // Brand icon: if assets/icon.png exists, use it for the favicon / app icon
+  // across every page; otherwise fall back to the inline emoji favicon.
+  const iconBytes = await fs.readFile(path.join(ASSETS_DIR, 'icon.png')).catch(() => null);
+
   const site = {
     ...rawSite,
     tagline: primaryFresh.archive ? primaryFresh.tagline : rawSite.tagline,
     description: primaryFresh.archive ? primaryFresh.description : rawSite.description,
     freshness: primaryFresh,
+    iconPng: iconBytes ? '/assets/icon.png' : null,
   };
 
   const entries = records
@@ -1332,6 +1337,29 @@ async function main() {
   await write('assets/style.css', STYLESHEET);
   await write('assets/og.svg', ogSvg(site, meta, vegEntries.length ? vegFresh : primaryFresh));
   await write('.nojekyll', '');
+  if (iconBytes) {
+    // Brand icon (favicon / apple-touch / PWA). Copied verbatim; a single square
+    // PNG is scaled by browsers for every required size.
+    await write('assets/icon.png', iconBytes);
+    await write(
+      'site.webmanifest',
+      JSON.stringify(
+        {
+          name: site.siteName,
+          short_name: site.siteName,
+          icons: [
+            { src: '/assets/icon.png', sizes: '192x192', type: 'image/png' },
+            { src: '/assets/icon.png', sizes: '512x512', type: 'image/png' },
+          ],
+          theme_color: '#1f7a4d',
+          background_color: '#ffffff',
+          display: 'browser',
+        },
+        null,
+        2,
+      ),
+    );
+  }
 
   const urls = ['/', '/weekly/', '/about/'];
 

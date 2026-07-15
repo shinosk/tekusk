@@ -15,3 +15,6 @@ export const VEGETAN_FIXTURES_DIR = path.join(ROOT, 'test', 'fixtures', 'vegetan
 export const ESTAT_FIXTURES_DIR = path.join(ROOT, 'test', 'fixtures', 'estat');
 export const PUBLIC_DIR = path.join(ROOT, 'public');
 export const TEMPLATES_DIR = path.join(ROOT, 'src', 'templates');
+// Source-of-truth static assets committed to the repo (e.g. the brand icon PNG),
+// copied into public/ at build time.
+export const ASSETS_DIR = path.join(ROOT, 'assets');

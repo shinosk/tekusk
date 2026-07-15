@@ -252,7 +252,13 @@ export function renderPage(site, page) {
 <meta property="og:locale" content="${esc(site.locale)}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="robots" content="index,follow">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A5%AC%3C/text%3E%3C/svg%3E">
+${
+  site.iconPng
+    ? `<link rel="icon" type="image/png" href="${esc(site.iconPng)}">
+<link rel="apple-touch-icon" href="${esc(site.iconPng)}">
+<link rel="manifest" href="/site.webmanifest">`
+    : `<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A5%AC%3C/text%3E%3C/svg%3E">`
+}
 <link rel="stylesheet" href="/assets/style.css">
 ${adsenseHead(site)}
 ${jsonldBlocks}
