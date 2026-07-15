@@ -148,6 +148,13 @@ export function composeXPost({ meta, entries = [], rankings = {}, siteUrl = '' }
   return { text, postKey, subject };
 }
 
+// Build an X "Web Intent" URL that opens the composer prefilled with `text`,
+// for manual one-tap posting with no API cost. Our composed text already
+// contains the link and hashtags, so everything goes in the single text param.
+export function xIntentUrl(text) {
+  return 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
+}
+
 // ---- OAuth 1.0a (RFC 5849) HMAC-SHA1 signing ------------------------------
 
 // RFC 3986 percent-encoding. encodeURIComponent leaves A-Za-z0-9-_.~ and also

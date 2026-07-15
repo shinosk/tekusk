@@ -75,11 +75,13 @@ jobs:
       - name: Build site
         run: node scripts/build.mjs
 
-      # 日次のSNS自動投稿（X）。新しい集計日のときだけ「買い時/値動き」+リンクを
-      # 1日1回投稿する（data/social/x-state.json で冪等管理）。認証情報は Secrets
-      # のみ・値はログ出力しない。未設定・API失敗でも fail-safe で exit 0（deploy を
-      # 妨げない）。停止したいときは config/site.json の social.x.enabled=false。
-      - name: Post to X (fail-safe)
+      # 日次のSNS投稿（X）。新しい集計日のとき「買い時/値動き」+リンクの投稿文を用意。
+      # 既定は手動投稿モード（social.x.autoPost=false）で、data/social/x-draft.md に
+      # コピペ用の投稿文＋ワンタップ投稿リンクを生成するだけ（X APIの費用ゼロ）。
+      # autoPost=true かつ Secrets 設定時のみ API で自動投稿（1日1回・冪等）。認証情報は
+      # Secrets のみ・値はログ出力しない。未設定・API失敗でも fail-safe で exit 0。
+      # 完全停止は config/site.json の social.x.enabled=false。
+      - name: Prepare/Post to X (fail-safe)
         env:
           X_API_KEY: ${{ secrets.X_API_KEY }}
           X_API_SECRET: ${{ secrets.X_API_SECRET }}

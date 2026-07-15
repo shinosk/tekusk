@@ -7,6 +7,7 @@ import {
   rfc3986,
   signatureBaseString,
   buildOAuthHeader,
+  xIntentUrl,
   TWEET_MAX,
   URL_WEIGHT,
 } from '../src/lib/social.mjs';
@@ -206,8 +207,8 @@ test('run() posts once, then skips the same postKey without calling postFn', asy
     return { ok: true, status: 201, text: JSON.stringify({ data: { id: '123' } }) };
   };
 
-  // First run: fresh state ⇒ posts.
-  const first = await run({ creds, state: { lastPostKey: null }, persist: false, force: false, postFn });
+  // First run: fresh state ⇒ posts (autoPost forced on for this test).
+  const first = await run({ creds, state: { lastPostKey: null }, persist: false, force: false, postFn, autoPost: true });
   assert.equal(first.status, 'posted');
   assert.equal(calls, 1, 'post attempted once');
 
@@ -218,6 +219,7 @@ test('run() posts once, then skips the same postKey without calling postFn', asy
     persist: false,
     force: false,
     postFn,
+    autoPost: true,
   });
   assert.equal(second.status, 'skipped');
   assert.equal(calls, 1, 'no second post for the same 集計日');
@@ -229,7 +231,30 @@ test('run() posts once, then skips the same postKey without calling postFn', asy
     persist: false,
     force: true,
     postFn,
+    autoPost: true,
   });
   assert.equal(forced.status, 'posted');
   assert.equal(calls, 2, 'force re-posts');
+});
+
+// ---- manual mode: autoPost=false prepares a draft, never calls the API -----
+
+test('run() in manual mode (autoPost=false) drafts without calling postFn', async () => {
+  const creds = { X_API_KEY: 'k', X_API_SECRET: 's', X_ACCESS_TOKEN: 't', X_ACCESS_SECRET: 'ts' };
+  let calls = 0;
+  const postFn = async () => {
+    calls += 1;
+    return { ok: true, status: 201, text: JSON.stringify({ data: { id: '123' } }) };
+  };
+  const res = await run({ creds, state: { lastPostKey: null }, persist: false, force: false, postFn, autoPost: false });
+  assert.equal(res.status, 'draft', 'manual mode returns a draft, not a post');
+  assert.equal(calls, 0, 'the paid API is never called in manual mode');
+  assert.ok(res.text && res.postKey, 'draft still carries the composed text and postKey');
+});
+
+test('xIntentUrl encodes the full post into a one-tap composer link', () => {
+  const url = xIntentUrl('買い時 #野菜\nhttps://example.com/');
+  assert.ok(url.startsWith('https://twitter.com/intent/tweet?text='));
+  assert.ok(!url.includes('\n'), 'newlines are percent-encoded');
+  assert.ok(url.includes('%23'), 'the # is encoded (not a URL fragment)');
 });
