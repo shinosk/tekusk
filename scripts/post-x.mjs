@@ -22,7 +22,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { CONFIG_DIR, DATA_DIR, DATA_ITEMS_DIR, DATA_SOCIAL_DIR } from '../src/lib/paths.mjs';
 import { computeItemStats, buildRankings } from '../src/lib/stats.mjs';
-import { composeXPost, buildOAuthHeader, randomNonce } from '../src/lib/social.mjs';
+import { composeXPost, buildOAuthHeader, randomNonce, xIntentUrl } from '../src/lib/social.mjs';
 
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
@@ -30,7 +30,15 @@ const force = args.includes('--force');
 const strict = args.includes('--strict');
 
 const STATE_PATH = path.join(DATA_SOCIAL_DIR, 'x-state.json');
+const DRAFT_PATH = path.join(DATA_SOCIAL_DIR, 'x-draft.md');
+const HISTORY_PATH = path.join(DATA_SOCIAL_DIR, 'x-drafts.jsonl');
 const TWEETS_ENDPOINT = 'https://api.twitter.com/2/tweets';
+
+// 'YYYY-MM-DD' → 'M/D' (best-effort; returns the input unchanged if unparseable).
+function mdLabel(date) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(date || ''));
+  return m ? `${Number(m[2])}/${Number(m[3])}` : String(date || '');
+}
 
 // ---- secret scrubbing -------------------------------------------------------
 // Collect the (non-empty) secret values so we can redact them from any string
@@ -85,6 +93,29 @@ async function writeState(state) {
   await fs.writeFile(STATE_PATH, JSON.stringify(state, null, 2) + '\n');
 }
 
+// Write a human-friendly copy-paste draft (data/social/x-draft.md) plus an
+// append-only history line. Used in manual mode (autoPost=false) so the day's
+// suggested post is ready to publish by hand at zero API cost.
+async function writeDraft({ text, postKey, latestDate, generatedAt }) {
+  await fs.mkdir(DATA_SOCIAL_DIR, { recursive: true });
+  const md =
+    `# X投稿ドラフト（集計日 ${mdLabel(latestDate)}）\n\n` +
+    `当面は手動投稿モードです。下の投稿文をコピペするか、ワンタップ投稿リンクを開いて投稿してください（X APIの費用はかかりません）。\n\n` +
+    `## 投稿文（コピペ用）\n\n` +
+    '```\n' +
+    `${text}\n` +
+    '```\n\n' +
+    `## ワンタップ投稿（スマホ推奨）\n\n` +
+    `${xIntentUrl(text)}\n\n` +
+    `---\n\n` +
+    `- postKey: ${postKey}\n` +
+    `- 生成: ${generatedAt}\n` +
+    `- 全自動に切り替える: config/site.json の social.x.autoPost を true にし、X APIキー4種を GitHub Secrets に設定\n`;
+  await fs.writeFile(DRAFT_PATH, md);
+  const rec = JSON.stringify({ postKey, latestDate, text, generatedAt });
+  await fs.appendFile(HISTORY_PATH, rec + '\n');
+}
+
 // Post the tweet via OAuth 1.0a User Context. `postFn` is injectable for tests;
 // the default performs the real fetch. Returns { id } on success.
 async function postTweet(text, creds, { postFn } = {}) {
@@ -135,10 +166,21 @@ async function postTweet(text, creds, { postFn } = {}) {
 //   creds   — override the env-derived credentials
 //   state   — override the on-disk x-state.json
 //   persist — when false, don't write x-state.json (default true)
-export async function run({ postFn, force: forceOpt = force, creds: credsOpt, state: stateOpt, persist = true } = {}) {
+export async function run({
+  postFn,
+  force: forceOpt = force,
+  creds: credsOpt,
+  state: stateOpt,
+  persist = true,
+  autoPost: autoPostOpt,
+} = {}) {
   const site = await readJson(path.join(CONFIG_DIR, 'site.json'), {});
   const meta = await readJson(path.join(DATA_DIR, 'meta.json'), null);
   const social = (site.social && site.social.x) || {};
+  // Two independent switches: `enabled` turns the whole feature on; `autoPost`
+  // (the cost switch) decides whether we call the paid API or just prepare a
+  // copy-paste draft for manual posting. Tests may override autoPost directly.
+  const autoPost = autoPostOpt != null ? autoPostOpt : social.autoPost === true;
 
   if (!dryRun && social.enabled === false) {
     console.log('[post-x] social.x.enabled=false — nothing to do.');
@@ -167,7 +209,29 @@ export async function run({ postFn, force: forceOpt = force, creds: credsOpt, st
   }
 
   const state = stateOpt || (await readState());
+  const now = new Date().toISOString();
+
+  // Always keep a fresh copy-paste draft for the current dataset (cheap, no
+  // credentials needed). Rewrite only when the dataset changed to avoid git churn.
+  const draftIsCurrent = !forceOpt && state.lastDraftKey === postKey;
+  if (!draftIsCurrent) {
+    if (persist) await writeDraft({ text, postKey, latestDate: meta.latestDate, generatedAt: now });
+    state.lastDraftKey = postKey;
+    state.lastDraftAt = now;
+    console.log(`[post-x] draft written for ${postKey} (data/social/x-draft.md).`);
+  } else {
+    console.log(`[post-x] draft already current for ${postKey}.`);
+  }
+
+  // Manual mode (default): stop after the draft, no API call, no cost.
+  if (!autoPost) {
+    if (persist) await writeState(state);
+    console.log('[post-x] autoPost=false — manual mode: draft ready, not posting.');
+    return { status: 'draft', text, postKey };
+  }
+
   if (!forceOpt && state.lastPostKey === postKey) {
+    if (persist) await writeState(state);
     console.log(`[post-x] already posted for ${postKey} — skipping (use --force to override).`);
     return { status: 'skipped', text, postKey };
   }
@@ -182,18 +246,17 @@ export async function run({ postFn, force: forceOpt = force, creds: credsOpt, st
     .filter(([, v]) => !v)
     .map(([k]) => k);
   if (missing.length) {
+    if (persist) await writeState(state);
     // Do NOT print the missing values (they're empty anyway) — just the names.
     console.log(`[post-x] skipping (no credentials): ${missing.join(', ')} not set.`);
     return { status: 'no-credentials', text, postKey };
   }
 
   const { id } = await postTweet(text, creds, { postFn });
-  const newState = {
-    lastPostKey: postKey,
-    lastPostedAt: new Date().toISOString(),
-    lastTweetId: id,
-  };
-  if (persist) await writeState(newState);
+  state.lastPostKey = postKey;
+  state.lastPostedAt = new Date().toISOString();
+  state.lastTweetId = id;
+  if (persist) await writeState(state);
   console.log(`[post-x] posted tweet${id ? ` id=${id}` : ''}; state ${persist ? 'updated' : 'not persisted'}.`);
   return { status: 'posted', text, postKey, tweetId: id };
 }
