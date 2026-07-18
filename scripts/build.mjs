@@ -105,6 +105,19 @@ async function write(rel, content) {
   await fs.writeFile(out, content);
 }
 
+// Google の Dataset リッチリザルトは description の文字列長を [50, 5000] に制限する。
+// 品目名・都市名が短いと下限50を割って「無効なアイテム」になるため、下回る場合だけ
+// 事実ベースの定型文を補って必ず50文字以上にする安全ガード。
+function datasetDescription(text) {
+  const MIN = 50;
+  const MAX = 5000;
+  let t = String(text == null ? '' : text).trim();
+  if (t.length < MIN) {
+    t += ' 公的なオープンデータをもとに毎日自動で集計・可視化した、価格の時系列データです。';
+  }
+  return t.length > MAX ? t.slice(0, MAX) : t;
+}
+
 function pctCell(v) {
   const c = trendClass(v);
   const arrow = v == null ? '' : v > 1 ? '▲' : v < -1 ? '▼' : '＝';
@@ -231,7 +244,9 @@ ${explainerSection}
       '@context': 'https://schema.org',
       '@type': 'Dataset',
       name: `${item.name}の価格推移`,
-      description: `${item.name}の卸売・小売価格の時系列。最新 ${fmtDate(stats.lastDate)}、平年比 ${fmtPct(stats.vsNormalPct)}。`,
+      description: datasetDescription(
+        `${item.name}の卸売価格・小売価格の時系列データ。最新は${fmtDate(stats.lastDate)}時点で平年比${fmtPct(stats.vsNormalPct)}。2005年からの長期推移を日次で収録し、公的なオープンデータをもとに自動集計しています。`,
+      ),
       creator: { '@type': 'Organization', name: src.attribution },
       license: src.licenseUrl,
       isAccessibleForFree: true,
@@ -307,7 +322,9 @@ ${adSlot(site, site.adsenseSlotItem)}
       '@context': 'https://schema.org',
       '@type': 'Dataset',
       name: `${item.name}の国際市況価格推移（アーカイブ）`,
-      description: `${item.name}（${item.origin}）の国際市況価格時系列。${fmtMonth(stats.firstDate)}〜${fmtMonth(stats.lastDate)}の月次アーカイブ。`,
+      description: datasetDescription(
+        `${item.name}（${item.origin}）の国際市況価格の月次時系列データ。${fmtMonth(stats.firstDate)}から${fmtMonth(stats.lastDate)}までの長期の価格推移を収録したアーカイブで、IMF等の公開データをもとに作成しています。`,
+      ),
       creator: { '@type': 'Organization', name: src.attribution },
       license: src.licenseUrl,
       isAccessibleForFree: true,
@@ -489,7 +506,9 @@ ${adSlot(site, site.adsenseSlotItem)}
       '@context': 'https://schema.org',
       '@type': 'Dataset',
       name: `${cityName}の野菜小売価格`,
-      description: `${cityName}における主要野菜の月次小売価格（円/kg）。最新 ${latestMonth}。`,
+      description: datasetDescription(
+        `${cityName}における主要野菜の月次小売価格（円/kg）の時系列データ。最新は${latestMonth}。全国平均との比較や品目別の価格推移を、農畜産業振興機構「ベジ探」の公的データをもとに掲載しています。`,
+      ),
       creator: { '@type': 'Organization', name: src.attribution },
       license: src.licenseUrl,
       isAccessibleForFree: true,
@@ -577,7 +596,9 @@ ${adSlot(site, site.adsenseSlotTop)}
       '@context': 'https://schema.org',
       '@type': 'Dataset',
       name: '都市別の野菜小売価格（月次調査）',
-      description: `全国主要${cityList.length}都市の野菜小売価格（円/kg・月次）。最新 ${latestMonth}。`,
+      description: datasetDescription(
+        `全国主要${cityList.length}都市における野菜の月次小売価格（円/kg）の時系列データ。最新は${latestMonth}。都市別・品目別の価格推移と全国平均を、農畜産業振興機構「ベジ探」の公的データをもとに掲載しています。`,
+      ),
       creator: { '@type': 'Organization', name: src.attribution },
       license: src.licenseUrl,
       isAccessibleForFree: true,
@@ -740,7 +761,9 @@ ${explainerBlock(rec.slug, rec.name)}
       '@context': 'https://schema.org',
       '@type': 'Dataset',
       name: `${rec.name}の産地別・消費地域別の卸売価格（${rec.year}年）`,
-      description: `${rec.name}の${rec.year}年の産地別入荷量シェアと消費地域別の月別卸売価格（円/kg）。${estatSurveyLabel(rec.year)}。`,
+      description: datasetDescription(
+        `${rec.name}の${rec.year}年の産地別入荷量シェアと消費地域別の月別卸売価格（円/kg）。${estatSurveyLabel(rec.year)}。`,
+      ),
       creator: { '@type': 'Organization', name: src.attribution || ESTAT_ATTRIBUTION },
       license: src.licenseUrl,
       isAccessibleForFree: true,
