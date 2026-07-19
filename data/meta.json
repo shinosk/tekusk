@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-18T22:50:08.390Z",
+  "generatedAt": "2026-07-19T22:52:16.293Z",
   "primarySource": "vegetan",
   "sources": {
     "vegetan": {
@@ -15,7 +15,7 @@
       "totalPoints": 1483,
       "latestDate": "2026-07-16",
       "missing": [],
-      "updatedAt": "2026-07-18T22:50:03.843Z"
+      "updatedAt": "2026-07-19T22:52:12.333Z"
     },
     "commodity": {
       "id": "commodity",
@@ -30,7 +30,7 @@
       "totalPoints": 11674,
       "latestDate": "2017-06-01",
       "missing": [],
-      "updatedAt": "2026-07-18T22:50:08.390Z"
+      "updatedAt": "2026-07-19T22:52:16.293Z"
     },
     "retail": {
       "id": "retail",
@@ -46,7 +46,7 @@
       "totalPoints": 480,
       "latestDate": "2026-06-01",
       "missing": [],
-      "updatedAt": "2026-07-18T22:50:08.039Z"
+      "updatedAt": "2026-07-19T22:52:15.950Z"
     },
     "estat": {
       "id": "estat",
