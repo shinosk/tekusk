@@ -9,7 +9,7 @@
   "buyKeyword": "大根",
   "source": "vegetan",
   "hasDaily": true,
-  "updatedAt": "2026-08-07T01:30:06.783Z",
+  "updatedAt": "2026-08-07T22:34:34.712Z",
   "series": [
     {
       "date": "2026-06-01",
@@ -332,6 +332,13 @@
       "arrival": 122.553,
       "normalPrice": 106,
       "normalRatio": 1.5377358490566038
+    },
+    {
+      "date": "2026-08-06",
+      "price": 176,
+      "arrival": 215.158,
+      "normalPrice": 106,
+      "normalRatio": 1.6603773584905661
     }
   ],
   "monthly": [
