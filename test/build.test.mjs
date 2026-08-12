@@ -170,6 +170,76 @@ test('build.mjs emits estat fruit pages, veg estat sections and honest annual fr
   assert.match(fs.readFileSync(path.join(PUBLIC_DIR, 'about/index.html'), 'utf8'), /青果物卸売市場調査/);
 });
 
+// Trust & editorial pages (AdSense 有用性対策): every build must emit the
+// privacy policy, contact page, guides index and each guide article; wire them
+// into the sitemap; expose privacy/contact/about links in the footer of every
+// page; and carry the required AdSense disclosures + Article JSON-LD. Internal
+// links are root-absolute so the site path prefix applies.
+test('build.mjs emits privacy/contact/guides pages with footer links and JSON-LD', (t) => {
+  if (!fs.existsSync(path.join(DATA_DIR, 'meta.json'))) {
+    t.skip('no data/meta.json — run `npm run fetch` first');
+    return;
+  }
+  execFileSync('node', ['scripts/build.mjs'], { cwd: ROOT, stdio: 'pipe' });
+
+  // Trust pages exist.
+  const privacy = path.join(PUBLIC_DIR, 'privacy/index.html');
+  const contact = path.join(PUBLIC_DIR, 'contact/index.html');
+  const guidesIdx = path.join(PUBLIC_DIR, 'guides/index.html');
+  for (const p of [privacy, contact, guidesIdx]) {
+    assert.ok(fs.existsSync(p), `${p} should exist`);
+  }
+
+  // Privacy page carries the AdSense-required disclosures.
+  const privacyHtml = fs.readFileSync(privacy, 'utf8');
+  assert.match(privacyHtml, /Google AdSense/);
+  assert.match(privacyHtml, /DoubleClick/);
+  assert.match(privacyHtml, /aboutads\.info/);
+  assert.match(privacyHtml, /google\.com\/settings\/ads/);
+  assert.match(privacyHtml, /Cookie/);
+
+  // Contact page exposes the configured contact email as a mailto link.
+  const contactEmail = SITE_CONF.contactEmail;
+  assert.ok(contactEmail, 'site.json must define contactEmail');
+  assert.match(fs.readFileSync(contact, 'utf8'), new RegExp(`mailto:${contactEmail.replace(/[.@]/g, '\\$&')}`));
+
+  // All three guide articles exist with an Article JSON-LD block and breadcrumb.
+  const guideSlugs = ['wholesale-price-basics', 'seasonal-buying-tips', 'origin-and-market-price'];
+  for (const slug of guideSlugs) {
+    const gp = path.join(PUBLIC_DIR, `guides/${slug}/index.html`);
+    assert.ok(fs.existsSync(gp), `${gp} should exist`);
+    const gh = fs.readFileSync(gp, 'utf8');
+    assert.match(gh, /"@type":"Article"/);
+    assert.match(gh, /"@type":"BreadcrumbList"/);
+    assert.match(gh, /<h1>/);
+    assert.match(gh, new RegExp(`href="${escPrefix}/guides/"`)); // breadcrumb back to index
+  }
+
+  // Guides index links to each article (root-absolute, prefixed).
+  const guidesIdxHtml = fs.readFileSync(guidesIdx, 'utf8');
+  for (const slug of guideSlugs) {
+    assert.match(guidesIdxHtml, new RegExp(`href="${escPrefix}/guides/${slug}/"`));
+  }
+
+  // Footer of EVERY page type reaches privacy, contact and about (AdSense wants
+  // these reachable site-wide). Also the nav gains a guides link.
+  for (const rel of ['index.html', 'items/tomato/index.html', 'about/index.html', 'weekly/index.html', 'privacy/index.html']) {
+    const html = fs.readFileSync(path.join(PUBLIC_DIR, rel), 'utf8');
+    assert.match(html, /class="footer-links"/, `${rel} footer-links`);
+    assert.match(html, new RegExp(`href="${escPrefix}/privacy/"`), `${rel} -> privacy`);
+    assert.match(html, new RegExp(`href="${escPrefix}/contact/"`), `${rel} -> contact`);
+    assert.match(html, new RegExp(`href="${escPrefix}/about/"`), `${rel} -> about`);
+    assert.match(html, new RegExp(`href="${escPrefix}/guides/">ガイド`), `${rel} nav -> guides`);
+  }
+
+  // Sitemap includes the new pages.
+  const sitemap = fs.readFileSync(path.join(PUBLIC_DIR, 'sitemap.xml'), 'utf8');
+  assert.match(sitemap, /\/privacy\//);
+  assert.match(sitemap, /\/contact\//);
+  assert.match(sitemap, /\/guides\//);
+  assert.match(sitemap, /\/guides\/wholesale-price-basics\//);
+});
+
 // Per-source freshness + attribution: on a build that has BOTH the live
 // vegetan data and the frozen commodity archive, veg pages must carry live
 // copy + the ベジ探 attribution and NO archive banner, while commodity pages

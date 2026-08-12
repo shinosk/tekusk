@@ -21,6 +21,7 @@ import { freshnessCopy } from '../src/lib/freshness.mjs';
 import { latestChange, monthsAcross, cityOf } from '../src/lib/retail.mjs';
 import { pad2 } from '../src/lib/wareki.mjs';
 import { getItemContent } from '../src/content/items.mjs';
+import { GUIDES } from '../src/content/guides.mjs';
 
 const VEGETAN_ATTRIBUTION =
   '出典：独立行政法人農畜産業振興機構『ベジ探』のデータを加工して作成';
@@ -896,7 +897,7 @@ function renderIntro(site, meta, vegEntries) {
   <h2>${esc(site.siteName)}でできること</h2>
   <p class="lead">全国の卸売市場で取引される野菜・果物の価格を、公的なオープンデータから毎日自動で集計し、無料で公開しています。難しい登録は不要。気になる品目の「いま」と「これまで」がすぐに分かります。</p>
   <div class="grid use-grid">${cards}</div>
-  <p class="more-links">このほか、<a href="/retail/">都市別の小売価格</a>や<a href="/weekly/">今週の値動きレポート</a>もご覧いただけます。</p>
+  <p class="more-links">このほか、<a href="/retail/">都市別の小売価格</a>や<a href="/weekly/">今週の値動きレポート</a>、価格の見方をまとめた<a href="/guides/">価格ガイド</a>もご覧いただけます。</p>
   <div class="notice">
     価格データは3つの公的な出典にもとづいています。<strong>①日次の卸売価格</strong>（独立行政法人農畜産業振興機構「ベジ探」。原資料は農林水産省の卸売市場調査）／<strong>②都市別の小売価格</strong>（同・月次調査）／<strong>③産地・地域別の卸売価格</strong>（農林水産省「青果物卸売市場調査」・e-Stat。年次の確報値）。卸売価格は市場での公表まで数営業日ほどかかるため直近数日は反映が遅れることがあり、産地別データは最新の公表年をもとにしています。更新は毎日自動で行っているため、人手をかけずに最新の数値を反映しています。
   </div>
@@ -1164,9 +1165,22 @@ function renderAbout(site, meta, updatedLabel, freshnessBySource) {
 </table>`
     : '';
 
+  const operator = site.operatorName || site.author || site.siteName;
+  const mailCell = site.contactEmail
+    ? `<a href="mailto:${esc(site.contactEmail)}">${esc(site.contactEmail)}</a>`
+    : '準備中';
+
   const body = `
 <h1>このサイトについて・データ出典</h1>
-<p class="lead">${esc(site.siteName)}は、全国の卸売市場で取引される野菜・果物の価格を、公的なオープンデータから毎日自動で集計して無料で公開している情報サイトです。</p>
+<p class="lead">${esc(site.siteName)}は、全国の卸売市場で取引される野菜・果物の価格を、公的なオープンデータから毎日自動で集計して無料で公開している情報サイトです。運営は「${esc(operator)}」が行っています。</p>
+
+<h2>運営者情報</h2>
+<table>
+  <tr><th>サイト名</th><td>${esc(site.siteName)}</td></tr>
+  <tr><th>運営者</th><td>${esc(operator)}</td></tr>
+  <tr><th>連絡先</th><td>${mailCell}（<a href="/contact/">お問い合わせ</a>）</td></tr>
+  <tr><th>関連ページ</th><td><a href="/privacy/">プライバシーポリシー</a>　/　<a href="/guides/">価格ガイド</a></td></tr>
+</table>
 
 <h2>サイトの目的</h2>
 <p>スーパーや市場に並ぶ野菜・果物の価格は、天候や産地の切り替わりで日々動いています。ただ、その「いまが高いのか安いのか」を消費者やお店の人が自分で調べるのは簡単ではありません。${esc(site.siteName)}は、公的機関が公開している価格データをわかりやすく整理し、<strong>「いま平年より割安な品目（買い時）」「価格の推移と旬」「産地・地域別の相場」</strong>を、登録なしでひと目で確認できるようにすることを目的としています。毎日の献立を考える消費者の方にも、飲食店や八百屋など仕入れを行うプロの方にも、同じように役立つことを目指しています。</p>
@@ -1197,7 +1211,10 @@ ${comRows}
 本サイトの情報を用いて行う一切の判断・行為について、運営者は責任を負いません。</p>
 
 <h2>広告・アフィリエイトについて</h2>
-<p>本サイトは第三者配信の広告サービス（Google AdSense 等）およびアフィリエイトプログラムを利用する場合があります（設定時のみ表示）。</p>
+<p>本サイトは第三者配信の広告サービス（Google AdSense 等）およびアフィリエイトプログラムを利用する場合があります。第三者配信事業者によるCookieの使用やパーソナライズド広告の無効化の方法など、詳しくは<a href="/privacy/">プライバシーポリシー</a>をご覧ください。</p>
+
+<h2>お問い合わせ</h2>
+<p>掲載データの誤りのご指摘や、出典・算出方法に関するご質問は、<a href="/contact/">お問い合わせページ</a>（${mailCell}）よりお寄せください。少人数で運営しているため返信にお時間をいただく場合がありますが、内容は必ず確認しています。</p>
 `;
   const jsonld = [breadcrumbLd(site, [{ name: 'トップ', url: '/' }, { name: 'データ出典', url: '/about/' }])];
   return renderPage(site, {
@@ -1208,6 +1225,234 @@ ${comRows}
     jsonld,
     updatedLabel,
     freshness: vf,
+    body,
+  });
+}
+
+// ---- Page: privacy policy (AdSense 必須) -----------------------------------
+function renderPrivacy(site, updatedLabel, freshness) {
+  const operator = site.operatorName || site.author || site.siteName;
+  const mail = site.contactEmail
+    ? `<a href="mailto:${esc(site.contactEmail)}">${esc(site.contactEmail)}</a>`
+    : '各ページのお問い合わせ窓口';
+
+  const analyticsPara = site.analyticsId
+    ? `<p>当サイトでは、サービス向上と利用状況の把握のためにアクセス解析ツールを利用しています。これらのツールはCookieを使用してアクセス情報を収集しますが、収集される情報は匿名で集計されており、個人を特定するものではありません。ブラウザの設定でCookieを無効にすることで、この収集を拒否できます。</p>`
+    : `<p>現在、当サイトではアクセス解析ツールを導入していません。今後、サービス向上や利用状況の把握のためにGoogle アナリティクス等のアクセス解析ツールを導入する場合があります。これらのツールはCookieを使用してアクセス情報を収集することがありますが、収集される情報は匿名で集計され、個人を特定するものではありません。ブラウザの設定でCookieを無効にすることで、この収集を拒否できます。導入した際は、本ポリシーに追記のうえお知らせします。</p>`;
+
+  const body = `
+<div class="article">
+<h1>プライバシーポリシー</h1>
+<p class="article-lead">${esc(site.siteName)}(以下「当サイト」といいます)は、ご利用いただく皆さまの個人情報およびプライバシーの保護に配慮してサイトを運営しています。本ポリシーでは、当サイトにおける情報の取り扱いについて説明します。</p>
+
+<h2>個人情報の取り扱いについて</h2>
+<p>当サイトは、公的なオープンデータをもとに野菜・果物の価格を掲載する情報サイトであり、会員登録やログインを必要としません。氏名・住所・電話番号といった個人情報を、フォーム等を通じて能動的に収集することはありません。お問い合わせ等でメールをお送りいただいた場合に限り、返信のためにメールアドレスおよびその内容を利用しますが、返信の目的以外には使用せず、第三者に提供することはありません。</p>
+
+<h2>Cookie(クッキー)とアクセス情報について</h2>
+<p>当サイトでは、閲覧体験の向上や広告配信のためにCookieを使用することがあります。Cookieとは、ウェブサイトを閲覧した際にブラウザに保存される小さなデータで、これ自体があなたの氏名などの個人情報を含むものではありません。Cookieの受け入れは、お使いのブラウザの設定で無効にすることができます。無効にした場合でも、当サイトの基本的な閲覧は可能です。</p>
+${analyticsPara}
+
+<h2>第三者配信の広告サービスについて</h2>
+<p>当サイトは、第三者配信の広告サービスとしてGoogle社の「Google AdSense」を利用しています。Googleなどの第三者配信事業者は、Cookieを使用して、ユーザーが当サイトや他のウェブサイトに過去にアクセスした情報にもとづいて広告を配信します(パーソナライズド広告)。</p>
+<p>Googleが広告Cookie(DoubleClick Cookieを含む)を使用することにより、ユーザーは当サイトや他のサイトへのアクセス情報にもとづいた広告を表示されます。ユーザーは、Googleの<a href="https://www.google.com/settings/ads" rel="nofollow noopener" target="_blank">広告設定</a>でパーソナライズド広告を無効にできます。また、<a href="https://www.aboutads.info" rel="nofollow noopener" target="_blank">www.aboutads.info</a>にアクセスすることで、第三者配信事業者のCookieを無効にできます。</p>
+<p>Google社によるデータの取り扱いについては、<a href="https://policies.google.com/technologies/ads" rel="nofollow noopener" target="_blank">広告に関するGoogleのポリシー</a>もあわせてご確認ください。</p>
+
+<h2>免責事項</h2>
+<p>当サイトが掲載する価格は、卸売市場等の公的な調査にもとづく参考値であり、店頭価格や実際の取引価格を保証するものではありません。掲載内容には正確性を期していますが、その完全性・正確性・有用性を保証するものではありません。当サイトの情報を用いて行う一切の判断・取引・行為について、運営者は責任を負いかねます。あらかじめご了承ください。</p>
+
+<h2>著作権について</h2>
+<p>当サイトが掲載する価格・数量等の数値は、各ページに明記した公的機関のオープンデータを出典としています。データの出典・ライセンスの詳細は<a href="/about/">運営・データ出典のページ</a>をご覧ください。当サイトが独自に作成した文章・図表・デザインの無断転載・複製はご遠慮ください。</p>
+
+<h2>本ポリシーの改定について</h2>
+<p>本ポリシーの内容は、法令の変更や運営方針の見直しに応じて、予告なく改定することがあります。改定後の内容は、本ページに掲載した時点から効力を生じるものとします。</p>
+
+<h2>制定日・お問い合わせ</h2>
+<table>
+  <tr><th>運営者</th><td>${esc(operator)}</td></tr>
+  <tr><th>連絡先</th><td>${mail}</td></tr>
+  <tr><th>制定日</th><td>2026年8月12日</td></tr>
+</table>
+<p>本ポリシーやプライバシーに関するお問い合わせは、<a href="/contact/">お問い合わせページ</a>よりご連絡ください。</p>
+</div>
+`;
+
+  const breadcrumb = [
+    { name: 'トップ', url: '/' },
+    { name: 'プライバシーポリシー', url: '/privacy/' },
+  ];
+  const jsonld = [breadcrumbLd(site, breadcrumb)];
+  return renderPage(site, {
+    title: 'プライバシーポリシー',
+    description: `${site.siteName}のプライバシーポリシー。個人情報・Cookieの取り扱い、Google AdSense等の第三者配信広告、アクセス解析、免責事項、著作権、連絡先についてご案内します。`,
+    path: '/privacy/',
+    breadcrumb,
+    jsonld,
+    updatedLabel,
+    freshness,
+    body,
+  });
+}
+
+// ---- Page: contact ----------------------------------------------------------
+function renderContact(site, updatedLabel, freshness) {
+  const operator = site.operatorName || site.author || site.siteName;
+  const mailLink = site.contactEmail
+    ? `<a class="contact-mail" href="mailto:${esc(site.contactEmail)}">${esc(site.contactEmail)}</a>`
+    : '';
+
+  const body = `
+<div class="article">
+<h1>お問い合わせ</h1>
+<p class="article-lead">${esc(site.siteName)}をご利用いただきありがとうございます。ご質問・ご意見のほか、掲載データに関するご連絡は、下記のメールアドレスまでお寄せください。</p>
+
+<h2>連絡先</h2>
+<p>${mailLink || 'ただいまお問い合わせ窓口を準備中です。'}</p>
+<p class="lead">お手数ですが、上記アドレス宛てにメールでご連絡ください。件名に用件がわかる一言を添えていただけると、確認がスムーズになります。</p>
+
+<h2>お気軽にお寄せください</h2>
+<p>次のようなご連絡を歓迎しています。</p>
+<ul>
+  <li><strong>掲載データの誤りのご指摘</strong> ― 価格や品目、表記に誤りを見つけられた場合は、該当ページのURLとあわせてお知らせいただけると助かります。</li>
+  <li><strong>データの出典・算出方法に関するご質問</strong> ― 数値の根拠や指標の意味について、わかりにくい点があればお問い合わせください。</li>
+  <li><strong>掲載・取材・その他のご相談</strong> ― サイトの内容に関するご相談やご提案もお待ちしています。</li>
+</ul>
+
+<h2>返信について</h2>
+<p>当サイトは少人数で運営しているため、内容の確認や返信にお時間をいただく場合があります。いただいたすべてのメールにお返事できない場合もございますが、内容は必ず拝見しています。あらかじめご了承ください。</p>
+<p class="lead">なお、価格は公的な調査にもとづく参考値であり、個別の取引価格や在庫状況についてはお答えできません。データの出典や免責事項については<a href="/about/">運営・データ出典のページ</a>を、個人情報の取り扱いについては<a href="/privacy/">プライバシーポリシー</a>をご確認ください。</p>
+
+<table>
+  <tr><th>運営者</th><td>${esc(operator)}</td></tr>
+  <tr><th>連絡先</th><td>${site.contactEmail ? `<a href="mailto:${esc(site.contactEmail)}">${esc(site.contactEmail)}</a>` : '準備中'}</td></tr>
+</table>
+</div>
+`;
+
+  const breadcrumb = [
+    { name: 'トップ', url: '/' },
+    { name: 'お問い合わせ', url: '/contact/' },
+  ];
+  const jsonld = [breadcrumbLd(site, breadcrumb)];
+  return renderPage(site, {
+    title: 'お問い合わせ',
+    description: `${site.siteName}へのお問い合わせ窓口。掲載データの誤りのご指摘、出典・算出方法に関するご質問、掲載に関するご相談などをメールで受け付けています。`,
+    path: '/contact/',
+    breadcrumb,
+    jsonld,
+    updatedLabel,
+    freshness,
+    body,
+  });
+}
+
+// ---- Guides (独自の読み物コンテンツ) ------------------------------------------
+function renderGuidesIndex(site, updatedLabel, freshness) {
+  const cards = GUIDES.map(
+    (g) => `<a class="card guide-card" href="/guides/${esc(g.slug)}/">
+      <h3>${esc(g.title)}</h3>
+      <p>${esc(g.description)}</p>
+      <span class="read">続きを読む →</span>
+    </a>`
+  ).join('');
+
+  const body = `
+<h1>野菜と果物の価格ガイド</h1>
+<p class="lead">卸売価格や平年比の見方、旬の野菜をお得に買うコツ、産地と相場の関係など、${esc(site.siteName)}編集部が、価格データをもっと役立てていただくための解説記事をまとめました。数字の背景を知ると、毎日の買い物や仕入れの判断がぐっとしやすくなります。</p>
+<div class="grid guide-grid">${cards}</div>
+<p class="more-links">価格の一覧は<a href="/">トップページ</a>、都市別の店頭価格は<a href="/retail/">小売価格ページ</a>、データの出典は<a href="/about/">運営・データ出典</a>でご覧いただけます。</p>
+`;
+
+  const breadcrumb = [
+    { name: 'トップ', url: '/' },
+    { name: 'ガイド', url: '/guides/' },
+  ];
+  const jsonld = [
+    breadcrumbLd(site, breadcrumb),
+    {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: '野菜と果物の価格ガイド',
+      itemListElement: GUIDES.map((g, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: g.title,
+        url: site.baseUrl.replace(/\/$/, '') + `/guides/${g.slug}/`,
+      })),
+    },
+  ];
+  return renderPage(site, {
+    title: '野菜と果物の価格ガイド',
+    description: `卸売価格・平年比の見方、旬の野菜をお得に買うコツ、産地と相場の関係など、${site.siteName}編集部による価格データの読み物・解説記事の一覧です。`,
+    path: '/guides/',
+    breadcrumb,
+    jsonld,
+    updatedLabel,
+    freshness,
+    body,
+  });
+}
+
+function renderGuidePage(site, guide, updatedLabel, freshness) {
+  const canonicalPath = `/guides/${guide.slug}/`;
+  const operator = site.operatorName || site.author || site.siteName;
+
+  const sections = guide.sections
+    .map((s) => `<h2>${esc(s.h)}</h2>\n${s.p.map((p) => `<p>${esc(p)}</p>`).join('\n')}`)
+    .join('\n');
+  const summary = guide.summary.map((p) => `<p>${esc(p)}</p>`).join('\n');
+  const related = guide.related
+    .map((r) => `<li><a href="${esc(r.path)}">${esc(r.name)}</a></li>`)
+    .join('\n');
+
+  const body = `
+<article class="article">
+<h1>${esc(guide.title)}</h1>
+<p class="article-meta">${esc(operator)}　|　公開日: ${esc(guide.datePublished)}</p>
+<p class="article-lead">${esc(guide.lead)}</p>
+${sections}
+
+<h2>まとめ</h2>
+${summary}
+
+<h2>あわせて読みたい</h2>
+<ul class="related-links">
+${related}
+</ul>
+
+<div class="notice">${esc(VEGETAN_ATTRIBUTION)}。本記事は${esc(site.siteName)}編集部が作成した解説記事で、価格は参考値です。</div>
+</article>
+`;
+
+  const breadcrumb = [
+    { name: 'トップ', url: '/' },
+    { name: 'ガイド', url: '/guides/' },
+    { name: guide.title, url: canonicalPath },
+  ];
+  const canonicalUrl = site.baseUrl.replace(/\/$/, '') + canonicalPath;
+  const jsonld = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: guide.title,
+      description: guide.description,
+      author: { '@type': 'Organization', name: operator },
+      publisher: { '@type': 'Organization', name: operator },
+      datePublished: guide.datePublished,
+      inLanguage: 'ja',
+      isAccessibleForFree: true,
+      mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl },
+      url: canonicalUrl,
+    },
+    breadcrumbLd(site, breadcrumb),
+  ];
+  return renderPage(site, {
+    title: guide.title,
+    description: guide.description,
+    path: canonicalPath,
+    breadcrumb,
+    jsonld,
+    updatedLabel,
+    freshness,
     body,
   });
 }
@@ -1368,6 +1613,16 @@ async function main() {
     await write('weekly/index.html', renderWeekly(site, meta, comEntries, rankings, updatedLabel, comFresh, retailRecords, cityList));
   }
   await write('about/index.html', renderAbout(site, meta, updatedLabel, freshnessBySource));
+
+  // Trust & editorial pages (AdSense 有用性: 信頼ページ + 独自の読み物).
+  await write('privacy/index.html', renderPrivacy(site, updatedLabel, vegFresh));
+  await write('contact/index.html', renderContact(site, updatedLabel, vegFresh));
+  await write('guides/index.html', renderGuidesIndex(site, updatedLabel, vegFresh));
+  urls.push('/privacy/', '/contact/', '/guides/');
+  for (const guide of GUIDES) {
+    await write(`guides/${guide.slug}/index.html`, renderGuidePage(site, guide, updatedLabel, vegFresh));
+    urls.push(`/guides/${guide.slug}/`);
+  }
 
   if (comEntries.length && vegEntries.length) {
     await write('archive/index.html', renderArchiveIndex(site, meta, comEntries, updatedLabel, comFresh));
