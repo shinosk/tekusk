@@ -66,6 +66,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .report p{margin:.6em 0}
 footer.site{border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;padding:18px 0 40px}
 footer.site a{color:var(--muted);text-decoration:underline}
+.footer-links{display:flex;flex-wrap:wrap;gap:6px 18px;margin:10px 0}
+.footer-links a{white-space:nowrap}
 .breadcrumb{font-size:.82rem;color:var(--muted);margin:4px 0 10px}
 .breadcrumb a{color:var(--muted)}
 .cat-tag{font-size:.78rem;color:var(--muted)}
@@ -134,6 +136,20 @@ footer.site a{color:var(--muted);text-decoration:underline}
   margin-right:.45em;vertical-align:middle}
 .dot-buy{background:var(--down)}
 .more-links{font-size:.92rem;color:var(--muted);margin:6px 0 0}
+/* --- editorial guides / static pages --- */
+.article{max-width:44em}
+.article p{margin:.7em 0}
+.article-meta{font-size:.82rem;color:var(--muted);margin:.2em 0 1em}
+.article-lead{font-size:1.05rem;color:var(--fg);margin:.4em 0 1.2em}
+.related-links{list-style:none;margin:.4em 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.related-links li a{font-weight:600}
+.guide-grid{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin:16px 0}
+.guide-card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:16px 18px;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow)}
+.guide-card h3{margin:0;font-size:1.06rem}
+.guide-card p{margin:0;color:var(--muted);font-size:.92rem;flex:1}
+.guide-card .read{font-size:.9rem;font-weight:600;color:var(--accent);margin-top:2px}
+.contact-mail{font-size:1.1rem;font-weight:700}
 @media (max-width:760px){
   .hero{grid-template-columns:1fr;padding:26px 22px;gap:18px}
   .hero-art{order:-1;max-width:320px}
@@ -271,6 +287,7 @@ ${archiveBanner(freshness)}
     <a href="/">トップ</a>
     <a href="/#fruits">果実</a>
     <a href="/retail/">小売価格</a>
+    <a href="/guides/">ガイド</a>
     <a href="/weekly/">週報</a>
     <a href="/archive/">国際市況</a>
     <a href="/about/">データ出典</a>
@@ -282,7 +299,13 @@ ${page.body}
 </div></main>
 <footer class="site"><div class="wrap">
   <p>${esc(site.siteName)} — ${footerNotice(freshness)} 価格は参考値であり取引を保証するものではありません。</p>
-  <p><a href="/about/">データ出典・免責事項</a>　|　最終更新: ${esc(page.updatedLabel || '')}</p>
+  <nav class="footer-links" aria-label="サイト情報">
+    <a href="/guides/">ガイド</a>
+    <a href="/about/">運営・データ出典</a>
+    <a href="/privacy/">プライバシーポリシー</a>
+    <a href="/contact/">お問い合わせ</a>
+  </nav>
+  <p>© ${new Date().getFullYear()} ${esc(site.operatorName || site.author || site.siteName)}　|　最終更新: ${esc(page.updatedLabel || '')}</p>
 </div></footer>
 </body>
 </html>`, sitePathPrefix(site));
