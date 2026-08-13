@@ -10,7 +10,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { CONFIG_DIR, DATA_DIR, DATA_ITEMS_DIR, DATA_RETAIL_DIR, DATA_ESTAT_DIR, PUBLIC_DIR } from '../src/lib/paths.mjs';
+import { CONFIG_DIR, DATA_DIR, DATA_ITEMS_DIR, DATA_RETAIL_DIR, DATA_ESTAT_DIR, PUBLIC_DIR, ASSETS_DIR } from '../src/lib/paths.mjs';
 import { renderPage, adSlot, STYLESHEET } from '../src/templates/layout.mjs';
 import { computeItemStats, buildRankings } from '../src/lib/stats.mjs';
 import { lineChartSvg } from '../src/lib/chart.mjs';
