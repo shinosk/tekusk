@@ -1,0 +1,10 @@
+{
+  "enabled": false,
+  "disclosure": "本ページには広告（アフィリエイトリンク）が含まれます。商品の販売は各事業者によるもので、当サイトは販売主体ではありません。価格・在庫は各販売サイトでご確認ください。",
+  "heading": "関連商品",
+  "amazonAssociate": {
+    "enabled": false,
+    "statement": "Amazonのアソシエイトとして、当サイトは適格販売により収入を得ています。"
+  },
+  "products": []
+}

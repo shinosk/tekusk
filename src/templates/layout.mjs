@@ -68,6 +68,17 @@ footer.site{border-top:1px solid var(--line);color:var(--muted);font-size:.85rem
 footer.site a{color:var(--muted);text-decoration:underline}
 .footer-links{display:flex;flex-wrap:wrap;gap:6px 18px;margin:10px 0}
 .footer-links a{white-space:nowrap}
+/* --- affiliate (広告) --- */
+.aff-badge{display:inline-block;margin-left:.6em;padding:1px 8px;border-radius:999px;
+  font-size:.7rem;font-weight:700;letter-spacing:.02em;vertical-align:middle;
+  background:var(--line);color:var(--muted)}
+.aff-disclosure{border-left-color:var(--accent2);font-size:.9rem}
+.aff-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin:14px 0}
+.aff-card{display:flex;flex-direction:column;gap:6px;color:var(--fg)}
+.aff-card:hover{text-decoration:none;border-color:var(--accent)}
+.aff-title{font-weight:600;line-height:1.45}
+.aff-note{margin:0;color:var(--muted);font-size:.9rem;flex:1}
+.aff-cta{font-size:.9rem;font-weight:600;color:var(--accent)}
 .breadcrumb{font-size:.82rem;color:var(--muted);margin:4px 0 10px}
 .breadcrumb a{color:var(--muted)}
 .cat-tag{font-size:.78rem;color:var(--muted)}

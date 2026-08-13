@@ -96,6 +96,19 @@ node scripts/fetch.mjs --source=commodity            # 凍結アーカイブの�
 - **fail-safe**: API・ネットワーク失敗でも `exit 0`（日次ワークフローを壊さない）。`--strict` でのみ失敗を返します。
 - 動作確認: `node scripts/post-x.mjs --dry-run`（本文を出力するだけ・認証不要）。`--force` で冪等スキップを無視。
 
+### アフィリエイト表示
+
+`config/affiliates.json` で管理します（既定は `enabled: false`・`products: []` ＝ 何も表示しません）。
+
+- `products[]` に商品を追加し `enabled: true` にすると、`itemSlugs` / `guideSlugs` で紐づけたページ
+  （品目ページ・ガイド記事）にのみ「関連商品」ブロックが表示されます。紐付けの無いページには出ません。
+- **PR表記は自動で挿入されます**（見出しの「広告」バッジ＋商品リンクより前に開示文）。
+  リンクには `rel="sponsored noopener"` と `target="_blank"` が自動付与されます。
+  景品表示法（ステルスマーケティング規制）により、広告であることの明示は必須です。
+- `amazonAssociate.enabled` を `true` にすると、Amazonアソシエイト参加時に必要な定型文が
+  プライバシーポリシーに表示されます。
+- 実装は `src/lib/affiliate.mjs`（純関数）。設定が壊れていても例外を投げず、何も表示しない fail-safe。
+
 ## ディレクトリ構成
 
 ```

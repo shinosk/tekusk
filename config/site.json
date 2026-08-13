@@ -12,11 +12,6 @@
   "adsenseClientId": "ca-pub-1313020247228385",
   "adsenseSlotTop": "",
   "adsenseSlotItem": "",
-  "affiliate": {
-    "enabled": false,
-    "note": "config/site.json の affiliate.enabled を true にし、リンクを設定すると各ページに表示されます。",
-    "links": []
-  },
   "social": {
     "x": {
       "enabled": true,
