@@ -20,6 +20,7 @@ import { weeklyReport, headline, itemBlurb, retailWeeklyParagraph } from '../src
 import { freshnessCopy } from '../src/lib/freshness.mjs';
 import { latestChange, monthsAcross, cityOf } from '../src/lib/retail.mjs';
 import { pad2 } from '../src/lib/wareki.mjs';
+import { affiliateBlock, amazonStatement } from '../src/lib/affiliate.mjs';
 import { getItemContent } from '../src/content/items.mjs';
 import { GUIDES } from '../src/content/guides.mjs';
 
@@ -222,6 +223,7 @@ ${monthlySection}
 ${retailSection}
 ${estatSection}
 ${explainerSection}
+${affiliateBlock(site.affiliates, { itemSlug: item.slug })}
 
 <h2>品目情報</h2>
 <table>
@@ -1240,6 +1242,10 @@ function renderPrivacy(site, updatedLabel, freshness) {
     ? `<p>当サイトでは、サービス向上と利用状況の把握のためにアクセス解析ツールを利用しています。これらのツールはCookieを使用してアクセス情報を収集しますが、収集される情報は匿名で集計されており、個人を特定するものではありません。ブラウザの設定でCookieを無効にすることで、この収集を拒否できます。</p>`
     : `<p>現在、当サイトではアクセス解析ツールを導入していません。今後、サービス向上や利用状況の把握のためにGoogle アナリティクス等のアクセス解析ツールを導入する場合があります。これらのツールはCookieを使用してアクセス情報を収集することがありますが、収集される情報は匿名で集計され、個人を特定するものではありません。ブラウザの設定でCookieを無効にすることで、この収集を拒否できます。導入した際は、本ポリシーに追記のうえお知らせします。</p>`;
 
+  // Amazonアソシエイト参加時に義務づけられる定型文（config で on のときだけ表示）。
+  const amzn = amazonStatement(site.affiliates);
+  const amazonNote = amzn ? `<p>${esc(amzn)}</p>` : '';
+
   const body = `
 <div class="article">
 <h1>プライバシーポリシー</h1>
@@ -1257,6 +1263,13 @@ ${analyticsPara}
 <p>Googleが広告Cookie(DoubleClick Cookieを含む)を使用することにより、ユーザーは当サイトや他のサイトへのアクセス情報にもとづいた広告を表示されます。ユーザーは、Googleの<a href="https://www.google.com/settings/ads" rel="nofollow noopener" target="_blank">広告設定</a>でパーソナライズド広告を無効にできます。また、<a href="https://www.aboutads.info" rel="nofollow noopener" target="_blank">www.aboutads.info</a>にアクセスすることで、第三者配信事業者のCookieを無効にできます。</p>
 <p>Google社によるデータの取り扱いについては、<a href="https://policies.google.com/technologies/ads" rel="nofollow noopener" target="_blank">広告に関するGoogleのポリシー</a>もあわせてご確認ください。</p>
 
+<h2>アフィリエイトプログラムについて</h2>
+<p>当サイトでは、第三者が運営するアフィリエイトプログラム（もしもアフィリエイト、A8.net、楽天アフィリエイト、Amazonアソシエイト等）に参加し、
+商品やサービスを紹介する場合があります。その場合、当該ページには広告（アフィリエイトリンク）が含まれる旨を明示します。</p>
+<p>アフィリエイトリンク経由で商品が購入された場合、当サイトの運営者が販売事業者から報酬を受け取ることがあります。
+商品・サービスの販売主体は各事業者であり、当サイトは販売主体ではありません。価格・在庫・仕様・配送条件などは、
+必ず各販売サイトの最新情報をご確認ください。商品に関するお問い合わせやご購入後のサポートは、各販売事業者へご連絡ください。</p>
+${amazonNote}
 <h2>免責事項</h2>
 <p>当サイトが掲載する価格は、卸売市場等の公的な調査にもとづく参考値であり、店頭価格や実際の取引価格を保証するものではありません。掲載内容には正確性を期していますが、その完全性・正確性・有用性を保証するものではありません。当サイトの情報を用いて行う一切の判断・取引・行為について、運営者は責任を負いかねます。あらかじめご了承ください。</p>
 
@@ -1418,6 +1431,7 @@ ${summary}
 <ul class="related-links">
 ${related}
 </ul>
+${affiliateBlock(site.affiliates, { guideSlug: guide.slug })}
 
 <div class="notice">${esc(VEGETAN_ATTRIBUTION)}。本記事は${esc(site.siteName)}編集部が作成した解説記事で、価格は参考値です。</div>
 </article>
@@ -1530,8 +1544,20 @@ async function main() {
   const primaryFresh =
     freshnessBySource[meta.primarySource] || freshnessCopy(meta.latestDate, now);
 
+  // Brand icon: if assets/icon.png exists, use it for the favicon / app icon
+  // across every page; otherwise fall back to the inline emoji favicon.
+  const iconBytes = await fs.readFile(path.join(ASSETS_DIR, 'icon.png')).catch(() => null);
+
+  // アフィリエイト設定（config/affiliates.json）。存在しない/壊れている場合は
+  // 「無効」として扱い、サイトには一切表示しない（fail-safe）。
+  const affiliates = (await readJson(path.join(CONFIG_DIR, 'affiliates.json'), null)) || {
+    enabled: false,
+    products: [],
+  };
+
   const site = {
     ...rawSite,
+    affiliates,
     tagline: primaryFresh.archive ? primaryFresh.tagline : rawSite.tagline,
     description: primaryFresh.archive ? primaryFresh.description : rawSite.description,
     freshness: primaryFresh,
