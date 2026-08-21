@@ -9,7 +9,7 @@
   "buyKeyword": "レタス",
   "source": "vegetan",
   "hasDaily": true,
-  "updatedAt": "2026-08-20T22:26:44.440Z",
+  "updatedAt": "2026-08-21T22:24:15.086Z",
   "series": [
     {
       "date": "2026-06-01",
@@ -388,6 +388,13 @@
       "arrival": 332.54,
       "normalPrice": 161,
       "normalRatio": 0.9130434782608695
+    },
+    {
+      "date": "2026-08-20",
+      "price": 137,
+      "arrival": 511.431,
+      "normalPrice": 161,
+      "normalRatio": 0.8509316770186336
     }
   ],
   "monthly": [
