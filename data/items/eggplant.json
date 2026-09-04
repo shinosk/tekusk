@@ -9,7 +9,7 @@
   "buyKeyword": "なす",
   "source": "vegetan",
   "hasDaily": true,
-  "updatedAt": "2026-09-03T23:48:06.292Z",
+  "updatedAt": "2026-09-04T23:45:12.958Z",
   "series": [
     {
       "date": "2026-06-01",
@@ -458,6 +458,13 @@
       "arrival": 108.209,
       "normalPrice": 356,
       "normalRatio": 0.9241573033707865
+    },
+    {
+      "date": "2026-09-03",
+      "price": 338,
+      "arrival": 184.292,
+      "normalPrice": 356,
+      "normalRatio": 0.949438202247191
     }
   ],
   "monthly": [
