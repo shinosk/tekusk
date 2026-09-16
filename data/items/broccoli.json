@@ -9,7 +9,7 @@
   "buyKeyword": "ブロッコリー",
   "source": "vegetan",
   "hasDaily": true,
-  "updatedAt": "2026-09-15T00:20:30.590Z",
+  "updatedAt": "2026-09-15T23:59:29.101Z",
   "series": [
     {
       "date": "2026-06-01",
@@ -514,6 +514,13 @@
       "arrival": 61.839,
       "normalPrice": 680,
       "normalRatio": 0.9632352941176471
+    },
+    {
+      "date": "2026-09-14",
+      "price": 666,
+      "arrival": 76.577,
+      "normalPrice": 680,
+      "normalRatio": 0.9794117647058823
     }
   ],
   "monthly": [
