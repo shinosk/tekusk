@@ -9,7 +9,7 @@
   "buyKeyword": "ほうれん草",
   "source": "vegetan",
   "hasDaily": true,
-  "updatedAt": "2026-09-24T00:15:35.548Z",
+  "updatedAt": "2026-09-25T00:17:49.032Z",
   "series": [
     {
       "date": "2026-06-01",
@@ -535,6 +535,27 @@
       "arrival": 26.922,
       "normalPrice": 960,
       "normalRatio": 1.190625
+    },
+    {
+      "date": "2026-09-18",
+      "price": 1139,
+      "arrival": 19.906,
+      "normalPrice": 960,
+      "normalRatio": 1.1864583333333334
+    },
+    {
+      "date": "2026-09-19",
+      "price": 1170,
+      "arrival": 21.129,
+      "normalPrice": 960,
+      "normalRatio": 1.21875
+    },
+    {
+      "date": "2026-09-23",
+      "price": 1143,
+      "arrival": 47.169,
+      "normalPrice": 822,
+      "normalRatio": 1.3905109489051095
     }
   ],
   "monthly": [
