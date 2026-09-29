@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-28T00:18:52.219Z",
+  "generatedAt": "2026-09-29T01:30:10.862Z",
   "primarySource": "vegetan",
   "sources": {
     "vegetan": {
@@ -12,10 +12,10 @@
       "attribution": "独立行政法人農畜産業振興機構『ベジ探』のデータを加工して作成（原資料: 農林水産省「青果物卸売市場調査」等）",
       "cadence": "daily",
       "itemCount": 19,
-      "totalPoints": 2181,
-      "latestDate": "2026-09-24",
+      "totalPoints": 2211,
+      "latestDate": "2026-09-26",
       "missing": [],
-      "updatedAt": "2026-09-28T00:18:48.179Z"
+      "updatedAt": "2026-09-29T01:30:06.696Z"
     },
     "commodity": {
       "id": "commodity",
@@ -30,7 +30,7 @@
       "totalPoints": 11674,
       "latestDate": "2017-06-01",
       "missing": [],
-      "updatedAt": "2026-09-28T00:18:52.219Z"
+      "updatedAt": "2026-09-29T01:30:10.862Z"
     },
     "retail": {
       "id": "retail",
@@ -46,7 +46,7 @@
       "totalPoints": 760,
       "latestDate": "2026-08-01",
       "missing": [],
-      "updatedAt": "2026-09-28T00:18:51.787Z"
+      "updatedAt": "2026-09-29T01:30:10.491Z"
     },
     "estat": {
       "id": "estat",
@@ -76,7 +76,7 @@
     "cadence": "daily"
   },
   "itemCount": 45,
-  "totalPoints": 13855,
-  "latestDate": "2026-09-24",
+  "totalPoints": 13885,
+  "latestDate": "2026-09-26",
   "missing": []
 }
