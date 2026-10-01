@@ -9,7 +9,7 @@
   "buyKeyword": "里芋",
   "source": "vegetan",
   "hasDaily": true,
-  "updatedAt": "2026-09-30T01:06:36.510Z",
+  "updatedAt": "2026-10-01T01:05:15.592Z",
   "series": [
     {
       "date": "2026-06-01",
@@ -1582,6 +1582,10 @@
     {
       "date": "2026-09-01",
       "price": 902.4
+    },
+    {
+      "date": "2026-10-01",
+      "price": 848.6
     }
   ]
 }
