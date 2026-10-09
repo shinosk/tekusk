@@ -9,7 +9,7 @@
   "buyKeyword": "ピーマン",
   "source": "vegetan",
   "hasDaily": true,
-  "updatedAt": "2026-10-08T01:34:57.798Z",
+  "updatedAt": "2026-10-09T01:45:36.309Z",
   "series": [
     {
       "date": "2026-06-01",
@@ -619,6 +619,13 @@
       "arrival": 96.295,
       "normalPrice": 501,
       "normalRatio": 1.2415169660678642
+    },
+    {
+      "date": "2026-10-06",
+      "price": 612,
+      "arrival": 73.954,
+      "normalPrice": 501,
+      "normalRatio": 1.221556886227545
     }
   ],
   "monthly": [
