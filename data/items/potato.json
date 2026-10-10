@@ -9,7 +9,7 @@
   "buyKeyword": "じゃがいも",
   "source": "vegetan",
   "hasDaily": true,
-  "updatedAt": "2026-10-09T01:45:36.316Z",
+  "updatedAt": "2026-10-10T01:32:20.754Z",
   "series": [
     {
       "date": "2026-06-01",
@@ -626,6 +626,13 @@
       "arrival": 288.989,
       "normalPrice": 143,
       "normalRatio": 1.0419580419580419
+    },
+    {
+      "date": "2026-10-08",
+      "price": 154,
+      "arrival": 252.2,
+      "normalPrice": 143,
+      "normalRatio": 1.0769230769230769
     }
   ],
   "monthly": [
