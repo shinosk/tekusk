@@ -9,7 +9,7 @@
   "buyKeyword": "キャベツ",
   "source": "vegetan",
   "hasDaily": true,
-  "updatedAt": "2026-10-12T01:02:17.634Z",
+  "updatedAt": "2026-10-13T02:51:03.466Z",
   "series": [
     {
       "date": "2026-06-01",
@@ -633,6 +633,13 @@
       "arrival": 733.528,
       "normalPrice": 104,
       "normalRatio": 1.9711538461538463
+    },
+    {
+      "date": "2026-10-09",
+      "price": 201,
+      "arrival": 579.872,
+      "normalPrice": 104,
+      "normalRatio": 1.9326923076923077
     }
   ],
   "monthly": [
