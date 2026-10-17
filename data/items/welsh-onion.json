@@ -9,7 +9,7 @@
   "buyKeyword": "ねぎ",
   "source": "vegetan",
   "hasDaily": true,
-  "updatedAt": "2026-10-16T00:06:15.159Z",
+  "updatedAt": "2026-10-17T00:10:10.073Z",
   "series": [
     {
       "date": "2026-06-01",
@@ -654,6 +654,13 @@
       "arrival": 372.989,
       "normalPrice": 485,
       "normalRatio": 0.9216494845360824
+    },
+    {
+      "date": "2026-10-15",
+      "price": 440,
+      "arrival": 244.144,
+      "normalPrice": 485,
+      "normalRatio": 0.9072164948453608
     }
   ],
   "monthly": [
