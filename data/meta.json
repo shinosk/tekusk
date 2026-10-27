@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-26T00:01:03.747Z",
+  "generatedAt": "2026-10-27T01:21:48.771Z",
   "primarySource": "vegetan",
   "sources": {
     "vegetan": {
@@ -30,7 +30,7 @@
       "totalPoints": 11674,
       "latestDate": "2017-06-01",
       "missing": [],
-      "updatedAt": "2026-10-26T00:01:03.747Z"
+      "updatedAt": "2026-10-27T01:21:48.771Z"
     },
     "retail": {
       "id": "retail",
