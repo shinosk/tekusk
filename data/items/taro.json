@@ -9,7 +9,7 @@
   "buyKeyword": "里芋",
   "source": "vegetan",
   "hasDaily": true,
-  "updatedAt": "2026-10-30T01:35:21.730Z",
+  "updatedAt": "2026-10-31T01:26:08.620Z",
   "series": [
     {
       "date": "2026-06-01",
@@ -724,6 +724,13 @@
       "arrival": 32.021,
       "normalPrice": 328,
       "normalRatio": 0.9725609756097561
+    },
+    {
+      "date": "2026-10-29",
+      "price": 349,
+      "arrival": 47.819,
+      "normalPrice": 328,
+      "normalRatio": 1.0640243902439024
     }
   ],
   "monthly": [
