@@ -9,7 +9,7 @@
   "buyKeyword": "トマト",
   "source": "vegetan",
   "hasDaily": true,
-  "updatedAt": "2026-10-31T01:26:08.613Z",
+  "updatedAt": "2026-11-01T00:43:28.223Z",
   "series": [
     {
       "date": "2026-06-01",
@@ -1733,6 +1733,10 @@
     {
       "date": "2026-10-01",
       "price": 1090
+    },
+    {
+      "date": "2026-11-01",
+      "price": 1057.8
     }
   ]
 }

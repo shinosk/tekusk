@@ -9,7 +9,7 @@
   "buyKeyword": "ほうれん草",
   "source": "vegetan",
   "hasDaily": true,
-  "updatedAt": "2026-10-31T01:26:08.605Z",
+  "updatedAt": "2026-11-01T00:43:28.216Z",
   "series": [
     {
       "date": "2026-06-01",
@@ -1733,6 +1733,10 @@
     {
       "date": "2026-10-01",
       "price": 1188.2
+    },
+    {
+      "date": "2026-11-01",
+      "price": 911.6
     }
   ]
 }

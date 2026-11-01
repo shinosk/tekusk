@@ -9,7 +9,7 @@
   "buyKeyword": "大根",
   "source": "vegetan",
   "hasDaily": true,
-  "updatedAt": "2026-10-31T01:26:08.617Z",
+  "updatedAt": "2026-11-01T00:43:28.227Z",
   "series": [
     {
       "date": "2026-06-01",
@@ -1733,6 +1733,10 @@
     {
       "date": "2026-10-01",
       "price": 242.4
+    },
+    {
+      "date": "2026-11-01",
+      "price": 192.4
     }
   ]
 }
