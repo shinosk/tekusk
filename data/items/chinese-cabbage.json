@@ -9,7 +9,7 @@
   "buyKeyword": "白菜",
   "source": "vegetan",
   "hasDaily": true,
-  "updatedAt": "2026-11-27T03:56:39.299Z",
+  "updatedAt": "2026-11-28T03:43:30.123Z",
   "series": [
     {
       "date": "2026-06-01",
@@ -850,6 +850,13 @@
       "arrival": 593.195,
       "normalPrice": 52,
       "normalRatio": 1.9615384615384615
+    },
+    {
+      "date": "2026-11-26",
+      "price": 101,
+      "arrival": 411.667,
+      "normalPrice": 52,
+      "normalRatio": 1.9423076923076923
     }
   ],
   "monthly": [
